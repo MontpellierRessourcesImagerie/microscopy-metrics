@@ -1,0 +1,20 @@
+[project]
+name = "microscopy_metrics"
+dynamic = ["version"]
+description = "A module for proceeding quality control with PSF"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [ 
+    { name = "MRI-CIA", email = "mri-cia@mri.cnrs.fr" }, 
+    { name = "Voker Baecker", email = "volker.baecker@mri.cnrs.fr"},
+    { name = "Clément Benedetti", email = "clement.benedetti@mri.cnrs.fr"},
+    { name = "Bastian Langouet", email = "langouetbastian@gmail.com" } 
+]
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+[project.urls]
+Homepage = "https://github.com/MontpellierRessourcesImagerie/microscopy-metrics"
+Issues = "https://github.com/MontpellierRessourcesImagerie/microscopy-metrics/issues"

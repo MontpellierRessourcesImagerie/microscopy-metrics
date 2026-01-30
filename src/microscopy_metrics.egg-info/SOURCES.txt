@@ -1,0 +1,9 @@
+LICENSE
+README.md
+pyproject.toml
+src/microscopy_metrics/__init__.py
+src/microscopy_metrics/example.py
+src/microscopy_metrics.egg-info/PKG-INFO
+src/microscopy_metrics.egg-info/SOURCES.txt
+src/microscopy_metrics.egg-info/dependency_links.txt
+src/microscopy_metrics.egg-info/top_level.txt
