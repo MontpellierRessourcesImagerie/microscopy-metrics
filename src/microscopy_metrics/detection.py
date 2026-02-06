@@ -191,10 +191,10 @@ def extract_Region_Of_Interest(centroids, crop_factor=5, bead_size=10):
                     break
         if over == False : 
             tmp = np.array([
-                    [centroid[1] - roi_size, centroid[2] - roi_size],
-                    [centroid[1] - roi_size, centroid[2] + roi_size],
-                    [centroid[1] + roi_size, centroid[2] + roi_size],
-                    [centroid[1] + roi_size, centroid[2] - roi_size],           
+                    [math.ceil(centroid[1] - roi_size), math.ceil(centroid[2] - roi_size)],
+                    [math.ceil(centroid[1] - roi_size), math.ceil(centroid[2] + roi_size)],
+                    [math.ceil(centroid[1] + roi_size), math.ceil(centroid[2] + roi_size)],
+                    [math.ceil(centroid[1] + roi_size), math.ceil(centroid[2] - roi_size)],           
                 ]
             )
             overlapped = is_roi_overlapped(rois,tmp)
