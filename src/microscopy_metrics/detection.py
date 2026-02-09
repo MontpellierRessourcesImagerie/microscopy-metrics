@@ -6,6 +6,24 @@ from skimage.measure import regionprops, label
 from skimage.exposure import adjust_sigmoid
 import math
 
+def get_shape(image:np.ndarray):
+    """ Return the shape of an image
+
+    Parameters
+    ----------
+    image : np.ndarray
+        The image to measure.
+
+    Returns
+    -------
+    shape : [int]
+        The measures in pixels for each axis
+    """
+    Z_shape = len(image)
+    Y_shape = len(image[0])
+    X_shape = len(image[0][0])
+    return [Z_shape,Y_shape,X_shape]
+
 def gaussian_high_pass(image:np.ndarray, sigma:float = 2):
     """ Apply a gaussian high pass filter to an image.
 
