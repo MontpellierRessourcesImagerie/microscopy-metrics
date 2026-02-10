@@ -1,28 +1,11 @@
 import numpy as np 
 from scipy import ndimage as ndi
 from skimage.feature import peak_local_max, blob_log, blob_dog
-from skimage.filters import threshold_otsu
+from skimage.filters import threshold_otsu,threshold_isodata,threshold_li,threshold_minimum,threshold_triangle
 from skimage.measure import regionprops, label
 from skimage.exposure import adjust_sigmoid
+from .utils import *
 import math
-
-def get_shape(image:np.ndarray):
-    """ Return the shape of an image
-
-    Parameters
-    ----------
-    image : np.ndarray
-        The image to measure.
-
-    Returns
-    -------
-    shape : [int]
-        The measures in pixels for each axis
-    """
-    Z_shape = len(image)
-    Y_shape = len(image[0])
-    X_shape = len(image[0][0])
-    return [Z_shape,Y_shape,X_shape]
 
 def gaussian_high_pass(image:np.ndarray, sigma:float = 2):
     """ Apply a gaussian high pass filter to an image.
@@ -46,7 +29,7 @@ def gaussian_high_pass(image:np.ndarray, sigma:float = 2):
     return high_passed_im
 
 
-def detect_psf_peak_local_max(image, min_distance=5, threshold_rel=0.3, threshold_auto=False):
+def detect_psf_peak_local_max(image, min_distance=5, threshold_rel=0.3, threshold_auto=False, threshold_choice="otsu"):
     """ Detect coords of PSFs in an image.
 
     Parameters
@@ -72,11 +55,20 @@ def detect_psf_peak_local_max(image, min_distance=5, threshold_rel=0.3, threshol
     filtered_image = gaussian_high_pass(rescaled_image, sigma = 10)
     threshold_abs = threshold_rel * np.max(filtered_image)
     if threshold_auto : 
-        threshold_abs = threshold_otsu(filtered_image)
+        if threshold_choice == "isodata":
+            threshold_abs = threshold_isodata(filtered_image)
+        elif threshold_choice == "li":
+            threshold_abs = threshold_li(filtered_image)
+        elif threshold_choice == "minimum":
+            threshold_abs = threshold_minimum(filtered_image)
+        elif threshold_choice == "triangle":
+            threshold_abs = threshold_triangle(filtered_image)
+        else :
+            threshold_abs = threshold_otsu(filtered_image)
     coordinates = peak_local_max(filtered_image,min_distance=min_distance,threshold_abs=threshold_abs)
     return coordinates
 
-def detect_psf_blob_log(image, max_sigma = 3, threshold_rel=0.1, threshold_auto=False):
+def detect_psf_blob_log(image, max_sigma = 3, threshold_rel=0.1, threshold_auto=False, threshold_choice="otsu"):
     """ Detect coords of PSF's centroids using blob log.
 
     Parameters
@@ -103,7 +95,16 @@ def detect_psf_blob_log(image, max_sigma = 3, threshold_rel=0.1, threshold_auto=
     
     threshold_abs = threshold_rel * np.max(image_float)
     if threshold_auto :
-        threshold_abs = threshold_otsu(image_float)
+        if threshold_choice == "isodata":
+            threshold_abs = threshold_isodata(image_float)
+        elif threshold_choice == "li":
+            threshold_abs = threshold_li(image_float)
+        elif threshold_choice == "minimum":
+            threshold_abs = threshold_minimum(image_float)
+        elif threshold_choice == "triangle":
+            threshold_abs = threshold_triangle(image_float)
+        else :
+            threshold_abs = threshold_otsu(image_float)
     filtered_image = gaussian_high_pass(image_float, sigma = max_sigma)
     image_float[image_float < 0] = 0
     
@@ -112,7 +113,7 @@ def detect_psf_blob_log(image, max_sigma = 3, threshold_rel=0.1, threshold_auto=
     centroids = np.array([[blob[0],blob[1],blob[2]] for blob in blobs])
     return centroids
 
-def detect_psf_blob_dog(image, max_sigma = 3, threshold_rel=0.1, threshold_auto=False):
+def detect_psf_blob_dog(image, max_sigma = 3, threshold_rel=0.1, threshold_auto=False, threshold_choice="otsu"):
     """ Detect coords of PSF's centroids using blob dog.
 
     Parameters
@@ -138,7 +139,16 @@ def detect_psf_blob_dog(image, max_sigma = 3, threshold_rel=0.1, threshold_auto=
     image_float = (image_float - np.min(image_float)) / (np.max(image_float) - np.min(image_float) + 1e-6)
     threshold_abs = threshold_rel * np.max(image_float)
     if threshold_auto :
-        threshold_abs = threshold_otsu(image_float)
+        if threshold_choice == "isodata":
+            threshold_abs = threshold_isodata(image_float)
+        elif threshold_choice == "li":
+            threshold_abs = threshold_li(image_float)
+        elif threshold_choice == "minimum":
+            threshold_abs = threshold_minimum(image_float)
+        elif threshold_choice == "triangle":
+            threshold_abs = threshold_triangle(image_float)
+        else :
+            threshold_abs = threshold_otsu(image_float)
     filtered_image = gaussian_high_pass(image_float, sigma = max_sigma)
     image_float[image_float < 0] = 0
     centroids = []
@@ -146,7 +156,7 @@ def detect_psf_blob_dog(image, max_sigma = 3, threshold_rel=0.1, threshold_auto=
     centroids = np.array([[blob[0],blob[1],blob[2]] for blob in blobs])
     return centroids
 
-def detect_psf_centroid(image, threshold_rel=0.1, threshold_auto=False):
+def detect_psf_centroid(image, threshold_rel=0.1, threshold_auto=False, threshold_choice="otsu"):
     """ Detect coords of PSF's centroids.
 
     Parameters
@@ -170,7 +180,16 @@ def detect_psf_centroid(image, threshold_rel=0.1, threshold_auto=False):
     filtered_image = gaussian_high_pass(rescaled_image, sigma = 10)
     threshold_abs = threshold_rel * np.max(filtered_image)
     if threshold_auto :
-        threshold_abs = threshold_otsu(filtered_image)
+        if threshold_choice == "isodata":
+            threshold_abs = threshold_isodata(filtered_image)
+        elif threshold_choice == "li":
+            threshold_abs = threshold_li(filtered_image)
+        elif threshold_choice == "minimum":
+            threshold_abs = threshold_minimum(filtered_image)
+        elif threshold_choice == "triangle":
+            threshold_abs = threshold_triangle(filtered_image)
+        else :
+            threshold_abs = threshold_otsu(filtered_image)
     binary_image = filtered_image > threshold_abs
     labeled_image = label(binary_image)
     centroids = regionprops(labeled_image)
@@ -181,7 +200,7 @@ def detect_psf_centroid(image, threshold_rel=0.1, threshold_auto=False):
     retf = np.array(ret)
     return retf,binary_image
 
-def extract_Region_Of_Interest(centroids, crop_factor=5, bead_size=10):
+def extract_Region_Of_Interest(image,centroids, crop_factor=5, bead_size=10, rejection_zone=10, physical_pixel=[1,1,1]):
     """ Uses centroids of detected beads to extract region of interest for each and remove the ones overlapped or too near from the edges.
 
     Parameters
@@ -189,17 +208,24 @@ def extract_Region_Of_Interest(centroids, crop_factor=5, bead_size=10):
     image : np.ndarray
         The image to be processed
     centroids : np.ndarray
-        The list of coordinates of each centroid.
+        The list of coordinates of each centroid
+    crop_factor : integer
+        The size factor of the ROI
+    bead_size : float
+        The theoretical size of a bead
+    rejection_zone : float
+        Minimal distance between bead and Top/Bottom
+    physical_pixel : list[float]
+        Physical dimensions of a pixel (um/px)
     
-
     Returns
     -------
     Shapes : List of np.ndarray
         List of all shapes representing ROIs
     """
     rois = []
-    image_shape = [512,512]
-    roi_size = (crop_factor * bead_size) / 2
+    image_shape = get_shape(image)
+    roi_size = um_to_px((crop_factor * bead_size) / 2, physical_pixel[2])
     for i,centroid in enumerate(centroids) :
         over = False
         for y,c2 in enumerate(centroids) : 
@@ -209,37 +235,15 @@ def extract_Region_Of_Interest(centroids, crop_factor=5, bead_size=10):
                     break
         if over == False : 
             tmp = np.array([
-                    [math.ceil(centroid[1] - roi_size), math.ceil(centroid[2] - roi_size)],
-                    [math.ceil(centroid[1] - roi_size), math.ceil(centroid[2] + roi_size)],
-                    [math.ceil(centroid[1] + roi_size), math.ceil(centroid[2] + roi_size)],
-                    [math.ceil(centroid[1] + roi_size), math.ceil(centroid[2] - roi_size)],           
+                    [int(centroid[0]),math.ceil(centroid[1] - roi_size), math.ceil(centroid[2] - roi_size)],
+                    [int(centroid[0]),math.ceil(centroid[1] - roi_size), math.ceil(centroid[2] + roi_size)],
+                    [int(centroid[0]),math.ceil(centroid[1] + roi_size), math.ceil(centroid[2] + roi_size)],
+                    [int(centroid[0]),math.ceil(centroid[1] + roi_size), math.ceil(centroid[2] - roi_size)],           
                 ]
             )
             overlapped = is_roi_overlapped(rois,tmp)
             if not overlapped :
-                if is_roi_in_image(tmp, image_shape):
+                if is_roi_in_image(tmp, image_shape) and is_roi_not_in_rejection(centroid,image_shape,math.ceil(um_to_px(rejection_zone,physical_pixel[0]))):
                     rois.append(tmp)
     return rois
 
-def is_roi_in_image(roi, image_shape):
-    height, width = image_shape
-    for y,x in roi :
-        if y < 0 or y>= height or x < 0 or  x>= width : 
-            return False
-    return True
-
-def is_roi_overlapped(rois,roi) :
-    new_y_min = min(roi[:,0])
-    new_y_max = max(roi[:,0])
-    new_x_min = min(roi[:,1])
-    new_x_max = max(roi[:,1])
-    for i,R in enumerate(rois):
-        y_min = min(R[:,0])
-        y_max = max(R[:,0])
-        x_min = min(R[:,1])
-        x_max = max(R[:,1])
-        no_overlap_x = (new_x_max < x_min) or (x_max < new_x_min)
-        no_overlap_y = (new_y_max < y_min) or (y_max < new_y_min)
-        if not (no_overlap_x or no_overlap_y):
-            return True
-    return False
