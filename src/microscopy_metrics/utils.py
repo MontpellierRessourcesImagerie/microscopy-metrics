@@ -90,3 +90,22 @@ def is_roi_overlapped(rois,roi) :
         if not (no_overlap_x or no_overlap_y):
             return True
     return False
+
+def legacy_threshold(image,nb_iteration=100):
+    img_min = np.min(image)
+    img_max = np.max(image)
+    midpoint = (img_max - img_min)/2
+    image[image < 0] = 0
+    for i in range (nb_iteration):
+        background = image[image <= midpoint]
+        signal = image[image > midpoint]
+        mean_background = np.mean(background) if len(background) > 0 else img_min
+        mean_signal = np.mean(signal) if len(signal) > 0 else img_max
+        n_midpoint = (mean_background + mean_signal)/2
+        if abs(n_midpoint - midpoint) < 1e-6 :
+            break
+        midpoint = n_midpoint
+    return midpoint
+
+def dist(p1,p2):
+    return math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
