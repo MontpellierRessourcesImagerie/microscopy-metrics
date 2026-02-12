@@ -51,8 +51,8 @@ def detect_psf_peak_local_max(image, min_distance=5, threshold_rel=0.3, threshol
         raise ValueError("Image have to be in 2D or 3D.")
     image_float = image.astype(np.float32)
     image_float = (image_float - np.min(image_float)) / (np.max(image_float) - np.min(image_float) + 1e-6)
-    rescaled_image = adjust_sigmoid(image_float)
-    filtered_image = gaussian_high_pass(rescaled_image, sigma = 10)
+    rescaled_image = ndi.gaussian_filter(image_float,sigma=2.0)
+    filtered_image = gaussian_high_pass(rescaled_image, sigma = 2.0)
     threshold_abs = threshold_rel * np.max(filtered_image)
     if threshold_auto : 
         if threshold_choice == "isodata":
@@ -176,8 +176,8 @@ def detect_psf_centroid(image, threshold_rel=0.1, threshold_auto=False, threshol
         raise ValueError("Image have to be in 2D or 3D.")
     image_float = image.astype(np.float32)
     image_float = (image_float - np.min(image_float)) / (np.max(image_float) - np.min(image_float) + 1e-6)
-    rescaled_image = adjust_sigmoid(image_float)
-    filtered_image = gaussian_high_pass(rescaled_image, sigma = 10)
+    rescaled_image = ndi.gaussian_filter(image_float,sigma=2.0)
+    filtered_image = gaussian_high_pass(rescaled_image, sigma = 2.0)
     threshold_abs = threshold_rel * np.max(filtered_image)
     if threshold_auto :
         if threshold_choice == "isodata":
@@ -224,6 +224,7 @@ def extract_Region_Of_Interest(image,centroids, crop_factor=5, bead_size=10, rej
         List of all shapes representing ROIs
     """
     rois = []
+    centroids_retained = []
     image_shape = get_shape(image)
     roi_size = um_to_px((crop_factor * bead_size) / 2, physical_pixel[2])
     for i,centroid in enumerate(centroids) :
@@ -245,5 +246,6 @@ def extract_Region_Of_Interest(image,centroids, crop_factor=5, bead_size=10, rej
             if not overlapped :
                 if is_roi_in_image(tmp, image_shape) and is_roi_not_in_rejection(centroid,image_shape,math.ceil(um_to_px(rejection_zone,physical_pixel[0]))):
                     rois.append(tmp)
-    return rois
+                    centroids_retained.append(i)
+    return rois,centroids_retained
 

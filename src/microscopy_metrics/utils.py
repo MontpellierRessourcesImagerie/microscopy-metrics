@@ -19,9 +19,13 @@ def get_shape(image:np.ndarray):
     shape : [int]
         The measures in pixels for each axis
     """
+    X_shape = 0
+    Y_shape = 0
     Z_shape = len(image)
-    Y_shape = len(image[0])
-    X_shape = len(image[0][0])
+    if image.ndim >= 2 :
+        Y_shape = len(image[0])
+        if image.ndim >= 3 :
+            X_shape = len(image[0][0])
     return [Z_shape,Y_shape,X_shape]
 
 def um_to_px(x,axisPhysicalSize):
