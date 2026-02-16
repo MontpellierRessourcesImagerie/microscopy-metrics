@@ -44,16 +44,18 @@ def get_cov_matrix(image,spacing,centroid):
 def fwhm(sigma):
     return 2 * np.sqrt(2*np.log(2)) * sigma
 
-def plot_fit_1d(psf1d, coords, params, prefix, ylim=[0, 9200]):
+def plot_fit_1d(psf1d, coords, params, prefix, ylim=None):
+    if ylim is None:
+        ylim = [0,psf1d.max()*1.1]
     fine_coords = np.linspace(coords[0], coords[-1], 500)
-    plt.plot(coords, psf1d, '-', label='measurment', color='k')
-    plt.bar(coords, psf1d, width=15, color='k')
+    plt.plot(coords, psf1d, '-', label='measurement', color='k')
+    plt.scatter(coords, psf1d, color='k', alpha=0.5, label='measurement points')
     plt.plot(coords, [params[1],] * len(coords), '--', label=f'{prefix} background' )
     plt.plot(coords, [params[1] + params[0],] * len(coords), '--', label=f'{prefix} amplitude')
     plt.plot([params[2],]* 2, [params[1], params[1] + params[0]], '--', label=f'{prefix} location')
     plt.plot(fine_coords, gauss_1d(*params)(fine_coords), '--', label=f'{prefix} Gaussian')
     plt.ylim(ylim)
-    plt.legend();
+    plt.legend(loc='upper right');
 
 def gauss_1d(amp, bg, mu, sigma):
     return lambda x: amp * np.exp(-(x-mu)**2 / (2*sigma**2)) + bg
@@ -67,7 +69,8 @@ def fit_curve_1D(amp,bg,mu,sigma,coords_x,psf_x,y_lim):
         eval_fun,
         coords_x,
         psf_x,
-        p0=params
+        p0=params,
+        maxfev=2000
     )
     plt.figure(figsize=(15,5))
     plt.subplot(1,2,1)
@@ -77,3 +80,4 @@ def fit_curve_1D(amp,bg,mu,sigma,coords_x,psf_x,y_lim):
     plot_fit_1d(psf_x, coords_x, popt, "Curve fit", y_lim)
     plt.title('Curve fit');
     plt.show()
+    return popt
