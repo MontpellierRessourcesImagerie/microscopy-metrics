@@ -15,6 +15,11 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+    "numpy",
+    "scikit-image",
+    "scikit-learn"
+]
 [project.urls]
 Homepage = "https://github.com/MontpellierRessourcesImagerie/microscopy-metrics"
 Issues = "https://github.com/MontpellierRessourcesImagerie/microscopy-metrics/issues"

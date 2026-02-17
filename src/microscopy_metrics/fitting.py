@@ -8,6 +8,7 @@ from .utils import *
 import math
 from scipy.optimize import curve_fit
 from matplotlib import pyplot as plt
+import os
 
 
 def get_cov_matrix(image,spacing,centroid):
@@ -63,15 +64,16 @@ def gauss_1d(amp, bg, mu, sigma):
 def eval_fun(x,amp,bg,mu,sigma):
     return gauss_1d(amp=amp,bg=bg,mu=mu,sigma=sigma)(x)
 
-def fit_curve_1D(amp,bg,mu,sigma,coords_x,psf_x,y_lim):
+def fit_curve_1D(amp,bg,mu,sigma,coords_x,psf_x,y_lim, output_dir = None):
     params = [amp,bg,mu, sigma]
     popt,pcov = curve_fit(
         eval_fun,
         coords_x,
         psf_x,
         p0=params,
-        maxfev=2000
-    )
+        maxfev=2000,
+        bounds=([0, 0, -np.inf, 0], [np.inf, np.inf, np.inf, np.inf])
+        )
     plt.figure(figsize=(15,5))
     plt.subplot(1,2,1)
     plot_fit_1d(psf_x, coords_x, params, "Est.", y_lim)
@@ -79,5 +81,4 @@ def fit_curve_1D(amp,bg,mu,sigma,coords_x,psf_x,y_lim):
     plt.subplot(1,2,2)
     plot_fit_1d(psf_x, coords_x, popt, "Curve fit", y_lim)
     plt.title('Curve fit');
-    plt.show()
-    return popt
+    return popt,pcov,plt

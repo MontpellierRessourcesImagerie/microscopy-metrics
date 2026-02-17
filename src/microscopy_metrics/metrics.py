@@ -4,9 +4,11 @@ from skimage.feature import peak_local_max, blob_log, blob_dog
 from skimage.filters import threshold_otsu
 from skimage.measure import regionprops, label
 from skimage.exposure import adjust_sigmoid
+from sklearn.metrics import r2_score
 import math
 from .utils import *
 from matplotlib import pyplot as plt
+from .fitting import *
 
 
 def signal_to_background_ratio(images):
@@ -119,3 +121,12 @@ def signal_to_background_ratio_annulus(images, inner_annulus_distance,annulus_th
         mean_SBR += ratio
         total +=1
     return mean_SBR/total,SBR
+
+def uncertainty(pcov):
+    perr = np.sqrt(np.diag(pcov))
+    return perr
+
+def determination(params, coords, psf):
+    psf_fit = eval_fun(coords,*params)
+    r_squared = r2_score(psf,psf_fit)
+    return r_squared
