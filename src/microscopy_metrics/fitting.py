@@ -7,8 +7,11 @@ from skimage.exposure import adjust_sigmoid
 from .utils import *
 import math
 from scipy.optimize import curve_fit
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import os
+from copy import copy
 
 
 def get_cov_matrix(image,spacing,centroid):
@@ -58,13 +61,34 @@ def plot_fit_1d(psf1d, coords, params, prefix, ylim=None):
     plt.ylim(ylim)
     plt.legend(loc='upper right');
 
+def show_2D_fit(psf,fit):
+    plt.figure(figsize=(10,5))
+    plt.subplot(1,2,1)
+    plt.imshow(psf)
+    plt.subplot(1,2,2)
+    plt.imshow(fit)
+    return plt
+
 def gauss_1d(amp, bg, mu, sigma):
     return lambda x: amp * np.exp(-(x-mu)**2 / (2*sigma**2)) + bg
+
+def gauss_2d(amp,bg,mu_x,mu_y,cxx,cxy,cyy):
+    def fun(coords):
+        cov_inv = np.linalg.inv(np.array([[cxx,cxy],[cxy,cyy]]))
+        exponent = -0.5 * (cov_inv[0,0] * (coords[:, 1] - mu_x) ** 2
+                                + 2 * cov_inv[0, 1] * (coords[:, 1] - mu_x) * (coords[:, 0] - mu_y)
+                                + cov_inv[1, 1] * (coords[:, 0] - mu_y) ** 2
+                    )
+        return amp * np.exp(exponent) + bg
+    return fun
 
 def eval_fun(x,amp,bg,mu,sigma):
     return gauss_1d(amp=amp,bg=bg,mu=mu,sigma=sigma)(x)
 
-def fit_curve_1D(amp,bg,mu,sigma,coords_x,psf_x,y_lim, output_dir = None):
+def eval_fun_2D(x, amp, bg, mu_x, mu_y, cxx, cxy, cyy):
+    return gauss_2d(amp=amp, bg=bg, mu_x=mu_x, mu_y=mu_y, cxx=cxx, cxy=cxy, cyy=cyy)(x)
+
+def fit_curve_1D(amp,bg,mu,sigma,coords_x,psf_x,y_lim):
     params = [amp,bg,mu, sigma]
     popt,pcov = curve_fit(
         eval_fun,
@@ -72,7 +96,7 @@ def fit_curve_1D(amp,bg,mu,sigma,coords_x,psf_x,y_lim, output_dir = None):
         psf_x,
         p0=params,
         maxfev=2000,
-        bounds=([0, 0, -np.inf, 0], [np.inf, np.inf, np.inf, np.inf])
+        bounds=([0, 0, 0, 0], [2, 1, max(coords_x), len(coords_x)])
         )
     plt.figure(figsize=(15,5))
     plt.subplot(1,2,1)
@@ -82,3 +106,43 @@ def fit_curve_1D(amp,bg,mu,sigma,coords_x,psf_x,y_lim, output_dir = None):
     plot_fit_1d(psf_x, coords_x, popt, "Curve fit", y_lim)
     plt.title('Curve fit');
     return popt,pcov,plt
+
+def fit_curve_2D(psf_yx,spacing):
+    yy = np.arange(psf_yx.shape[0]) * spacing[1]
+    xx = np.arange(psf_yx.shape[1]) * spacing[2]
+    y, x = np.meshgrid(yy, xx, indexing="ij")
+    coords_yx = np.stack([y.ravel(), x.ravel()], -1)
+
+    yy_fine = np.linspace(0, psf_yx.shape[0], 500) * spacing[1]
+    xx_fine = np.linspace(0, psf_yx.shape[1], 500) * spacing[2]
+    y_fine, x_fine = np.meshgrid(yy_fine, xx_fine, indexing="ij")
+    fine_coords_yx = np.stack([y_fine.ravel(), x_fine.ravel()], -1)
+
+    bg = np.median(psf_yx)
+    amp = psf_yx.max() - bg
+    mu_y, mu_x = np.unravel_index(psf_yx.argmax(), psf_yx.shape)
+    sigma_x = 2.0
+    sigma_y = 2.0
+    cxy = 0.0
+
+    params = [amp, bg, mu_x, mu_y, sigma_x, cxy, sigma_y]
+
+    popt,pcov = curve_fit(
+        eval_fun_2D,
+        coords_yx,
+        psf_yx.ravel(),
+        p0=params,
+        maxfev=2000000,
+        bounds=(
+            [0, 0, 0, 0, 0.1, -0.5, 0.1],
+            [2, 1, psf_yx.shape[1], psf_yx.shape[0], len(coords_yx), len(coords_yx), len(coords_yx)]
+        )
+
+    )
+
+
+    cv_2d_params = copy(popt)
+    cv_2d = gauss_2d(*popt)(fine_coords_yx)
+    cv_2d = cv_2d.reshape((500,500))
+    plot = show_2D_fit(psf_yx,cv_2d)
+    return popt,pcov,plot

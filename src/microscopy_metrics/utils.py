@@ -68,11 +68,39 @@ def px_to_um(x,axisPhysicalSize):
 
 
 def is_roi_not_in_rejection(centroid,image_shape, rejection_zone):
+    """ Estimate if the bead is or not in the rejection zone on Z axis.
+
+    Parameters
+    ----------
+    centroid : list
+        Coordinates of the bead's centroid
+    image_shape : list
+        Dimensions of the picture
+    rejection_zone : float
+        Minimal distance between top/bottom and the centroid
+    Returns
+    -------
+    Boolean
+        True if the bead is not in the rejection zone.
+    """
     if ((centroid[0] - rejection_zone) < 0) or ((centroid[0] + rejection_zone) > image_shape[0]) :
         return False
     return True 
 
 def is_roi_in_image(roi, image_shape):
+    """ Estimate if the ROI is contained in the image shape
+
+    Parameters
+    ----------
+    roi : np.array : 
+        Coordinates of corners of the ROI
+    image_shape : list
+        Dimensions of the image
+    Returns
+    -------
+    Boolean :
+        True if the ROI is contained in the image shape
+    """
     stack,height, width = image_shape
     for z,y,x in roi :
         if y < 0 or y>= height or x < 0 or  x>= width : 
@@ -80,6 +108,19 @@ def is_roi_in_image(roi, image_shape):
     return True
 
 def is_roi_overlapped(rois,roi) :
+    """ Estimate if the ROI is overlapped by an other one
+    Parameters
+    ----------
+    rois : list
+        List of all rois of the image
+    roi : np.array : 
+        Coordinates of corners of the ROI
+    
+    Returns
+    -------
+    Boolean :
+        False if the ROI is not overlapped
+    """
     new_y_min = min(roi[:,1])
     new_y_max = max(roi[:,1])
     new_x_min = min(roi[:,2])
@@ -96,6 +137,19 @@ def is_roi_overlapped(rois,roi) :
     return False
 
 def legacy_threshold(image,nb_iteration=100):
+    """ Apply the Metroloj_Qc's 'legacy threshold'
+
+    Parameters
+    ----------
+    image : np.array
+        Image to apply the threshold
+    nb_iteration : int
+        Number of iteration to process
+    Returns
+    -------
+    midpoint : float
+        Value of the threshold
+    """
     img_min = np.min(image)
     img_max = np.max(image)
     midpoint = (img_max - img_min)/2
@@ -112,4 +166,17 @@ def legacy_threshold(image,nb_iteration=100):
     return midpoint
 
 def dist(p1,p2):
+    """ Calculate distance between two points
+
+    Parameters
+    ----------
+    p1 : list
+        First point
+    p2 : list
+        Other point
+    Returns
+    -------
+    float :
+        Euclidian distance between these two points
+    """
     return math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)

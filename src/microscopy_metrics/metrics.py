@@ -123,10 +123,36 @@ def signal_to_background_ratio_annulus(images, inner_annulus_distance,annulus_th
     return mean_SBR/total,SBR
 
 def uncertainty(pcov):
+    """ Measure uncertainty of parameters returned by Gaussian fit.
+
+    Parameters
+    ----------
+    pcov : list
+        The covariance matrix between parameters
+    Returns
+    -------
+    perr : np.array
+        The list of uncertainty factor for each parameter
+    """
     perr = np.sqrt(np.diag(pcov))
     return perr
 
 def determination(params, coords, psf):
+    """ Measure determination coefficient of parameters returned by Gaussian fit.
+
+    Parameters
+    ----------
+    params : list
+        The covariance matrix between parameters
+    coords : np.array
+        The list of coordinates x in the profile
+    psf : np.array
+        The initial profile
+    Returns
+    -------
+    r_square : float
+        The coefficient representing the quality of the fit
+    """
     psf_fit = eval_fun(coords,*params)
     r_squared = r2_score(psf,psf_fit)
     return r_squared
