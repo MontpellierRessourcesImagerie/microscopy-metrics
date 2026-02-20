@@ -26,7 +26,9 @@ def get_shape(image:np.ndarray):
         Y_shape = len(image[0])
         if image.ndim >= 3 :
             X_shape = len(image[0][0])
-    return [Z_shape,Y_shape,X_shape]
+            return [Z_shape,Y_shape,X_shape]
+        return [Z_shape,Y_shape]
+    return [Z_shape]
 
 def um_to_px(x,axisPhysicalSize):
     """ Converts a value in micrometer into pixels depending on physical size of a pixel
@@ -179,4 +181,7 @@ def dist(p1,p2):
     float :
         Euclidian distance between these two points
     """
-    return math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
+    if len(p1) == 3 and len(p2) == 3:
+        return math.sqrt((p2[1] - p1[1])**2 + (p2[2] - p1[2])**2)
+    else :
+        return math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)

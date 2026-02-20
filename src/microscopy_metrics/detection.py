@@ -198,7 +198,7 @@ def detect_psf_centroid(image, threshold_rel=0.1, threshold_auto=False, threshol
         ret.append(centroid.centroid)
 
     retf = np.array(ret)
-    return retf,binary_image
+    return retf
 
 def extract_Region_Of_Interest(image,centroids, crop_factor=5, bead_size=10, rejection_zone=10, physical_pixel=[1,1,1]):
     """ Uses centroids of detected beads to extract region of interest for each and remove the ones overlapped or too near from the edges.

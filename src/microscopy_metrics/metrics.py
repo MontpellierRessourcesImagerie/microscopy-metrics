@@ -54,11 +54,14 @@ def signal_to_background_ratio(images):
                     else :
                         n_signal +=1
                         signal += image[z][y][x]
-        ratio = float((signal/n_signal) / (background/n_background))
+        mean_background = background / n_background if n_background > 0 else 1e-6
+        mean_signal = signal / n_signal if n_signal > 0 else 0
+
+        ratio = float(mean_signal / mean_background)
         SBR.append(ratio)
         mean_SBR += ratio
         total +=1
-    return mean_SBR/total,SBR
+    return mean_SBR/total if total > 0 else 0,SBR
 
 def signal_to_background_ratio_annulus(images, inner_annulus_distance,annulus_thickness,physical_pixel=[1,1,1]):
     """ Measure signal to background ratio of an image.
@@ -116,11 +119,14 @@ def signal_to_background_ratio_annulus(images, inner_annulus_distance,annulus_th
                     else :
                         n_signal +=1
                         signal += image[z][y][x]
-        ratio = float((signal/max(n_signal,1)) / max(1,(background/max(1,n_background))))
+        mean_background = background / n_background if n_background > 0 else 1e-6
+        mean_signal = signal / n_signal if n_signal > 0 else 0
+
+        ratio = float(mean_signal / mean_background)
         SBR.append(ratio)
         mean_SBR += ratio
         total +=1
-    return mean_SBR/total,SBR
+    return mean_SBR/total if total > 0 else 0,SBR
 
 def uncertainty(pcov):
     """ Measure uncertainty of parameters returned by Gaussian fit.

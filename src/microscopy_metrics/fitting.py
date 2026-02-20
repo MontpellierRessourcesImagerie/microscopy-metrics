@@ -35,12 +35,12 @@ def get_cov_matrix(image,spacing,centroid):
         z = grids[0].ravel() - centroid[0] * spacing[0]
         y = grids[1].ravel() - centroid[1] * spacing[1]
         x = grids[2].ravel() - centroid[2] * spacing[2]
-        cxx = cov(x, x, img.ravel())
-        cyy = cov(y, y, img.ravel())
-        czz = cov(z, z, img.ravel())
-        cxy = cov(x, y, img.ravel())
-        cxz = cov(x, z, img.ravel())
-        cyz = cov(y, z, img.ravel())
+        cxx = cov(x, x, image.ravel())
+        cyy = cov(y, y, image.ravel())
+        czz = cov(z, z, image.ravel())
+        cxy = cov(x, y, image.ravel())
+        cxz = cov(x, z, image.ravel())
+        cyz = cov(y, z, image.ravel())
         return np.array([[cxx, cxy, cxz], [cxy, cyy, cyz], [cxz, cyz, czz]])
     else :
         NotImplementedError()
