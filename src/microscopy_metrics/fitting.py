@@ -48,18 +48,23 @@ def get_cov_matrix(image,spacing,centroid):
 def fwhm(sigma):
     return 2 * np.sqrt(2*np.log(2)) * sigma
 
-def plot_fit_1d(psf1d, coords, params, prefix, ylim=None):
+def plot_fit_1d(psf1d, coords, params, prefix, ylim=None, ax=None):
+    if ax is None:
+        ax = plt.gca()
+
     if ylim is None:
-        ylim = [0,psf1d.max()*1.1]
+        ylim = [0, psf1d.max() * 1.1]
+
     fine_coords = np.linspace(coords[0], coords[-1], 500)
-    plt.plot(coords, psf1d, '-', label='measurement', color='k')
-    plt.scatter(coords, psf1d, color='k', alpha=0.5, label='measurement points')
-    plt.plot(coords, [params[1],] * len(coords), '--', label=f'{prefix} background' )
-    plt.plot(coords, [params[1] + params[0],] * len(coords), '--', label=f'{prefix} amplitude')
-    plt.plot([params[2],]* 2, [params[1], params[1] + params[0]], '--', label=f'{prefix} location')
-    plt.plot(fine_coords, gauss_1d(*params)(fine_coords), '--', label=f'{prefix} Gaussian')
-    plt.ylim(ylim)
-    plt.legend(loc='upper right');
+    ax.plot(coords, psf1d, '-', label='measurement', color='k')
+    ax.scatter(coords, psf1d, color='k', alpha=0.5, label='measurement points')
+    ax.plot(coords, [params[1]] * len(coords), '--', label=f'{prefix} background')
+    ax.plot(coords, [params[1] + params[0]] * len(coords), '--', label=f'{prefix} amplitude')
+    ax.plot([params[2]] * 2, [params[1], params[1] + params[0]], '--', label=f'{prefix} location')
+    ax.plot(fine_coords, gauss_1d(*params)(fine_coords), '--', label=f'{prefix} Gaussian')
+    ax.set_ylim(ylim)
+    ax.legend(loc='upper right')
+
 
 def show_2D_fit(psf,fit):
     plt.figure(figsize=(10,5))
@@ -98,14 +103,7 @@ def fit_curve_1D(amp,bg,mu,sigma,coords_x,psf_x,y_lim):
         maxfev=2000,
         bounds=([0, 0, 0, 0], [2, 1, max(coords_x), len(coords_x)])
         )
-    plt.figure(figsize=(15,5))
-    plt.subplot(1,2,1)
-    plot_fit_1d(psf_x, coords_x, params, "Est.", y_lim)
-    plt.title('Estimated from data');
-    plt.subplot(1,2,2)
-    plot_fit_1d(psf_x, coords_x, popt, "Curve fit", y_lim)
-    plt.title('Curve fit');
-    return popt,pcov,plt
+    return popt,pcov
 
 def fit_curve_2D(psf_yx,spacing):
     yy = np.arange(psf_yx.shape[0]) * spacing[1]
