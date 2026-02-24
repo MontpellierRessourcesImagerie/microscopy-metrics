@@ -1,1 +1,1 @@
-A module for proceeding quality control with PSF
+A module for doing quality control with PSFs.
