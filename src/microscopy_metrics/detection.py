@@ -6,6 +6,11 @@ from skimage.measure import regionprops, label
 from skimage.exposure import adjust_sigmoid
 from .utils import *
 import math
+import os
+from PIL import Image
+from skimage.draw import polygon_perimeter
+
+
 
 class Detection(object) :
     def __init__(self, image=None):
@@ -31,68 +36,85 @@ class Detection(object) :
             self.detect_psf_blob_dog, 
             self.detect_psf_centroid
         ]
+        self.cropped = []
+
 
     def set_image(self,image):
         if not isinstance(image,np.ndarray) or image.ndim not in (2,3):
             raise ValueError("Please, select an Image with 2 or 3 dimensions.")
         self.image = image
     
+
     def get_image(self):
         return self.image
+
 
     def set_crop_factor(self,value):
         if not isinstance(value,int) or value > np.max(self.image.shape):
             raise ValueError("Please, choose an integer smaller than image as a crop factor")
         self.crop_factor = value
     
+
     def get_crop_factor(self):
         return self.crop_factor
+
 
     def set_sigma(self,value):
         if not isinstance(value,int):
             raise ValueError("Please, choose an integer as a sigma")
         self.sigma = value
     
+
     def get_sigma(self):
         return self.sigma
+
 
     def set_min_distance(self,value):
         if not isinstance(value,int) :
             raise ValueError("Please, choose an integer as a minimal distance")
         self.min_distance = value
     
+
     def get_min_distance(self):
         return self.min_distance
+
 
     def set_bead_size(self,value):
         if not isinstance(value,float) :
             raise ValueError("Please, choose a float as a size of bead")
         self.bead_size = value
     
+
     def get_bead_size(self):
         return self.bead_size
+
 
     def set_rejection_distance(self,value):
         if not isinstance(value,float) :
             raise ValueError("Please, choose a float as a rejection distance")
         self.rejection_distance = value
     
+
     def get_rejection_distance(self):
         return self.rejection_distance
+
 
     def set_pixel_size(self,value):
         if not isinstance(value,np.array) or value.shape != self.image.shape:
             raise ValueError("Shape format not compatible with current image")
         self.pixel_size = value
     
+
     def get_pixel_size(self):
         return self.pixel_size
+
 
     def set_bead_size(self,value):
         if not isinstance(value,float) :
             raise ValueError("Please, choose a float as a size of bead")
         self.bead_size = value
     
+
     def get_bead_size(self):
         return self.bead_size
 
@@ -111,12 +133,14 @@ class Detection(object) :
             else :
                 self.threshold = threshold_otsu(self.high_passed_im)
 
+
     def set_normalized_image(self):
         if self.image.ndim not in(2,3):
             raise ValueError("Image have to be in 2D or 3D.")
         self.normalized_image = self.image.astype(np.float32)
         self.normalized_image = (self.normalized_image - np.min(self.normalized_image)) / (np.max(self.normalized_image) - np.min(self.normalized_image) + 1e-6)
         self.normalized_image[self.normalized_image < 0] = 0
+
 
     def gaussian_high_pass(self):
         """ Apply a gaussian high pass filter to an image.
@@ -137,6 +161,7 @@ class Detection(object) :
         low_pass = ndi.gaussian_filter(self.normalized_image,self.sigma)
         self.high_passed_im = self.normalized_image - low_pass
         self.set_threshold()
+
 
     def detect_psf_peak_local_max(self):
         """ Detect coords of PSFs in an image.
@@ -161,6 +186,7 @@ class Detection(object) :
         self.gaussian_high_pass()
         self.centroids = peak_local_max(self.high_passed_im,min_distance=self.min_distance,threshold_abs=self.threshold)
 
+
     def detect_psf_blob_log(self):
         """ Detect coords of PSF's centroids using blob log.
 
@@ -175,7 +201,6 @@ class Detection(object) :
         threshold_rel : float
             Relative threshold
         
-
         Returns
         -------
         Coordinates : np.ndarray
@@ -186,6 +211,7 @@ class Detection(object) :
         self.set_threshold()
         blobs = blob_log(self.normalized_image, max_sigma=self.sigma, threshold=self.threshold)
         self.centroids = np.array([[blob[0],blob[1],blob[2]] for blob in blobs])
+
 
     def detect_psf_blob_dog(self):
         """ Detect coords of PSF's centroids using blob dog.
@@ -212,6 +238,7 @@ class Detection(object) :
         self.set_threshold()
         blobs = blob_dog(self.normalized_image, max_sigma=self.sigma, threshold=self.threshold)
         self.centroids = np.array([[blob[0],blob[1],blob[2]] for blob in blobs])
+
 
     def detect_psf_centroid(self):
         """ Detect coords of PSF's centroids.
@@ -240,6 +267,7 @@ class Detection(object) :
             tmp_centroids.append(prop.centroid)
 
         self.centroids = np.array(tmp_centroids)
+
 
     def extract_Region_Of_Interest(self):
         """ Uses centroids of detected beads to extract region of interest for each and remove the ones overlapped or too near from the edges.
@@ -286,41 +314,49 @@ class Detection(object) :
                         self.rois_extracted.append(tmp)
                         self.list_id_centroids_retained.append(i)
 
-    def run(self, selected_tool):
+
+    def run(self, selected_tool, output_dir=None):
+        if output_dir is None :
+            raise ValueError("Problem to find output folder")
         self.centroids = []
         self.rois_extracted = []
         self.list_id_centroids_retained = []
         self.detect_methods_list[selected_tool]()
+        yield {'desc':"Extracting Rois..."}
         self.extract_Region_Of_Interest()
-        #self.on_crop_psf()
+        yield {'desc': "Cropping PSFs..."}
+        self.on_crop_psf(output_dir)
 
-    def get_active_path(self, index):
+
+    def get_active_path(self, index,output_dir):
         """Utility function to return the current path of a given bead"""
-        active_path = os.path.join(self.output_dir,f"bead_{index}")
+        active_path = os.path.join(output_dir,f"bead_{index}")
         if not os.path.exists(active_path):
             os.makedirs(active_path)
         return active_path
 
+
     def add_roi_on_image(self,roi):
-        image = self.working_layer.data
-        if image.ndim == 3 :
-            image = np.max(image,axis=0)
-        image = ((image-image.min()) / (image.max() - image.min()) * 255).astype(np.uint8)
-        image_rgb = np.stack([image,image,image], axis=-1)
+        if self.image.ndim == 3 :
+            image_tmp = np.max(self.image,axis=0)
+        image_tmp = ((image_tmp-image_tmp.min()) / (image_tmp.max() - image_tmp.min()) * 255).astype(np.uint8)
+        image_rgb = np.stack([image_tmp,image_tmp,image_tmp], axis=-1)
         rr, cc = polygon_perimeter(
             [roi[0, 1], roi[1, 1], roi[2, 1], roi[3, 1]],
             [roi[0, 2], roi[1, 2], roi[2, 2], roi[3, 2]],
-            image.shape
+            image_tmp.shape
         )
         image_rgb[rr,cc,0] = 255
         image_rgb[rr,cc,1] = 0
         image_rgb[rr,cc,2] = 0
         return image_rgb
 
+
     def on_crop_psf(self, output_dir):
         for i, roi in enumerate(self.rois_extracted):
             data = self.image[...,roi[0][1]:roi[2][1],roi[0][2]:roi[1][2]]
-            active_path = self.get_active_path(i)
+            self.cropped.append(data)
+            active_path = self.get_active_path(i,output_dir)
             centroid_idx = self.list_id_centroids_retained[i]
             physic = [int(self.centroids[centroid_idx][0]),int(self.centroids[centroid_idx][1] - self.rois_extracted[i][0][1]),int(self.centroids[centroid_idx][2] - self.rois_extracted[i][0][2])]
             image_float = data.astype(np.float32)
