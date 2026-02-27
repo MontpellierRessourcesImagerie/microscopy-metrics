@@ -5,48 +5,11 @@ from skimage.filters import threshold_otsu
 from skimage.measure import regionprops, label
 from skimage.exposure import adjust_sigmoid
 from sklearn.metrics import r2_score
+from scipy.ndimage import median_filter
 import math
 from .utils import *
 from matplotlib import pyplot as plt
 from .fitting import *
-
-
-def uncertainty(pcov):
-    """ Measure uncertainty of parameters returned by Gaussian fit.
-
-    Parameters
-    ----------
-    pcov : list
-        The covariance matrix between parameters
-    Returns
-    -------
-    perr : np.array
-        The list of uncertainty factor for each parameter
-    """
-    perr = np.sqrt(np.diag(pcov))
-    return perr
-
-
-def determination(params, coords, psf):
-    """ Measure determination coefficient of parameters returned by Gaussian fit.
-
-    Parameters
-    ----------
-    params : list
-        The covariance matrix between parameters
-    coords : np.array
-        The list of coordinates x in the profile
-    psf : np.array
-        The initial profile
-    Returns
-    -------
-    r_square : float
-        The coefficient representing the quality of the fit
-    """
-    psf_fit = eval_fun(coords,*params)
-    r_squared = r2_score(psf,psf_fit)
-    return r_squared
-
 
 class Metrics(object):
     def __init__(self,image=None):
@@ -144,20 +107,25 @@ class Metrics(object):
 
         if len(self.images) == 0 : 
             raise ValueError("You must have at least one PSF")
-        for image in self.images : 
+        for i,image in enumerate(self.images) : 
             if image.ndim not in (2,3):
                 print("Incorrect picture format")
                 pass
             image_float = self.set_normalized_image(image)
-            threshold_abs = legacy_threshold(image_float)
+            image_float = median_filter(image_float,size=5)
+            threshold_abs = legacy_threshold(image_float,1000)
             binary_image = image_float > threshold_abs
             labeled_image = label(binary_image)
             regions = regionprops(labeled_image)
             if not regions :
                 pass
             largest_region = max(regions,key=lambda r:r.area)
+            min_z, min_y, min_x, max_z, max_y, max_x = largest_region.bbox
             center = largest_region.centroid
-            diameter_bead = np.sqrt(4 * largest_region.area / np.pi)
+            diameter_z = max_z - min_z
+            diameter_y = max_y - min_y
+            diameter_x = max_x - min_x
+            diameter_bead = max(diameter_z, diameter_y, diameter_x)  # Prend la dimension maximale
             inner_distance = um_to_px(self.ring_inner_distance,self.pixel_size[2]) + diameter_bead/2
             outer_distance = um_to_px(self.ring_thickness,self.pixel_size[2]) + inner_distance
             signal = 0.0
@@ -167,14 +135,15 @@ class Metrics(object):
             for z in range(binary_image.shape[0]):
                 for y in range(binary_image.shape[1]):
                     for x in range(binary_image.shape[2]):
-                        distance = dist(center,[y,x])
-                        if binary_image[z][y][x] == 0 :
-                            if distance>=inner_distance and distance<=outer_distance:
-                                n_background +=1
-                                background += image[z][y][x]
-                        else :
-                            n_signal +=1
-                            signal += image[z][y][x]
+                        distance = np.sqrt((z - center[0])**2 + (y - center[1])**2 + (x - center[2])**2)
+                        if binary_image[z, y, x] == 1:
+                            n_signal += 1
+                            signal += image[z, y, x]
+                        else:
+                            if inner_distance <= distance <= outer_distance:
+                                n_background += 1
+                                background += image[z, y, x]
+
             if n_background == 0 :
                 raise ValueError("There are no background pixel detected")
             mean_background = background / n_background

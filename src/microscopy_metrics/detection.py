@@ -315,17 +315,19 @@ class Detection(object) :
                         self.list_id_centroids_retained.append(i)
 
 
-    def run(self, selected_tool, output_dir=None):
-        if output_dir is None :
+    def run(self, selected_tool, output_dir=None, crop_psf=True):
+        if output_dir is None and crop_psf == True :
             raise ValueError("Problem to find output folder")
         self.centroids = []
         self.rois_extracted = []
         self.list_id_centroids_retained = []
+        self.cropped = []
         self.detect_methods_list[selected_tool]()
         yield {'desc':"Extracting Rois..."}
         self.extract_Region_Of_Interest()
-        yield {'desc': "Cropping PSFs..."}
-        self.on_crop_psf(output_dir)
+        if crop_psf:
+            yield {'desc': "Cropping PSFs..."}
+            self.on_crop_psf(output_dir)
 
 
     def get_active_path(self, index,output_dir):

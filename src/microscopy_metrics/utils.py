@@ -5,30 +5,8 @@ from skimage.filters import threshold_otsu
 from skimage.measure import regionprops, label
 from skimage.exposure import adjust_sigmoid
 import math
+from concurrent.futures import ThreadPoolExecutor,as_completed
 
-def get_shape(image:np.ndarray):
-    """ Return the shape of an image
-
-    Parameters
-    ----------
-    image : np.ndarray
-        The image to measure.
-
-    Returns
-    -------
-    shape : [int]
-        The measures in pixels for each axis
-    """
-    X_shape = 0
-    Y_shape = 0
-    Z_shape = len(image)
-    if image.ndim >= 2 :
-        Y_shape = len(image[0])
-        if image.ndim >= 3 :
-            X_shape = len(image[0][0])
-            return [Z_shape,Y_shape,X_shape]
-        return [Z_shape,Y_shape]
-    return [Z_shape]
 
 def um_to_px(x,axisPhysicalSize):
     """ Converts a value in micrometer into pixels depending on physical size of a pixel
@@ -67,7 +45,6 @@ def px_to_um(x,axisPhysicalSize):
     """
     x_conv = x * axisPhysicalSize
     return x_conv
-
 
 def is_roi_not_in_rejection(centroid,image_shape, rejection_zone):
     """ Estimate if the bead is or not in the rejection zone on Z axis.
@@ -166,22 +143,3 @@ def legacy_threshold(image,nb_iteration=100):
             break
         midpoint = n_midpoint
     return midpoint
-
-def dist(p1,p2):
-    """ Calculate distance between two points
-
-    Parameters
-    ----------
-    p1 : list
-        First point
-    p2 : list
-        Other point
-    Returns
-    -------
-    float :
-        Euclidian distance between these two points
-    """
-    if len(p1) == 3 and len(p2) == 3:
-        return math.sqrt((p2[1] - p1[1])**2 + (p2[2] - p1[2])**2)
-    else :
-        return math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
