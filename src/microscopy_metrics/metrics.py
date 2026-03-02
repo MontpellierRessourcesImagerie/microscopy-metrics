@@ -18,6 +18,8 @@ class Metrics(object):
         self.ring_inner_distance = 1.0
         self.ring_thickness = 2.0
         self.pixel_size = [1,1,1]
+        self.FWHM = []
+        self.LAR = 0
 
         self.SBR = []
         self.mean_SBR = 0.0
@@ -163,5 +165,16 @@ class Metrics(object):
         self.mean_SBR = 0.0
         yield {'desc':"SBR calculation..."}
         self.signal_to_background_ratio_annulus()
+
+    def lateral_asymmetry_ratio(self):
+        if self.FWHM == []:
+            return
+        tmp = np.array([self.FWHM[1], self.FWHM[2]])
+        self.LAR = tmp.min()/tmp.max()
+
+    def run_postfitting_metrics(self):
+        self.LAR = 0
+        yield {'desc':"LAR calculation..."}
+        self.lateral_asymmetry_ratio()
     
 

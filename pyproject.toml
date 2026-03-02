@@ -18,7 +18,8 @@ classifiers = [
 dependencies = [
     "numpy",
     "scikit-image",
-    "scikit-learn"
+    "scikit-learn",
+    "reportlab"
 ]
 [project.urls]
 Homepage = "https://github.com/MontpellierRessourcesImagerie/microscopy-metrics"

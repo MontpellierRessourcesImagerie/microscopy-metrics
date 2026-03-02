@@ -14,49 +14,6 @@ import os
 from copy import copy
 from sklearn.metrics import r2_score
 
-def eval_fun_2D(x, amp, bg, mu_x, mu_y, cxx, cxy, cyy):
-    return gauss_2d(amp=amp, bg=bg, mu_x=mu_x, mu_y=mu_y, cxx=cxx, cxy=cxy, cyy=cyy)(x)
-
-def fit_curve_2D(psf_yx,spacing):
-    yy = np.arange(psf_yx.shape[0]) * spacing[1]
-    xx = np.arange(psf_yx.shape[1]) * spacing[2]
-    y, x = np.meshgrid(yy, xx, indexing="ij")
-    coords_yx = np.stack([y.ravel(), x.ravel()], -1)
-
-    yy_fine = np.linspace(0, psf_yx.shape[0], 500) * spacing[1]
-    xx_fine = np.linspace(0, psf_yx.shape[1], 500) * spacing[2]
-    y_fine, x_fine = np.meshgrid(yy_fine, xx_fine, indexing="ij")
-    fine_coords_yx = np.stack([y_fine.ravel(), x_fine.ravel()], -1)
-
-    bg = np.median(psf_yx)
-    amp = psf_yx.max() - bg
-    mu_y, mu_x = np.unravel_index(psf_yx.argmax(), psf_yx.shape)
-    sigma_x = 2.0
-    sigma_y = 2.0
-    cxy = 0.0
-
-    params = [amp, bg, mu_x, mu_y, sigma_x, cxy, sigma_y]
-
-    popt,pcov = curve_fit(
-        eval_fun_2D,
-        coords_yx,
-        psf_yx.ravel(),
-        p0=params,
-        maxfev=2000000,
-        bounds=(
-            [0, 0, 0, 0, 0.1, -0.5, 0.1],
-            [2, 1, psf_yx.shape[1], psf_yx.shape[0], len(coords_yx), len(coords_yx), len(coords_yx)]
-        )
-
-    )
-
-
-    cv_2d_params = copy(popt)
-    cv_2d = gauss_2d(*popt)(fine_coords_yx)
-    cv_2d = cv_2d.reshape((500,500))
-    plot = show_2D_fit(psf_yx,cv_2d)
-    return popt,pcov,plot
-
 class Fitting(object):
     def __init__(self):
         self.images = []
@@ -147,6 +104,28 @@ class Fitting(object):
             )
         return popt,pcov
 
+    def fit_curve_2D(self,amp,bg,mu,sigma,coords,psf,y_lim):
+        params = [amp,bg,*mu,*sigma]
+
+        try:
+            popt, pcov = curve_fit(
+                lambda x, *params: self.eval_fun_2D(x, *params),
+                coords,
+                psf.flatten(),
+                p0=params,
+                maxfev=2000000,
+                bounds=(
+                    [0, 0, 0, 0, 0.1, -0.5, 0.1],
+                    [2, 1, psf.shape[1], psf.shape[0], psf.shape[1], psf.shape[1], psf.shape[0]]
+                )
+            )
+        except Exception as e:
+            print(f"Erreur lors de l'ajustement de la courbe: {e}")
+            return None, None
+
+        return popt, pcov
+
+
     def plot_fit_1d(self,psf1d, coords, params, prefix, ylim=None, ax=None):
         if ax is None:
             ax = plt.gca()
@@ -167,7 +146,7 @@ class Fitting(object):
 
     def process_single_fit(self,index):
         result = [index]
-        for _ in range(3) :
+        for _ in range(4) :
             result.append([])
         image_float = self.set_normalized_image(self.images[index])
         active_path = self.get_active_path(index)
@@ -185,15 +164,62 @@ class Fitting(object):
             with plt.ioff():
                 fig = plt.figure(figsize=(15, 5))
                 ax2 = fig.add_subplot(1, 2, 2)
+                ax2.set_title(f"Fitted curve of the PSF along axis {axe[u]}")
                 self.plot_fit_1d(psf[u], coords[u], params, "Fit", lim, ax=ax2)
+                ax2.set_xlabel("Position in the PSF (pixels)")
+                ax2.set_ylabel("Intensity level")
                 output_path = os.path.join(active_path, f'fit_curve_1D_{axe[u]}.png')
                 fig.savefig(output_path, dpi=300, bbox_inches='tight')
                 plt.close(fig)
 
-            result[1].append(self.fwhm(params[3]))
+            result[1].append(px_to_um(self.fwhm(params[3]),self.spacing[u]))
             result[2].append(self.uncertainty(pcov))
             result[3].append(self.determination(params,coords[u],psf[u]))
+            result[4].append(params)
         return result
+
+    def get_coords(self,psf,axe1,axe2):
+        yy = np.arange(psf.shape[0]) * self.spacing[axe1]
+        xx = np.arange(psf.shape[1]) * self.spacing[axe2]
+        y, x = np.meshgrid(yy,xx,indexing="ij")
+        return np.stack([y.ravel(),x.ravel()],-1)
+
+    def process_single_fit_2D(self,index):
+        result = [index]
+        for _ in range(3) :
+            result.append([])
+        for _ in range(3):
+            result[1].append(0)
+        image_float = self.set_normalized_image(self.images[index])
+        active_path = self.get_active_path(index)
+        physic = [int(self.centroids[index][0]), int(self.centroids[index][1] - self.rois[index][0][1]), int(self.centroids[index][2] - self.rois[index][0][2])]
+        psf = [image_float[:,:,physic[2]],image_float[physic[0],:,:],image_float[:,physic[1],:]]
+        axe = ["ZY","YX","XZ"]
+        coords = [self.get_coords(psf[0],0,1),self.get_coords(psf[1],1,2),self.get_coords(psf[2],2,0)]
+        params_1D = self.process_single_fit(index)[4]
+        for u in range(3):
+            lim = [0,psf[u].max() * 1.1]
+            bg = (params_1D[0][1] + params_1D[1][1] + params_1D[2][1])/3
+            amp = (params_1D[0][0] + params_1D[1][0] + params_1D[2][0])/3
+            if u+1 < 3 :
+                sigma = [params_1D[u][3],0,params_1D[u+1][3]]
+                u2 = u+1
+            else :
+                sigma = [params_1D[u][3],0,params_1D[0][3]]
+                u2 = 0
+            if u+1 < 3 :
+                mu = [params_1D[u][2],params_1D[u+1][2]]
+            else :
+                mu = [params_1D[u][2],params_1D[0][2]]
+            params,pcov = self.fit_curve_2D(amp,bg,mu,sigma,coords[u],psf[u],lim)
+            result[1][u] += (px_to_um(self.fwhm(params[4]),self.spacing[u]))
+            result[1][u2] += (px_to_um(self.fwhm(params[6]),self.spacing[u2]))
+            result[2].append(self.uncertainty(pcov))
+            result[3].append(self.determination_2D(params,coords[u],psf[u].flatten()))
+        for i in range(len(result[1])):
+            result[1][i] /=2
+        return result
+    
 
     def compute_fitting_1D(self):
         self.results = []
@@ -238,6 +264,26 @@ class Fitting(object):
             The coefficient representing the quality of the fit
         """
         psf_fit = self.eval_fun(coords,*params)
+        r_squared = r2_score(psf,psf_fit)
+        return r_squared
+
+    def determination_2D(self,params, coords, psf):
+        """ Measure determination coefficient of parameters returned by Gaussian fit.
+
+        Parameters
+        ----------
+        params : list
+            The covariance matrix between parameters
+        coords : np.array
+            The list of coordinates x in the profile
+        psf : np.array
+            The initial profile
+        Returns
+        -------
+        r_square : float
+            The coefficient representing the quality of the fit
+        """
+        psf_fit = self.eval_fun_2D(coords,*params)
         r_squared = r2_score(psf,psf_fit)
         return r_squared
                 

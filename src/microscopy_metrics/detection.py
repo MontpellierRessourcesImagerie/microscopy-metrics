@@ -349,8 +349,8 @@ class Detection(object) :
             image_tmp.shape
         )
         image_rgb[rr,cc,0] = 255
-        image_rgb[rr,cc,1] = 0
-        image_rgb[rr,cc,2] = 0
+        image_rgb[rr,cc,1] = 255
+        image_rgb[rr,cc,2] = 255
         return image_rgb
 
 
@@ -364,7 +364,7 @@ class Detection(object) :
             image_float = data.astype(np.float32)
             image_float = (image_float - np.min(image_float)) / (np.max(image_float) - np.min(image_float) + 1e-6)
             image_float[image_float < 0] = 0
-            image_uint16 = (image_float * 65535).astype(np.uint16)
+            image_uint16 = (image_float * 255).astype(np.uint8)
             XY_data = Image.fromarray(image_uint16[physic[0],:,:])
             YZ_data = Image.fromarray(image_uint16[:,:,physic[2]])
             XZ_data = Image.fromarray(image_uint16[:,physic[1],:])
