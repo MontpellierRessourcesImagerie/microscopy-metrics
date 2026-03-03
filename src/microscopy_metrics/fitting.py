@@ -92,7 +92,7 @@ class Fitting(object):
             os.makedirs(active_path)
         return active_path
 
-    def fit_curve_1D(self,amp,bg,mu,sigma,coords_x,psf_x,y_lim):
+    def fit_curve_1D(self,amp,bg,mu,sigma,coords_x,psf_x):
         params = [amp,bg,mu, sigma]
         popt,pcov = curve_fit(
             self.eval_fun,
@@ -104,26 +104,32 @@ class Fitting(object):
             )
         return popt,pcov
 
-    def fit_curve_2D(self,amp,bg,mu,sigma,coords,psf,y_lim):
-        params = [amp,bg,*mu,*sigma]
+    def fit_curve_2D(self, amp, bg, mu, sigma, coords, psf):
+        params = [amp, bg, *mu, *sigma]
+        print("Initial parameters:", params)
+        print("psf shape:", psf.shape)
+        print("psf min:", psf.min(), "psf max:", psf.max())
+        print("coords shape:", coords.shape, coords)
 
         try:
             popt, pcov = curve_fit(
-                lambda x, *params: self.eval_fun_2D(x, *params),
+                self.eval_fun_2D,
                 coords,
-                psf.flatten(),
+                psf.ravel(),
                 p0=params,
                 maxfev=2000000,
                 bounds=(
                     [0, 0, 0, 0, 0.1, -0.5, 0.1],
-                    [2, 1, psf.shape[1], psf.shape[0], psf.shape[1], psf.shape[1], psf.shape[0]]
+                    [2, 1, psf.shape[1], psf.shape[0], psf.shape[1], 0.5, psf.shape[0]]
                 )
             )
+            print("Optimized parameters:", popt)
         except Exception as e:
             print(f"Erreur lors de l'ajustement de la courbe: {e}")
             return None, None
 
         return popt, pcov
+
 
 
     def plot_fit_1d(self,psf1d, coords, params, prefix, ylim=None, ax=None):
@@ -160,7 +166,7 @@ class Fitting(object):
             amp = psf[u].max() - bg
             sigma = np.sqrt(self.get_cov_matrix(np.clip(psf[u] - bg, 0, psf[u].max()), [self.spacing[u]], (self.centroids[index] - self.rois[index][0])))
             mu = np.argmax(psf[u])
-            params,pcov = self.fit_curve_1D(amp,bg,mu,sigma,coords[u],psf[u],lim)
+            params,pcov = self.fit_curve_1D(amp,bg,mu,sigma,coords[u],psf[u])
             with plt.ioff():
                 fig = plt.figure(figsize=(15, 5))
                 ax2 = fig.add_subplot(1, 2, 2)
@@ -191,11 +197,18 @@ class Fitting(object):
         for _ in range(3):
             result[1].append(0)
         image_float = self.set_normalized_image(self.images[index])
-        active_path = self.get_active_path(index)
         physic = [int(self.centroids[index][0]), int(self.centroids[index][1] - self.rois[index][0][1]), int(self.centroids[index][2] - self.rois[index][0][2])]
-        psf = [image_float[:,:,physic[2]],image_float[physic[0],:,:],image_float[:,physic[1],:]]
-        axe = ["ZY","YX","XZ"]
-        coords = [self.get_coords(psf[0],0,1),self.get_coords(psf[1],1,2),self.get_coords(psf[2],2,0)]
+        psf = [
+            image_float[:,:,physic[2]],
+            image_float[physic[0],:,:],
+            image_float[:,physic[1],:]
+        ]
+        axe = ["ZY","YX","ZX"]
+        coords = [
+            self.get_coords(psf[0],0,1),
+            self.get_coords(psf[1],1,2),
+            self.get_coords(psf[2],2,0)
+        ]
         params_1D = self.process_single_fit(index)[4]
         for u in range(3):
             lim = [0,psf[u].max() * 1.1]
@@ -211,13 +224,14 @@ class Fitting(object):
                 mu = [params_1D[u][2],params_1D[u+1][2]]
             else :
                 mu = [params_1D[u][2],params_1D[0][2]]
-            params,pcov = self.fit_curve_2D(amp,bg,mu,sigma,coords[u],psf[u],lim)
+            params,pcov = self.fit_curve_2D(amp,bg,mu,sigma,coords[u],psf[u])
             result[1][u] += (px_to_um(self.fwhm(params[4]),self.spacing[u]))
             result[1][u2] += (px_to_um(self.fwhm(params[6]),self.spacing[u2]))
             result[2].append(self.uncertainty(pcov))
-            result[3].append(self.determination_2D(params,coords[u],psf[u].flatten()))
+            result[3].append(self.determination_2D(params,coords[u],psf[u].ravel()))
         for i in range(len(result[1])):
             result[1][i] /=2
+        print(result)
         return result
     
 

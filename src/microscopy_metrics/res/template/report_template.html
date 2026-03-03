@@ -28,15 +28,15 @@
             <img src="{{ path }}/YZ_view.png" alt="X_view.png" style="height:500px;display: block; margin-left: auto; margin-right: auto;">
             <h4>Full width at half maximum (µm): </h4>
             <ul>
-                <li> z: {{ "%.4f"|format(results["FWHM"][0]) }}px</li>
-                <li> y: {{ "%.4f"|format(results["FWHM"][1]) }}px</li>
-                <li> x: {{ "%.4f"|format(results["FWHM"][2]) }}px</li>
+                <li> z: {{ "%.4f"|format(results["FWHM"][0]) }}</li>
+                <li> y: {{ "%.4f"|format(results["FWHM"][1]) }}</li>
+                <li> x: {{ "%.4f"|format(results["FWHM"][2]) }}</li>
             </ul> <br>
             <h4>Uncertainty : </h4>
             <ul>
-                <li> Sigma z: {{ "%.4f"|format(results["uncertainty"][0][3]) }}</li>
-                <li> Sigma y: {{ "%.4f"|format(results["uncertainty"][1][3]) }}</li>
-                <li> Sigma x: {{ "%.4f"|format(results["uncertainty"][2][3]) }}</li>
+                <li> z: {{ "%.4f"|format(results["uncertainty"][0][3]) }}</li>
+                <li> y: {{ "%.4f"|format(results["uncertainty"][1][3]) }}</li>
+                <li> x: {{ "%.4f"|format(results["uncertainty"][2][3]) }}</li>
             </ul><br>
             <h4>Determination coefficient : </h4>
             <ul>
@@ -46,8 +46,9 @@
             </ul><br>
             <h2>Metrics</h2>
              <p>
-            Signal to background ratio (SBR): {{ "%.4f"|format(results["SBR"]) }}
-            Lateral asymmetry ratio (LAR): {{ "%.4f"|format(results["LAR"]) }}
+            Signal to background ratio (SBR): {{ "%.4f"|format(results["SBR"]) }} <br>
+            Lateral asymmetry ratio (LAR): {{ "%.4f"|format(results["LAR"]) }} <br>
+            Sphericity: {{ "%.4f"|format(results["sphericity"]) }}
             </p>
         </div>
     </body>

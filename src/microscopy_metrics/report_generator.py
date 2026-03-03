@@ -63,9 +63,10 @@ class Report_Generator(object):
         textLines = [
             f"centroid: {self.filtered_beads[self.analysis_data[index]["id"]]}",
             f"Signal to Background ratio: {self.analysis_data[index]["SBR"]:.4f}",
-            f"Lateral asymmetry ratio: {self.analysis_data[index]["LAR"]:.4f}"
+            f"Lateral asymmetry ratio: {self.analysis_data[index]["LAR"]:.4f}",
+            f"Sphericity: {self.analysis_data[index]["sphericity"]:.4f}"
         ]
-        text = self.pdf.beginText(40,720)
+        text = self.pdf.beginText(40,750)
         text.setFont(normalStyle.fontName, normalStyle.fontSize)
         for line in textLines :
             text.textLine(line)
@@ -180,7 +181,8 @@ class Report_Generator(object):
                 data_metrics = [
                     ["Metric","Value"],
                     ["Signal to background ratio",f"{self.analysis_data[i]["SBR"]}"],
-                    ["Lateral asymmetry ratio",f"{self.analysis_data[i]["LAR"]}"]
+                    ["Lateral asymmetry ratio",f"{self.analysis_data[i]["LAR"]}"],
+                    ["Sphericity",f"{self.analysis_data[i]["sphericity"]}"]
                 ]
                 writer.writerow(["Bead's datas"])
                 writer.writerows(data_bead)

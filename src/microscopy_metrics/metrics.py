@@ -20,6 +20,7 @@ class Metrics(object):
         self.pixel_size = [1,1,1]
         self.FWHM = []
         self.LAR = 0
+        self.spherict = 0
 
         self.SBR = []
         self.mean_SBR = 0.0
@@ -33,60 +34,51 @@ class Metrics(object):
             image_float[image_float < 0] = 0
             return image_float
 
+    def process_single_SBR_ring(self,index,image):
+        if image.ndim not in (2,3):
+            print("Incorrect picture format")
+            return -1
+        image_float = self.set_normalized_image(image)
+        image_float = median_filter(image_float,size=5)
+        threshold_abs = legacy_threshold(image_float,1000)
+        binary_image = image_float > threshold_abs
+        labeled_image = label(binary_image)
+        regions = regionprops(labeled_image)
+        if not regions :
+            return -1
+        largest_region = max(regions,key=lambda r:r.area)
+        min_z, min_y, min_x, max_z, max_y, max_x = largest_region.bbox
+        center = largest_region.centroid
+        diameter_z = max_z - min_z
+        diameter_y = max_y - min_y
+        diameter_x = max_x - min_x
+        diameter_bead = max(diameter_z, diameter_y, diameter_x)  # Prend la dimension maximale
+        inner_distance = um_to_px(self.ring_inner_distance,self.pixel_size[2]) + diameter_bead/2
+        outer_distance = um_to_px(self.ring_thickness,self.pixel_size[2]) + inner_distance
+        signal = 0.0
+        n_signal = 0
+        background = 0.0
+        n_background = 0
+        for z in range(binary_image.shape[0]):
+            for y in range(binary_image.shape[1]):
+                for x in range(binary_image.shape[2]):
+                    distance = np.sqrt((z - center[0])**2 + (y - center[1])**2 + (x - center[2])**2)
+                    if binary_image[z, y, x] == 1:
+                        n_signal += 1
+                        signal += image[z, y, x]
+                    else:
+                        if inner_distance <= distance <= outer_distance:
+                            n_background += 1
+                            background += image[z, y, x]
 
-    def signal_to_background_ratio(self):
-        """ Parameters
-        ----------
-        image : list(np.ndarray)
-            The image to be measured.
-        inner_annulus_distance : int
-            The distance between bead edge and inner annulus edge (in pixels)
-        annulus_thickness : int
-            The thickness of the annulus.
-        Returns
-        -------
-        signal to background ratio : float
-        """
-        mean_SBR = 0.0
-        SBR = []
-        total = 0
-
-        if len(self.images) == 0 : 
-            raise ValueError("You must have at least one PSF")
-        for image in self.images : 
-            if image.ndim not in (2,3):
-                print("Incorrect picture format")
-                pass
-            image_float = self.set_normalized_image(image)
-            threshold_abs = legacy_threshold(image_float)
-            binary_image = image_float > threshold_abs
-            signal = 0.0
-            n_signal = 0
-            background = 0.0
-            n_background = 0
-            for z in range(binary_image.shape[0]):
-                for y in range(binary_image.shape[1]):
-                    for x in range(binary_image.shape[2]):
-                        if binary_image[z,y,x] == 0 :
-                            n_background +=1
-                            background += image[z,y,x]
-                        else :
-                            n_signal +=1
-                            signal += image[z,y,x]
-            if n_background == 0 :
-                raise ValueError("There are no background pixel detected")
-            mean_background = background / n_background
-            if n_signal == 0 :
-                raise ValueError("There are no signal pixel detected")
-            mean_signal = signal / n_signal
-
-            ratio = float(mean_signal / mean_background)
-            SBR.append(ratio)
-            mean_SBR += ratio
-            total +=1
-        self.mean_SBR = mean_SBR / total
-        self.SBR = SBR
-
+        if n_background == 0 :
+            raise ValueError("There are no background pixel detected")
+        mean_background = background / n_background
+        if n_signal == 0 :
+            raise ValueError("There are no signal pixel detected")
+        mean_signal = signal / n_signal
+        ratio = float(mean_signal / mean_background)
+        return ratio
 
     def signal_to_background_ratio_annulus(self):
         """ Parameters
@@ -105,57 +97,23 @@ class Metrics(object):
         """
         mean_SBR = 0.0
         SBR = []
-        total = 0
 
         if len(self.images) == 0 : 
             raise ValueError("You must have at least one PSF")
-        for i,image in enumerate(self.images) : 
-            if image.ndim not in (2,3):
-                print("Incorrect picture format")
-                pass
-            image_float = self.set_normalized_image(image)
-            image_float = median_filter(image_float,size=5)
-            threshold_abs = legacy_threshold(image_float,1000)
-            binary_image = image_float > threshold_abs
-            labeled_image = label(binary_image)
-            regions = regionprops(labeled_image)
-            if not regions :
-                pass
-            largest_region = max(regions,key=lambda r:r.area)
-            min_z, min_y, min_x, max_z, max_y, max_x = largest_region.bbox
-            center = largest_region.centroid
-            diameter_z = max_z - min_z
-            diameter_y = max_y - min_y
-            diameter_x = max_x - min_x
-            diameter_bead = max(diameter_z, diameter_y, diameter_x)  # Prend la dimension maximale
-            inner_distance = um_to_px(self.ring_inner_distance,self.pixel_size[2]) + diameter_bead/2
-            outer_distance = um_to_px(self.ring_thickness,self.pixel_size[2]) + inner_distance
-            signal = 0.0
-            n_signal = 0
-            background = 0.0
-            n_background = 0
-            for z in range(binary_image.shape[0]):
-                for y in range(binary_image.shape[1]):
-                    for x in range(binary_image.shape[2]):
-                        distance = np.sqrt((z - center[0])**2 + (y - center[1])**2 + (x - center[2])**2)
-                        if binary_image[z, y, x] == 1:
-                            n_signal += 1
-                            signal += image[z, y, x]
-                        else:
-                            if inner_distance <= distance <= outer_distance:
-                                n_background += 1
-                                background += image[z, y, x]
+        total = len(self.images)
+        with ThreadPoolExecutor() as executor : 
+            futures = {
+                executor.submit(lambda i, img: self.process_single_SBR_ring(i, img), i, image): i
+                for i, image in enumerate(self.images)
+            }
 
-            if n_background == 0 :
-                raise ValueError("There are no background pixel detected")
-            mean_background = background / n_background
-            if n_signal == 0 :
-                raise ValueError("There are no signal pixel detected")
-            mean_signal = signal / n_signal
-            ratio = float(mean_signal / mean_background)
-            SBR.append(ratio)
-            mean_SBR += ratio
-            total +=1
+            for future in as_completed(futures):
+                result = future.result()
+                if result == -1 :
+                    total += result
+                else :
+                    SBR.append(result)
+                    mean_SBR += result
         self.mean_SBR = mean_SBR / total
         self.SBR = SBR
 
@@ -172,9 +130,11 @@ class Metrics(object):
         tmp = np.array([self.FWHM[1], self.FWHM[2]])
         self.LAR = tmp.min()/tmp.max()
 
-    def run_postfitting_metrics(self):
-        self.LAR = 0
-        yield {'desc':"LAR calculation..."}
-        self.lateral_asymmetry_ratio()
+    def sphericity(self):
+        if self.FWHM == []:
+            return 
+        FWHM_xy = math.sqrt(self.FWHM[2] * self.FWHM[1])
+        sphericity = FWHM_xy / self.FWHM[0]
+        self.spherict = sphericity
     
 
