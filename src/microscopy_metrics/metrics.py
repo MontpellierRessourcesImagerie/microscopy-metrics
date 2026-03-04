@@ -13,28 +13,107 @@ from .fitting import *
 
 class Metrics(object):
     def __init__(self,image=None):
-        self.image = image
-        self.images = []
-        self.ring_inner_distance = 1.0
-        self.ring_thickness = 2.0
-        self.pixel_size = [1,1,1]
-        self.FWHM = []
+        self._image = image
+        self._images = []
+        self._ring_inner_distance = 1.0
+        self._ring_thickness = 2.0
+        self._pixel_size = [1,1,1]
+        self._FWHM = []
+        
         self.LAR = 0
         self.spherict = 0
-
         self.SBR = []
         self.mean_SBR = 0.0
 
+    @property
+    def image(self):
+        return self._image
+    @image.setter
+    def image(self,image):
+        if not isinstance(image,np.ndarray) or image.ndim not in (2,3):
+            raise ValueError("Please, select an Image with 2 or 3 dimensions.")
+        self._image = image
+
+    @property
+    def images(self):
+        return self._images
+    @images.setter
+    def images(self,images):
+        if len(images) == 0 or images is None :
+            raise ValueError("Please, send at list one image")
+        self._images = images
+
+    @property
+    def ring_inner_distance(self):
+        return self._ring_inner_distance
+    @ring_inner_distance.setter
+    def ring_inner_distance(self,value):
+        if not isinstance(value,float):
+            raise ValueError("Please, enter a float value as ring_inner_distance")
+        self._ring_inner_distance = value
+
+    @property
+    def ring_thickness(self):
+        return self._ring_thickness
+    @ring_thickness.setter
+    def ring_thickness(self,value):
+        if not isinstance(value, float):
+            raise ValueError("Please, enter a float value as ring_inner_distance")
+        self._ring_thickness = value
+
+    @property
+    def pixel_size(self):
+        return self._pixel_size
+    @pixel_size.setter
+    def pixel_size(self,value):
+        if not isinstance(value,np.ndarray):
+            raise ValueError("Shape format not compatible with current image")
+        self._pixel_size = value
+
+    @property
+    def FWHM(self):
+        return self._FWHM
+    @FWHM.setter
+    def FWHM(self,value):
+        if not isinstance(value,list) :
+            raise ValueError("FWHM must be a float")
+        self._FWHM = value
+
+
 
     def set_normalized_image(self,image):
-            if image.ndim not in(2,3):
-                raise ValueError("Image have to be in 2D or 3D.")
-            image_float = image.astype(np.float32)
-            image_float = (image_float - np.min(image_float)) / (np.max(image_float) - np.min(image_float) + 1e-6)
-            image_float[image_float < 0] = 0
-            return image_float
+        """Method to normalize a 2D or 3D image and erase negative values
+
+        Args:
+            image (np.ndarray): Image to be normalized
+        
+        Raises:
+            ValueError: This function only operate on 2D or 3D images
+
+        Returns:
+            np.ndarray: Image normalized
+        """
+        if image.ndim not in(2,3):
+            raise ValueError("Image have to be in 2D or 3D.")
+        image_float = image.astype(np.float32)
+        image_float = (image_float - np.min(image_float)) / (np.max(image_float) - np.min(image_float) + 1e-6)
+        image_float[image_float < 0] = 0
+        return image_float
 
     def process_single_SBR_ring(self,index,image):
+        """Function to calculate Signa to background ratio using a ring for a specific bead
+
+        Args:
+            index (int): Bead ID corresping to it's position in the list
+            image (np.ndarray): Image to use for the calculation
+
+        Raises:
+            ValueError: There have to be at least one background pixel in the image
+            ValueError: There have to be at least one signal pixel in the image
+
+        Returns:
+            float: Signal to background ratio of the image
+        """
         if image.ndim not in (2,3):
             print("Incorrect picture format")
             return -1
@@ -52,9 +131,9 @@ class Metrics(object):
         diameter_z = max_z - min_z
         diameter_y = max_y - min_y
         diameter_x = max_x - min_x
-        diameter_bead = max(diameter_z, diameter_y, diameter_x)  # Prend la dimension maximale
-        inner_distance = um_to_px(self.ring_inner_distance,self.pixel_size[2]) + diameter_bead/2
-        outer_distance = um_to_px(self.ring_thickness,self.pixel_size[2]) + inner_distance
+        diameter_bead = max(diameter_z, diameter_y, diameter_x)
+        inner_distance = um_to_px(self._ring_inner_distance,self._pixel_size[2]) + diameter_bead/2
+        outer_distance = um_to_px(self._ring_thickness,self._pixel_size[2]) + inner_distance
         signal = 0.0
         n_signal = 0
         background = 0.0
@@ -81,30 +160,16 @@ class Metrics(object):
         return ratio
 
     def signal_to_background_ratio_annulus(self):
-        """ Parameters
-        ----------
-        image : list(np.ndarray)
-            The image to be measured.
-        inner_annulus_distance : int
-            The distance between bead edge and inner annulus edge (in pixels)
-        annulus_thickness : int
-            The thickness of the annulus.
-        physical_pixel : list(float)
-            Physical size of a pixel for each axis (z,y,x)
-        Returns
-        -------
-        signal to background ratio : float
-        """
         mean_SBR = 0.0
         SBR = []
 
-        if len(self.images) == 0 : 
+        if len(self._images) == 0 : 
             raise ValueError("You must have at least one PSF")
-        total = len(self.images)
+        total = len(self._images)
         with ThreadPoolExecutor() as executor : 
             futures = {
                 executor.submit(lambda i, img: self.process_single_SBR_ring(i, img), i, image): i
-                for i, image in enumerate(self.images)
+                for i, image in enumerate(self._images)
             }
 
             for future in as_completed(futures):
@@ -125,16 +190,16 @@ class Metrics(object):
         self.signal_to_background_ratio_annulus()
 
     def lateral_asymmetry_ratio(self):
-        if self.FWHM == []:
+        if self._FWHM == []:
             return
-        tmp = np.array([self.FWHM[1], self.FWHM[2]])
+        tmp = np.array([self._FWHM[1], self._FWHM[2]])
         self.LAR = tmp.min()/tmp.max()
 
     def sphericity(self):
-        if self.FWHM == []:
+        if self._FWHM == []:
             return 
-        FWHM_xy = math.sqrt(self.FWHM[2] * self.FWHM[1])
-        sphericity = FWHM_xy / self.FWHM[0]
+        FWHM_xy = math.sqrt(self._FWHM[2] * self._FWHM[1])
+        sphericity = FWHM_xy / self._FWHM[0]
         self.spherict = sphericity
     
 

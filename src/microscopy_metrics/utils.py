@@ -9,19 +9,13 @@ from concurrent.futures import ThreadPoolExecutor,as_completed
 
 
 def um_to_px(x,axisPhysicalSize):
-    """ Converts a value in micrometer into pixels depending on physical size of a pixel
-    
-    Parameters
-    ----------
-    x : float
-        The value in um to convert
-    axisPhysicalSize : float
-        Physical size of a pixel (um/px)
-    
-    Returns
-    -------
-    x_conv : float
-        The number of pixels corresponding to x
+    """
+    Args:
+        x (float): The value in um to convert
+        axisPhysicalSize (float):Physical size of a pixel (µm/px)
+
+    Returns:
+        float: The number of pixels corresponding to x
     """
     if axisPhysicalSize == 0.0 :
         return 0.0
@@ -29,56 +23,39 @@ def um_to_px(x,axisPhysicalSize):
     return x_conv
 
 def px_to_um(x,axisPhysicalSize):
-    """ Converts a value in pixels into micrometers depending on physical size of a pixel
-    
-    Parameters
-    ----------
-    x : float
-        The value in pixels to convert
-    axisPhysicalSize : float
-        Physical size of a pixel (um/px)
-    
-    Returns
-    -------
-    x_conv : float
-        The um value corresponding to x
+    """
+    Args:
+        x (float):  The value in pixels to convert
+        axisPhysicalSize (float): Physical size of a pixel (µm/px)
+
+    Returns:
+        float: The µm value corresponding to x
     """
     x_conv = x * axisPhysicalSize
     return x_conv
 
 def is_roi_not_in_rejection(centroid,image_shape, rejection_zone):
-    """ Estimate if the bead is or not in the rejection zone on Z axis.
-
-    Parameters
-    ----------
-    centroid : list
-        Coordinates of the bead's centroid
-    image_shape : list
-        Dimensions of the picture
-    rejection_zone : float
-        Minimal distance between top/bottom and the centroid
-    Returns
-    -------
-    Boolean
-        True if the bead is not in the rejection zone.
+    """
+    Args:
+        centroid (List): Coordinates of the bead's centroid
+        image_shape (List): Dimensions of the picture
+        rejection_zone (float): Minimal distance between top/bottom and the centroid
+    
+    Returns:
+        Boolean: True if the bead is not in the rejection zone.
     """
     if ((centroid[0] - rejection_zone) < 0) or ((centroid[0] + rejection_zone) > image_shape[0]) :
         return False
     return True 
 
 def is_roi_in_image(roi, image_shape):
-    """ Estimate if the ROI is contained in the image shape
+    """
+    Args:
+        roi (np.array): Coordinates of corners of the ROI
+        image_shape (List): Dimensions of the image
 
-    Parameters
-    ----------
-    roi : np.array : 
-        Coordinates of corners of the ROI
-    image_shape : list
-        Dimensions of the image
-    Returns
-    -------
-    Boolean :
-        True if the ROI is contained in the image shape
+    Returns:
+        Boolean: True if the ROI is contained in the image shape
     """
     stack,height, width = image_shape
     for z,y,x in roi :
@@ -87,18 +64,13 @@ def is_roi_in_image(roi, image_shape):
     return True
 
 def is_roi_overlapped(rois,roi) :
-    """ Estimate if the ROI is overlapped by an other one
-    Parameters
-    ----------
-    rois : list
-        List of all rois of the image
-    roi : np.array : 
-        Coordinates of corners of the ROI
+    """
+    Args:
+        rois (List): List of all rois of the image
+        roi (np.array): Coordinates of vertices of the ROI
     
-    Returns
-    -------
-    Boolean :
-        False if the ROI is not overlapped
+    Returns:
+        Boolean: False if the ROI is not overlapped
     """
     new_y_min = min(roi[:,1])
     new_y_max = max(roi[:,1])
@@ -116,18 +88,14 @@ def is_roi_overlapped(rois,roi) :
     return False
 
 def legacy_threshold(image,nb_iteration=100):
-    """ Apply the Metroloj_Qc's 'legacy threshold'
+    """Apply the Metroloj_Qc's 'legacy threshold'
 
-    Parameters
-    ----------
-    image : np.array
-        Image to apply the threshold
-    nb_iteration : int
-        Number of iteration to process
-    Returns
-    -------
-    midpoint : float
-        Value of the threshold
+    Args:
+        image (np.array): Image to apply the threshold
+        nb_iteration (int, optional): Number of iteration to process. Defaults to 100.
+
+    Returns:
+        float: Value of the threshold
     """
     img_min = np.min(image)
     img_max = np.max(image)
