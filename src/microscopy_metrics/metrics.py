@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 from scipy import ndimage as ndi
 from skimage.feature import peak_local_max, blob_log, blob_dog
 from skimage.filters import threshold_otsu
@@ -11,52 +11,155 @@ from .utils import *
 from matplotlib import pyplot as plt
 from .fitting import *
 
+
+class Theoretical_Resolution(object):
+    def __init__(self):
+        self._numerical_aperture = 0.9
+        self._emission_wavelength = 490
+        self._refractive_index = 1.5
+
+    @property
+    def numerical_aperture(self):
+        return self._numerical_aperture
+
+    @numerical_aperture.setter
+    def numerical_aperture(self, value):
+        if not isinstance(value, float):
+            raise ValueError("Numerical aperture must be a float")
+        self._numerical_aperture = value
+
+    @property
+    def emission_wavelength(self):
+        return self._emission_wavelength
+
+    @emission_wavelength.setter
+    def emission_wavelength(self, value):
+        if not isinstance(value, float) and not isinstance(value, int):
+            raise ValueError("Emission wavelength must be a number")
+        self._emission_wavelength = value / 1000
+
+    @property
+    def refractive_index(self):
+        return self._refractive_index
+
+    @refractive_index.setter
+    def refractive_index(self, value):
+        if not isinstance(value, float):
+            raise ValueError("Refractive index must be a float")
+        self._refractive_index = value
+
+    def get_theoretical_resolution(self):
+        return [0, 0, 0]
+
+
+class Widefield_resolution(Theoretical_Resolution):
+    def __init__(self):
+        super(Widefield_resolution, self).__init__()
+
+    def get_theoretical_resolution(self):
+        r_xy = (0.51 * self._emission_wavelength) / self._numerical_aperture
+        r_z = (1.77 * self._refractive_index * self._emission_wavelength) / (
+            self._numerical_aperture**2
+        )
+        return [r_z, r_xy, r_xy]
+
+
+class Confocal_resolution(Theoretical_Resolution):
+    def __init__(self):
+        super(Confocal_resolution, self).__init__()
+
+    def get_theoretical_resolution(self):
+        r_xy = (0.51 * self._emission_wavelength) / self._numerical_aperture
+        r_z = (0.88 * self._emission_wavelength) / (
+            self._refractive_index
+            - math.sqrt(self._refractive_index**2 - self._numerical_aperture**2)
+        )
+        return [r_z, r_xy, r_xy]
+
+
+class Spinning_disk_resolution(Theoretical_Resolution):
+    def __init__(self):
+        super(Spinning_disk_resolution, self).__init__()
+
+    def get_theoretical_resolution(self):
+        r_xy = (0.51 * self._emission_wavelength) / self._numerical_aperture
+        r_z = self._emission_wavelength / (
+            self._refractive_index
+            - math.sqrt(self._refractive_index**2 - self._numerical_aperture**2)
+        )
+        return [r_z, r_xy, r_xy]
+
+
+class Multiphoton_resolution(Theoretical_Resolution):
+    def __init__(self):
+        super(Multiphoton_resolution, self).__init__()
+
+    def get_theoretical_resolution(self):
+        if self._numerical_aperture < 0.7:
+            r_xy = (0.377 * self._emission_wavelength) / self._numerical_aperture
+        else:
+            r_xy = (0.383 * self._emission_wavelength) / (
+                self._numerical_aperture**0.91
+            )
+        r_z = (0.626 * self._emission_wavelength) / (
+            self._refractive_index
+            - math.sqrt(self._refractive_index**2 - self._numerical_aperture**2)
+        )
+        return [r_z, r_xy, r_xy]
+
+
 class Metrics(object):
-    def __init__(self,image=None):
+    def __init__(self, image=None):
         self._image = image
         self._images = []
         self._ring_inner_distance = 1.0
         self._ring_thickness = 2.0
-        self._pixel_size = [1,1,1]
+        self._pixel_size = [1, 1, 1]
         self._FWHM = []
-        
+        self._Theoretical_Resolution_Tool = None
+
         self.LAR = 0
-        self.spherict = 0
+        self._sphericity = 0
         self.SBR = []
         self.mean_SBR = 0.0
+        self.theoretical_resolution = []
 
     @property
     def image(self):
         return self._image
+
     @image.setter
-    def image(self,image):
-        if not isinstance(image,np.ndarray) or image.ndim not in (2,3):
+    def image(self, image):
+        if not isinstance(image, np.ndarray) or image.ndim not in (2, 3):
             raise ValueError("Please, select an Image with 2 or 3 dimensions.")
         self._image = image
 
     @property
     def images(self):
         return self._images
+
     @images.setter
-    def images(self,images):
-        if len(images) == 0 or images is None :
+    def images(self, images):
+        if len(images) == 0 or images is None:
             raise ValueError("Please, send at list one image")
         self._images = images
 
     @property
     def ring_inner_distance(self):
         return self._ring_inner_distance
+
     @ring_inner_distance.setter
-    def ring_inner_distance(self,value):
-        if not isinstance(value,float):
+    def ring_inner_distance(self, value):
+        if not isinstance(value, float):
             raise ValueError("Please, enter a float value as ring_inner_distance")
         self._ring_inner_distance = value
 
     @property
     def ring_thickness(self):
         return self._ring_thickness
+
     @ring_thickness.setter
-    def ring_thickness(self,value):
+    def ring_thickness(self, value):
         if not isinstance(value, float):
             raise ValueError("Please, enter a float value as ring_inner_distance")
         self._ring_thickness = value
@@ -64,43 +167,74 @@ class Metrics(object):
     @property
     def pixel_size(self):
         return self._pixel_size
+
     @pixel_size.setter
-    def pixel_size(self,value):
-        if not isinstance(value,np.ndarray):
+    def pixel_size(self, value):
+        if not isinstance(value, np.ndarray):
             raise ValueError("Shape format not compatible with current image")
         self._pixel_size = value
 
     @property
     def FWHM(self):
         return self._FWHM
+
     @FWHM.setter
-    def FWHM(self,value):
-        if not isinstance(value,list) :
-            raise ValueError("FWHM must be a float")
+    def FWHM(self, value):
+        if not isinstance(value, list):
+            raise ValueError("FWHM must be a list")
         self._FWHM = value
 
+    @property
+    def sphericity(self):
+        return self._sphericity
 
+    @sphericity.setter
+    def sphericity(self, value):
+        if not isinstance(value, float):
+            raise ValueError("Sphericity muse be a float")
+        self._sphericity = value
 
-    def set_normalized_image(self,image):
+    @property
+    def theoretical_resolution_tool(self):
+        return self._Theoretical_Resolution_Tool
+
+    @theoretical_resolution_tool.setter
+    def theoretical_resolution_tool(self, value):
+        if not isinstance(value, str):
+            raise ValueError("You have to enter the microscope type name")
+        if value == "widefield":
+            self._Theoretical_Resolution_Tool = Widefield_resolution()
+        elif value == "confocal":
+            self._Theoretical_Resolution_Tool = Confocal_resolution()
+        elif value == "Spinning_disk":
+            self._Theoretical_Resolution_Tool = Spinning_disk_resolution()
+        elif value == "Multiphoton":
+            self._Theoretical_Resolution_Tool = Multiphoton_resolution()
+        else:
+            raise ValueError("Microscope not implemented yet")
+
+    def set_normalized_image(self, image):
         """Method to normalize a 2D or 3D image and erase negative values
 
         Args:
             image (np.ndarray): Image to be normalized
-        
+
         Raises:
             ValueError: This function only operate on 2D or 3D images
 
         Returns:
             np.ndarray: Image normalized
         """
-        if image.ndim not in(2,3):
+        if image.ndim not in (2, 3):
             raise ValueError("Image have to be in 2D or 3D.")
         image_float = image.astype(np.float32)
-        image_float = (image_float - np.min(image_float)) / (np.max(image_float) - np.min(image_float) + 1e-6)
+        image_float = (image_float - np.min(image_float)) / (
+            np.max(image_float) - np.min(image_float) + 1e-6
+        )
         image_float[image_float < 0] = 0
         return image_float
 
-    def process_single_SBR_ring(self,index,image):
+    def process_single_SBR_ring(self, index, image):
         """Function to calculate Signa to background ratio using a ring for a specific bead
 
         Args:
@@ -114,26 +248,30 @@ class Metrics(object):
         Returns:
             float: Signal to background ratio of the image
         """
-        if image.ndim not in (2,3):
+        if image.ndim not in (2, 3):
             print("Incorrect picture format")
             return -1
         image_float = self.set_normalized_image(image)
-        image_float = median_filter(image_float,size=5)
-        threshold_abs = legacy_threshold(image_float,1000)
+        image_float = median_filter(image_float, size=5)
+        threshold_abs = legacy_threshold(image_float, 1000)
         binary_image = image_float > threshold_abs
         labeled_image = label(binary_image)
         regions = regionprops(labeled_image)
-        if not regions :
+        if not regions:
             return -1
-        largest_region = max(regions,key=lambda r:r.area)
+        largest_region = max(regions, key=lambda r: r.area)
         min_z, min_y, min_x, max_z, max_y, max_x = largest_region.bbox
         center = largest_region.centroid
         diameter_z = max_z - min_z
         diameter_y = max_y - min_y
         diameter_x = max_x - min_x
         diameter_bead = max(diameter_z, diameter_y, diameter_x)
-        inner_distance = um_to_px(self._ring_inner_distance,self._pixel_size[2]) + diameter_bead/2
-        outer_distance = um_to_px(self._ring_thickness,self._pixel_size[2]) + inner_distance
+        inner_distance = (
+            um_to_px(self._ring_inner_distance, self._pixel_size[2]) + diameter_bead / 2
+        )
+        outer_distance = (
+            um_to_px(self._ring_thickness, self._pixel_size[2]) + inner_distance
+        )
         signal = 0.0
         n_signal = 0
         background = 0.0
@@ -141,7 +279,11 @@ class Metrics(object):
         for z in range(binary_image.shape[0]):
             for y in range(binary_image.shape[1]):
                 for x in range(binary_image.shape[2]):
-                    distance = np.sqrt((z - center[0])**2 + (y - center[1])**2 + (x - center[2])**2)
+                    distance = np.sqrt(
+                        (z - center[0]) ** 2
+                        + (y - center[1]) ** 2
+                        + (x - center[2]) ** 2
+                    )
                     if binary_image[z, y, x] == 1:
                         n_signal += 1
                         signal += image[z, y, x]
@@ -150,10 +292,10 @@ class Metrics(object):
                             n_background += 1
                             background += image[z, y, x]
 
-        if n_background == 0 :
+        if n_background == 0:
             raise ValueError("There are no background pixel detected")
         mean_background = background / n_background
-        if n_signal == 0 :
+        if n_signal == 0:
             raise ValueError("There are no signal pixel detected")
         mean_signal = signal / n_signal
         ratio = float(mean_signal / mean_background)
@@ -163,43 +305,46 @@ class Metrics(object):
         mean_SBR = 0.0
         SBR = []
 
-        if len(self._images) == 0 : 
+        if len(self._images) == 0:
             raise ValueError("You must have at least one PSF")
         total = len(self._images)
-        with ThreadPoolExecutor() as executor : 
+        with ThreadPoolExecutor() as executor:
             futures = {
-                executor.submit(lambda i, img: self.process_single_SBR_ring(i, img), i, image): i
+                executor.submit(
+                    lambda i, img: self.process_single_SBR_ring(i, img), i, image
+                ): i
                 for i, image in enumerate(self._images)
             }
 
             for future in as_completed(futures):
                 result = future.result()
-                if result == -1 :
+                if result == -1:
                     total += result
-                else :
+                else:
                     SBR.append(result)
                     mean_SBR += result
         self.mean_SBR = mean_SBR / total
         self.SBR = SBR
 
-
     def run_prefitting_metrics(self):
         self.SBR = []
         self.mean_SBR = 0.0
-        yield {'desc':"SBR calculation..."}
+        yield {"desc": "SBR calculation..."}
         self.signal_to_background_ratio_annulus()
+        yield {"desc": "Estimating theoretical resolution..."}
+        self.theoretical_resolution = (
+            self._Theoretical_Resolution_Tool.get_theoretical_resolution()
+        )
 
     def lateral_asymmetry_ratio(self):
         if self._FWHM == []:
             return
         tmp = np.array([self._FWHM[1], self._FWHM[2]])
-        self.LAR = tmp.min()/tmp.max()
+        self.LAR = tmp.min() / tmp.max()
 
-    def sphericity(self):
+    def sphericity_ratio(self):
         if self._FWHM == []:
-            return 
+            return
         FWHM_xy = math.sqrt(self._FWHM[2] * self._FWHM[1])
         sphericity = FWHM_xy / self._FWHM[0]
-        self.spherict = sphericity
-    
-
+        self._sphericity = sphericity

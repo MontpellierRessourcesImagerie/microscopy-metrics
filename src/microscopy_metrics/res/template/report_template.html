@@ -26,6 +26,12 @@
             <img src="{{ path }}/XZ_view.png" alt="Y_view.png" style="height:500px;display: block; margin-left: auto; margin-right: auto;">
             <h3>X view</h3>
             <img src="{{ path }}/YZ_view.png" alt="X_view.png" style="height:500px;display: block; margin-left: auto; margin-right: auto;">
+            <h4>Theoretical resolution (µm):</h4>
+            <ul>
+                <li> z: {{ "%.4f"|format(theoretical_resolution[0]) }}</li>
+                <li> y: {{ "%.4f"|format(theoretical_resolution[1]) }}</li>
+                <li> x: {{ "%.4f"|format(theoretical_resolution[2]) }}</li>
+            </ul> <br>
             <h4>Full width at half maximum (µm): </h4>
             <ul>
                 <li> z: {{ "%.4f"|format(results["FWHM"][0]) }}</li>
