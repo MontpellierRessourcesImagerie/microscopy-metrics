@@ -1,16 +1,9 @@
 import numpy as np
 from scipy import ndimage as ndi
 from skimage.feature import peak_local_max, blob_log, blob_dog
-from skimage.filters import (
-    threshold_otsu,
-    threshold_isodata,
-    threshold_li,
-    threshold_minimum,
-    threshold_triangle,
-)
 from skimage.measure import regionprops, label
-from skimage.exposure import adjust_sigmoid
 from .utils import *
+from .threshold_tool import *
 import math
 import os
 from PIL import Image
@@ -28,12 +21,11 @@ class Detection(object):
         self._bead_size = 0.6
         self._rejection_distance = 0.5
         self._pixel_size = [0.06, 0.06, 0.5]
-        self._threshold_rel = 0.3
-        self.threshold_choice = "otsu"
+
+        self._threshold_tool = None
 
         self.normalized_image = None
         self.high_passed_im = None
-        self.threshold = None
         self.centroids = []
         self.rois_extracted = []
         self.list_id_centroids_retained = []
@@ -118,28 +110,12 @@ class Detection(object):
         self._pixel_size = value
 
     @property
-    def threshold_rel(self):
-        return self._threshold_rel
+    def threshold_tool(self):
+        return self._threshold_tool
 
-    @threshold_rel.setter
-    def threshold_rel(self, value):
-        if not isinstance(value, float):
-            raise ValueError("Please, choose a float as a threshold")
-        self._threshold_rel = value
-
-    def set_threshold(self):
-        self.threshold = self._threshold_rel * np.max(self.high_passed_im)
-        if self.threshold_choice is not None:
-            if self.threshold_choice == "isodata":
-                self.threshold = threshold_isodata(self.high_passed_im)
-            elif self.threshold_choice == "li":
-                self.threshold = threshold_li(self.high_passed_im)
-            elif self.threshold_choice == "minimum":
-                self.threshold = threshold_minimum(self.high_passed_im)
-            elif self.threshold_choice == "triangle":
-                self.threshold = threshold_triangle(self.high_passed_im)
-            else:
-                self.threshold = threshold_otsu(self.high_passed_im)
+    @threshold_tool.setter
+    def threshold_tool(self, value):
+        self._threshold_tool = value
 
     def set_normalized_image(self):
         """Method to normalize a 2D or 3D image and erase negative values
@@ -158,7 +134,6 @@ class Detection(object):
     def gaussian_high_pass(self):
         low_pass = ndi.gaussian_filter(self.normalized_image, self._sigma)
         self.high_passed_im = self.normalized_image - low_pass
-        self.set_threshold()
 
     def detect_psf_peak_local_max(self):
         self.set_normalized_image()
@@ -167,24 +142,24 @@ class Detection(object):
         self.centroids = peak_local_max(
             self.high_passed_im,
             min_distance=self._min_distance,
-            threshold_abs=self.threshold,
+            threshold_abs=self._threshold_tool.get_threshold(self.high_passed_im),
         )
 
     def detect_psf_blob_log(self):
         self.set_normalized_image()
-        self.high_passed_im = self.normalized_image
-        self.set_threshold()
         blobs = blob_log(
-            self.normalized_image, max_sigma=self._sigma, threshold=self.threshold
+            self.normalized_image,
+            max_sigma=self._sigma,
+            threshold=self._threshold_tool.get_threshold(self.normalized_image),
         )
         self.centroids = np.array([[blob[0], blob[1], blob[2]] for blob in blobs])
 
     def detect_psf_blob_dog(self):
         self.set_normalized_image()
-        self.high_passed_im = self.normalized_image
-        self.set_threshold()
         blobs = blob_dog(
-            self.normalized_image, max_sigma=self._sigma, threshold=self.threshold
+            self.normalized_image,
+            max_sigma=self._sigma,
+            threshold=self._threshold_tool.get_threshold(self.normalized_image),
         )
         self.centroids = np.array([[blob[0], blob[1], blob[2]] for blob in blobs])
 
@@ -192,7 +167,7 @@ class Detection(object):
         self.set_normalized_image()
         self.normalized_image = ndi.gaussian_filter(self.normalized_image, sigma=2.0)
         self.gaussian_high_pass()
-        binary_image = self.high_passed_im > self.threshold
+        binary_image = self.high_passed_im > self._threshold_tool.get_threshold(self.high_passed_im)
         labeled_image = label(binary_image)
         region_props = regionprops(labeled_image)
         tmp_centroids = []
