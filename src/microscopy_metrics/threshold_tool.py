@@ -6,11 +6,11 @@ from skimage.filters import (
     threshold_triangle,
 )
 import numpy as np
-from abc import ABC,abstractmethod
+from abc import ABC, abstractmethod
 
 
 class Threshold(object):
-    name ="middle"
+    name = "middle"
     _threshold_classes = {}
 
     def __init_subclass__(cls):
@@ -20,10 +20,9 @@ class Threshold(object):
         cls._threshold_classes[name] = cls
 
     @classmethod
-    def get_instance(cls,method_name):
+    def get_instance(cls, method_name):
         threshold_class = cls._threshold_classes[method_name]
         return threshold_class()
-
 
     def get_threshold(self, image):
         return max(image) / 2
@@ -36,6 +35,7 @@ class Threshold(object):
 
 class Threshold_Otsu(Threshold):
     name = "otsu"
+
     def __init__(self):
         super(Threshold_Otsu, self).__init__()
 
@@ -44,7 +44,8 @@ class Threshold_Otsu(Threshold):
 
 
 class Threshold_Isodata(Threshold):
-    name="isodata"
+    name = "isodata"
+
     def __init__(self):
         super(Threshold_Isodata, self).__init__()
 
@@ -53,7 +54,8 @@ class Threshold_Isodata(Threshold):
 
 
 class Threshold_Li(Threshold):
-    name="li"
+    name = "li"
+
     def __init__(self):
         super(Threshold_Li, self).__init__()
 
@@ -62,7 +64,8 @@ class Threshold_Li(Threshold):
 
 
 class Threshold_Minimum(Threshold):
-    name="minimum"
+    name = "minimum"
+
     def __init__(self):
         super(Threshold_Minimum, self).__init__()
 
@@ -71,7 +74,8 @@ class Threshold_Minimum(Threshold):
 
 
 class Threshold_Triangle(Threshold):
-    name="triangle"
+    name = "triangle"
+
     def __init__(self):
         super(Threshold_Triangle, self).__init__()
 
@@ -80,7 +84,8 @@ class Threshold_Triangle(Threshold):
 
 
 class Threshold_Legacy(Threshold):
-    name="legacy"
+    name = "legacy"
+
     def __init__(self, nb_iteration=100):
         super(Threshold_Legacy, self).__init__()
         self.nb_iteration = nb_iteration
@@ -108,12 +113,11 @@ class Threshold_Legacy(Threshold):
 
 
 class Threshold_Manual(Threshold):
-    name="manual"
+    name = "manual"
+
     def __init__(self, rel_threshold=0.5):
         super(Threshold_Manual, self).__init__()
         self.rel_threshold = rel_threshold
 
     def get_threshold(self, image):
         return self.rel_threshold * np.max(image)
-
-

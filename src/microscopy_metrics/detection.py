@@ -1,13 +1,11 @@
 import numpy as np
-from scipy import ndimage as ndi
-from skimage.feature import peak_local_max, blob_log, blob_dog
-from skimage.measure import regionprops, label
 from .utils import *
-from .threshold_tool import *
 import math
 import os
 from PIL import Image
 from skimage.draw import polygon_perimeter
+from .detection_tool import Detection_Tool
+from .threshold_tool import Threshold
 
 
 class Detection(object):
@@ -23,18 +21,13 @@ class Detection(object):
         self._pixel_size = [0.06, 0.06, 0.5]
 
         self._threshold_tool = None
+        self._detection_tool = None
 
         self.normalized_image = None
         self.high_passed_im = None
         self.centroids = []
         self.rois_extracted = []
         self.list_id_centroids_retained = []
-        self.detect_methods_list = [
-            self.detect_psf_peak_local_max,
-            self.detect_psf_blob_log,
-            self.detect_psf_blob_dog,
-            self.detect_psf_centroid,
-        ]
         self.cropped = []
 
     @property
@@ -117,65 +110,6 @@ class Detection(object):
     def threshold_tool(self, value):
         self._threshold_tool = value
 
-    def set_normalized_image(self):
-        """Method to normalize a 2D or 3D image and erase negative values
-
-        Raises:
-            ValueError: This function only operate on 2D or 3D images
-        """
-        if self._image.ndim not in (2, 3):
-            raise ValueError("Image have to be in 2D or 3D.")
-        self.normalized_image = self._image.astype(np.float32)
-        self.normalized_image = (
-            self.normalized_image - np.min(self.normalized_image)
-        ) / (np.max(self.normalized_image) - np.min(self.normalized_image) + 1e-6)
-        self.normalized_image[self.normalized_image < 0] = 0
-
-    def gaussian_high_pass(self):
-        low_pass = ndi.gaussian_filter(self.normalized_image, self._sigma)
-        self.high_passed_im = self.normalized_image - low_pass
-
-    def detect_psf_peak_local_max(self):
-        self.set_normalized_image()
-        self.normalized_image = ndi.gaussian_filter(self.normalized_image, sigma=2.0)
-        self.gaussian_high_pass()
-        self.centroids = peak_local_max(
-            self.high_passed_im,
-            min_distance=self._min_distance,
-            threshold_abs=self._threshold_tool.get_threshold(self.high_passed_im),
-        )
-
-    def detect_psf_blob_log(self):
-        self.set_normalized_image()
-        blobs = blob_log(
-            self.normalized_image,
-            max_sigma=self._sigma,
-            threshold=self._threshold_tool.get_threshold(self.normalized_image),
-        )
-        self.centroids = np.array([[blob[0], blob[1], blob[2]] for blob in blobs])
-
-    def detect_psf_blob_dog(self):
-        self.set_normalized_image()
-        blobs = blob_dog(
-            self.normalized_image,
-            max_sigma=self._sigma,
-            threshold=self._threshold_tool.get_threshold(self.normalized_image),
-        )
-        self.centroids = np.array([[blob[0], blob[1], blob[2]] for blob in blobs])
-
-    def detect_psf_centroid(self):
-        self.set_normalized_image()
-        self.normalized_image = ndi.gaussian_filter(self.normalized_image, sigma=2.0)
-        self.gaussian_high_pass()
-        binary_image = self.high_passed_im > self._threshold_tool.get_threshold(self.high_passed_im)
-        labeled_image = label(binary_image)
-        region_props = regionprops(labeled_image)
-        tmp_centroids = []
-        for prop in region_props:
-            tmp_centroids.append(prop.centroid)
-
-        self.centroids = np.array(tmp_centroids)
-
     def extract_Region_Of_Interest(self):
         """Uses found centroids to extract region of interest
         Automatically rejects the ones overlapped or too near from the edges.
@@ -229,7 +163,7 @@ class Detection(object):
                         self.rois_extracted.append(tmp)
                         self.list_id_centroids_retained.append(i)
 
-    def run(self, selected_tool, output_dir=None, crop_psf=True):
+    def run(self, output_dir=None, crop_psf=True):
         """Function to operate complete detection workflow
 
         Args:
@@ -249,7 +183,8 @@ class Detection(object):
         self.rois_extracted = []
         self.list_id_centroids_retained = []
         self.cropped = []
-        self.detect_methods_list[selected_tool]()
+        self._detection_tool.detect()
+        self.centroids = self._detection_tool.centroids
         yield {"desc": "Extracting Rois..."}
         self.extract_Region_Of_Interest()
         if crop_psf:

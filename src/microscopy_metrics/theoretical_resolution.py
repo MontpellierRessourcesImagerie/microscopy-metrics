@@ -1,5 +1,5 @@
 from abc import ABC,abstractmethod
-
+import math
 
 class Theoretical_Resolution(object):
     """Standard class for theoretical microscope resolution calculation"""
@@ -34,7 +34,7 @@ class Theoretical_Resolution(object):
     @numerical_aperture.setter
     def numerical_aperture(self, value):
         if not isinstance(value, float):
-            raise ValueError("Numerical aperture must be a float")
+            raise ValueError(f"Numerical aperture must be a float : {value}")
         self._numerical_aperture = value
 
     @property

@@ -19,6 +19,7 @@ class Report_Generator(object):
         self._filtered_beads = []
         self._mean_SBR = 0.0
         self._theoretical_resolution = []
+        self.image_shape = None
 
         self.pdf = None
 
@@ -286,44 +287,43 @@ class Report_Generator(object):
         self.pdf.setFont("Helvetica-Bold", 18)
         self.pdf.drawCentredString(300, 600, "Acquisition parameters")
         textLines = [
-            f"Pixel size: [{self._parameters_acquisition["PhysicSizeZ"]},{self._parameters_acquisition["PhysicSizeY"]},{self._parameters_acquisition["PhysicSizeX"]}]",
-            f"Image shape: [{self._parameters_acquisition["ShapeZ"]},{self._parameters_acquisition["ShapeY"]},{self._parameters_acquisition["ShapeX"]}]",
-            f"Microscope type: {self._parameters_acquisition["Microscope_type"]}",
-            f"Emission wavelength: {self._parameters_acquisition["Emission_Wavelength"]}nm",
-            f"Refractive index: {self._parameters_acquisition["Refractive_index"]}",
-            f"Numerical aperture: {self._parameters_acquisition["Numerical_aperture"]}",
+            f"Pixel size: [{self._parameters_acquisition["Pixel size Z"]},{self._parameters_acquisition["Pixel size Y"]},{self._parameters_acquisition["Pixel size X"]}]",
+            f"Image shape: [{self.image_shape[0]},{self.image_shape[1]},{self.image_shape[2]}]",
+            f"Microscope type: {self._parameters_acquisition["Microscope type"]}",
+            f"Emission wavelength: {self._parameters_acquisition["Emission wavelength"]}nm",
+            f"Refractive index: {self._parameters_acquisition["Refraction index"]}",
+            f"Numerical aperture: {self._parameters_acquisition["Numerical aperture"]}",
         ]
         self.draw_paragaph_on_pdf(textLines, 40, 500)
         self.pdf.setFont("Helvetica-Bold", 18)
         self.pdf.drawCentredString(300, 400, "Detection parameters")
-        tools = ["peak_local_maxima", "blob_log", "blob_dog", "centroids"]
         textLines = [
-            f"Detection method: {tools[self._parameters_detection['selected_tool']]}"
+            f"Detection method: {self._parameters_detection['Detection tool']}"
         ]
-        if self._parameters_detection["selected_tool"] == 0:
+        if self._parameters_detection['Detection tool'] == "peak local maxima":
             textLines.append(
-                f"Minimal distance: {self._parameters_detection['Min_dist']}"
+                f"Minimal distance: {self._parameters_detection['Min dist']}"
             )
         else:
             textLines.append(f"Sigma: {self._parameters_detection['Sigma']}")
         textLines.extend(
             [
-                f"Bead size: {self._parameters_detection['theorical_bead_size']}",
-                f"Crop factor: {self._parameters_detection['crop_factor']}",
+                f"Bead size: {self._parameters_detection['Theoretical bead size (µm)']}",
+                f"Crop factor: {self._parameters_detection['crop factor']}",
             ]
         )
-        if self._parameters_detection["auto_threshold"]:
+        if self._parameters_detection["Threshold"] != "manual":
             textLines.append(
-                f"Threshold tool: {self._parameters_detection['threshold_choice']}"
+                f"Threshold tool: {self._parameters_detection['Threshold']}"
             )
         else:
             textLines.append(
-                f"Threshold relative: {self._parameters_detection['Rel_threshold']}"
+                f"Threshold relative: {self._parameters_detection['threshold']}"
             )
         textLines.extend(
             [
-                f"Distance ring-bead: {self._parameters_detection['distance_annulus']}",
-                f"Ring thickness: {self._parameters_detection['thickness_annulus']}",
+                f"Distance ring-bead: {self._parameters_detection['Inner annulus distance to bead (µm)']}",
+                f"Ring thickness: {self._parameters_detection['Annulus thickness (µm)']}",
             ]
         )
         self.draw_paragaph_on_pdf(textLines, 40, 300)
