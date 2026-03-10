@@ -4,7 +4,7 @@ import math
 import os
 from PIL import Image
 from skimage.draw import polygon_perimeter
-from .detection_tool import Detection_Tool
+from .detection_tool import DetectionTool
 from .threshold_tool import Threshold
 
 
@@ -13,22 +13,22 @@ class Detection(object):
 
     def __init__(self, image=None):
         self._image = image
-        self._crop_factor = 5
+        self._cropFactor = 5
         self._sigma = 3
-        self._min_distance = 1
-        self._bead_size = 0.6
-        self._rejection_distance = 0.5
-        self._pixel_size = [0.06, 0.06, 0.5]
+        self._minDistance = 1
+        self._beadSize = 0.6
+        self._rejectionDistance = 0.5
+        self._pixelSize = [0.1, 0.06, 0.06]
 
-        self._threshold_tool = None
-        self._detection_tool = None
+        self._thresholdTool = None
+        self._detectionTool = None
 
-        self.normalized_image = None
-        self.high_passed_im = None
-        self.centroids = []
-        self.rois_extracted = []
-        self.list_id_centroids_retained = []
-        self.cropped = []
+        self._normalizedImage = None
+        self._highPassedImage = None
+        self._centroids = []
+        self._roisExtracted = []
+        self._listIdCentroidsRetained = []
+        self._cropped = []
 
     @property
     def image(self):
@@ -41,16 +41,16 @@ class Detection(object):
         self._image = image
 
     @property
-    def crop_factor(self):
-        return self._crop_factor
+    def cropFactor(self):
+        return self._cropFactor
 
-    @crop_factor.setter
-    def crop_factor(self, value):
+    @cropFactor.setter
+    def cropFactor(self, value):
         if not isinstance(value, int) or value > np.max(self._image.shape):
             raise ValueError(
                 "Please, choose an integer smaller than image as a crop factor"
             )
-        self._crop_factor = value
+        self._cropFactor = value
 
     @property
     def sigma(self):
@@ -63,65 +63,65 @@ class Detection(object):
         self._sigma = value
 
     @property
-    def min_distance(self):
-        return self._min_distance
+    def minDistance(self):
+        return self._minDistance
 
-    @min_distance.setter
-    def min_distance(self, value):
+    @minDistance.setter
+    def minDistance(self, value):
         if not isinstance(value, int):
             raise ValueError("Please, choose an integer as a minimal distance")
-        self._min_distance = value
+        self._minDistance = value
 
     @property
-    def bead_size(self):
-        return self._bead_size
+    def beadSize(self):
+        return self._beadSize
 
-    @bead_size.setter
-    def bead_size(self, value):
+    @beadSize.setter
+    def beadSize(self, value):
         if not isinstance(value, float):
             raise ValueError("Please, choose a float as a size of bead")
-        self._bead_size = value
+        self._beadSize = value
 
     @property
-    def rejection_distance(self):
-        return self._rejection_distance
+    def rejectionDistance(self):
+        return self._rejectionDistance
 
-    @rejection_distance.setter
-    def rejection_distance(self, value):
+    @rejectionDistance.setter
+    def rejectionDistance(self, value):
         if not isinstance(value, float):
             raise ValueError("Please, choose a float as a rejection distance")
-        self._rejection_distance = value
+        self._rejectionDistance = value
 
     @property
-    def pixel_size(self):
-        return self._pixel_size
+    def pixelSize(self):
+        return self._pixelSize
 
-    @pixel_size.setter
-    def pixel_size(self, value):
+    @pixelSize.setter
+    def pixelSize(self, value):
         if not isinstance(value, np.ndarray):
             raise ValueError("Shape format not compatible with current image")
-        self._pixel_size = value
+        self._pixelSize = value
 
     @property
-    def threshold_tool(self):
-        return self._threshold_tool
+    def thresholdTool(self):
+        return self._thresholdTool
 
-    @threshold_tool.setter
-    def threshold_tool(self, value):
-        self._threshold_tool = value
+    @thresholdTool.setter
+    def thresholdTool(self, value):
+        self._thresholdTool = value
 
-    def extract_Region_Of_Interest(self):
-        """Uses found centroids to extract region of interest
+    def extractRegionOfInterest(self):
+        """Uses found _centroids to extract region of interest
         Automatically rejects the ones overlapped or too near from the edges.
         """
-        roi_size = um_to_px(
-            (self._crop_factor * self._bead_size) / 2, self._pixel_size[2]
+        roiSize = umToPx(
+            (self._cropFactor * self._beadSize) / 2, self._pixelSize[2]
         )
-        for i, centroid in enumerate(self.centroids):
+        for i, centroid in enumerate(self._centroids):
             over = False
-            for y, c2 in enumerate(self.centroids):
+            for y, c2 in enumerate(self._centroids):
                 if i != y:
-                    if math.dist(centroid, c2) < (math.sqrt(2) * roi_size):
+                    if math.dist(centroid, c2) < (math.sqrt(2) * roiSize):
                         over = True
                         break
             if over == False:
@@ -129,83 +129,82 @@ class Detection(object):
                     [
                         [
                             int(centroid[0]),
-                            math.ceil(centroid[1] - roi_size),
-                            math.ceil(centroid[2] - roi_size),
+                            math.ceil(centroid[1] - roiSize),
+                            math.ceil(centroid[2] - roiSize),
                         ],
                         [
                             int(centroid[0]),
-                            math.ceil(centroid[1] - roi_size),
-                            math.ceil(centroid[2] + roi_size),
+                            math.ceil(centroid[1] - roiSize),
+                            math.ceil(centroid[2] + roiSize),
                         ],
                         [
                             int(centroid[0]),
-                            math.ceil(centroid[1] + roi_size),
-                            math.ceil(centroid[2] + roi_size),
+                            math.ceil(centroid[1] + roiSize),
+                            math.ceil(centroid[2] + roiSize),
                         ],
                         [
                             int(centroid[0]),
-                            math.ceil(centroid[1] + roi_size),
-                            math.ceil(centroid[2] - roi_size),
+                            math.ceil(centroid[1] + roiSize),
+                            math.ceil(centroid[2] - roiSize),
                         ],
                     ]
                 )
-                overlapped = is_roi_overlapped(self.rois_extracted, tmp)
+                overlapped = isRoiOverlapped(self._roisExtracted, tmp)
                 if not overlapped:
-                    if is_roi_in_image(
+                    if isRoiInImage(
                         tmp, self._image.shape
-                    ) and is_roi_not_in_rejection(
+                    ) and isRoiNotInRejection(
                         centroid,
                         self._image.shape,
                         math.ceil(
-                            um_to_px(self._rejection_distance, self._pixel_size[0])
+                            umToPx(self._rejectionDistance, self._pixelSize[0])
                         ),
                     ):
-                        self.rois_extracted.append(tmp)
-                        self.list_id_centroids_retained.append(i)
+                        self._roisExtracted.append(tmp)
+                        self._listIdCentroidsRetained.append(i)
 
-    def run(self, output_dir=None, crop_psf=True):
+    def run(self, outputDir=None, cropPsf=True):
         """Function to operate complete detection workflow
 
         Args:
-            selected_tool (int): Selected detection tool by the user
-            output_dir (Path, optional): Directory of the output folder. Defaults to None.
-            crop_psf (bool, optional): Allow or not the generation of cropped PSF images. Defaults to True.
+            outputDir (Path, optional): Directory of the output folder. Defaults to None.
+            cropPsf (bool, optional): Allow or not the generation of _cropped PSF images. Defaults to True.
 
         Raises:
-            ValueError: To generate images of the cropped PSFs, the output_dir have to exist
+            ValueError: To generate images of the _cropped PSFs, the outputDir have to exist
 
         Yields:
             String: Return the current step of the workflow
         """
-        if output_dir is None and crop_psf == True:
+        if outputDir is None and cropPsf == True:
             raise ValueError("Problem to find output folder")
-        self.centroids = []
-        self.rois_extracted = []
-        self.list_id_centroids_retained = []
-        self.cropped = []
-        self._detection_tool.detect()
-        self.centroids = self._detection_tool.centroids
+        self._centroids = []
+        self._roisExtracted = []
+        self._listIdCentroidsRetained = []
+        self._cropped = []
+        self._detectionTool.detect()
+        self._centroids = self._detectionTool._centroids
         yield {"desc": "Extracting Rois..."}
-        self.extract_Region_Of_Interest()
-        if crop_psf:
+        self.extractRegionOfInterest()
+        if cropPsf:
             yield {"desc": "Cropping PSFs..."}
-            self.crop_psf(output_dir)
+            self.cropPsf(outputDir)
 
-    def get_active_path(self, index, output_dir):
+    def getActivePath(self, index, outputDir):
         """
         Args:
             index (int): Bead ID corresping to it's position in the list
-            output_dir (Path): Directory of the output folder
+            outputDir (Path): Directory of the output folder
 
         Returns:
             Path: Folder's path found (or created) for the selected bead
         """
-        active_path = os.path.join(output_dir, f"bead_{index}")
-        if not os.path.exists(active_path):
-            os.makedirs(active_path)
-        return active_path
+        activePath = os.path.join(outputDir, f"bead_{index}")
+        if not os.path.exists(activePath):
+            os.makedirs(activePath)
+        return activePath
 
-    def add_roi_on_image(self, roi):
+    def addRoiOnImage(self, roi):
         """Function to draw a square representating an ROI in a picture
 
         Args:
@@ -215,48 +214,48 @@ class Detection(object):
             np.ndarray: Modified image with the ROI
         """
         if self._image.ndim == 3:
-            image_tmp = np.max(self._image, axis=0)
-        image_tmp = (
-            (image_tmp - image_tmp.min()) / (image_tmp.max() - image_tmp.min()) * 255
+            imageTmp = np.max(self._image, axis=0)
+        imageTmp = (
+                (imageTmp - imageTmp.min()) / (imageTmp.max() - imageTmp.min()) * 255
         ).astype(np.uint8)
-        image_rgb = np.stack([image_tmp, image_tmp, image_tmp], axis=-1)
+        imageRGB = np.stack([imageTmp, imageTmp, imageTmp], axis=-1)
         rr, cc = polygon_perimeter(
             [roi[0, 1], roi[1, 1], roi[2, 1], roi[3, 1]],
             [roi[0, 2], roi[1, 2], roi[2, 2], roi[3, 2]],
-            image_tmp.shape,
+            imageTmp.shape,
         )
-        image_rgb[rr, cc, 0] = 255
-        image_rgb[rr, cc, 1] = 255
-        image_rgb[rr, cc, 2] = 255
-        return image_rgb
+        imageRGB[rr, cc, 0] = 255
+        imageRGB[rr, cc, 1] = 255
+        imageRGB[rr, cc, 2] = 255
+        return imageRGB
 
-    def crop_psf(self, output_dir):
+    def cropPsf(self, outputDir):
         """Function to crop image for each ROI and save them
 
         Args:
-            output_dir (Path): Directory of the output folder
+            outputDir (Path): Directory of the output folder
         """
-        for i, roi in enumerate(self.rois_extracted):
+        for i, roi in enumerate(self._roisExtracted):
             data = self._image[..., roi[0][1] : roi[2][1], roi[0][2] : roi[1][2]]
-            self.cropped.append(data)
-            active_path = self.get_active_path(i, output_dir)
-            centroid_idx = self.list_id_centroids_retained[i]
+            self._cropped.append(data)
+            activePath = self.getActivePath(i, outputDir)
+            centroidIdx = self._listIdCentroidsRetained[i]
             physic = [
-                int(self.centroids[centroid_idx][0]),
-                int(self.centroids[centroid_idx][1] - self.rois_extracted[i][0][1]),
-                int(self.centroids[centroid_idx][2] - self.rois_extracted[i][0][2]),
+                int(self._centroids[centroidIdx][0]),
+                int(self._centroids[centroidIdx][1] - self._roisExtracted[i][0][1]),
+                int(self._centroids[centroidIdx][2] - self._roisExtracted[i][0][2]),
             ]
-            image_float = data.astype(np.float32)
-            image_float = (image_float - np.min(image_float)) / (
-                np.max(image_float) - np.min(image_float) + 1e-6
+            imageFloat = data.astype(np.float32)
+            imageFloat = (imageFloat - np.min(imageFloat)) / (
+                    np.max(imageFloat) - np.min(imageFloat) + 1e-6
             )
-            image_float[image_float < 0] = 0
-            image_uint16 = (image_float * 255).astype(np.uint8)
-            XY_data = Image.fromarray(image_uint16[physic[0], :, :])
-            YZ_data = Image.fromarray(image_uint16[:, :, physic[2]])
-            XZ_data = Image.fromarray(image_uint16[:, physic[1], :])
-            XY_data.save(os.path.join(active_path, "XY_view.png"))
-            YZ_data.save(os.path.join(active_path, "YZ_view.png"))
-            XZ_data.save(os.path.join(active_path, "XZ_view.png"))
-            image_roi = Image.fromarray(self.add_roi_on_image(roi))
-            image_roi.save(os.path.join(active_path, "Localisation.png"))
+            imageFloat[imageFloat < 0] = 0
+            imageUint16 = (imageFloat * 255).astype(np.uint8)
+            XYData = Image.fromarray(imageUint16[physic[0], :, :])
+            YZData = Image.fromarray(imageUint16[:, :, physic[2]])
+            XZData = Image.fromarray(imageUint16[:, physic[1], :])
+            XYData.save(os.path.join(activePath, "XY_view.png"))
+            YZData.save(os.path.join(activePath, "YZ_view.png"))
+            XZData.save(os.path.join(activePath, "XZ_view.png"))
+            imageRoi = Image.fromarray(self.addRoiOnImage(roi))
+            imageRoi.save(os.path.join(activePath, "Localisation.png"))

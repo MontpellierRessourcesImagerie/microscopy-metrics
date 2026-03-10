@@ -9,101 +9,101 @@ import csv
 import numpy as np
 
 
-class Report_Generator(object):
+class ReportGenerator(object):
     def __init__(self):
-        self._output_dir = ""
-        self._output_path = ""
-        self._analysis_data = {}
-        self._parameters_detection = {}
-        self._parameters_acquisition = {}
-        self._filtered_beads = []
-        self._mean_SBR = 0.0
-        self._theoretical_resolution = []
-        self.image_shape = None
+        self._outputDir = ""
+        self._outputPath = ""
+        self._analysisData = {}
+        self._parametersDetection = {}
+        self._parametersAcquisition = {}
+        self._filteredBeads = []
+        self._meanSBR = 0.0
+        self._theoreticalResolution = []
+        self._imageShape = None
 
         self.pdf = None
 
     @property
-    def output_dir(self):
-        return self._output_dir
+    def outputDir(self):
+        return self._outputDir
 
-    @output_dir.setter
-    def output_dir(self, value):
+    @outputDir.setter
+    def outputDir(self, value):
         if value is None or not os.path.exists(value):
-            raise ValueError("The output_dir is wrong")
-        self._output_dir = value
+            raise ValueError("The outputDir is wrong")
+        self._outputDir = value
 
     @property
-    def output_path(self):
-        return self._output_path
+    def outputPath(self):
+        return self._outputPath
 
-    @output_path.setter
-    def output_path(self, value):
+    @outputPath.setter
+    def outputPath(self, value):
         if value is None:
-            raise ValueError("The output_dir is wrong")
-        self._output_path = value
+            raise ValueError("The outputDir is wrong")
+        self._outputPath = value
 
     @property
-    def analysis_data(self):
-        return self._analysis_data
+    def analysisData(self):
+        return self._analysisData
 
-    @analysis_data.setter
-    def analysis_data(self, data):
+    @analysisData.setter
+    def analysisData(self, data):
         if data is None or data == {}:
-            raise ValueError("analysis_data must be a not empty collection")
-        self._analysis_data = data
+            raise ValueError("analysisData must be a not empty collection")
+        self._analysisData = data
 
     @property
-    def parameters_detection(self):
-        return self._parameters_detection
+    def parametersDetection(self):
+        return self._parametersDetection
 
-    @parameters_detection.setter
-    def parameters_detection(self, data):
+    @parametersDetection.setter
+    def parametersDetection(self, data):
         if data is None or data == {}:
-            raise ValueError("parameters_detection must be a not empty collection")
-        self._parameters_detection = data
+            raise ValueError("parametersDetection must be a not empty collection")
+        self._parametersDetection = data
 
     @property
-    def parameters_acquisition(self):
-        return self._parameters_acquisition
+    def parametersAcquisition(self):
+        return self._parametersAcquisition
 
-    @parameters_acquisition.setter
-    def parameters_acquisition(self, data):
+    @parametersAcquisition.setter
+    def parametersAcquisition(self, data):
         if data is None or data == {}:
-            raise ValueError("parameters_acquisition must be a not empty collection")
-        self._parameters_acquisition = data
+            raise ValueError("parametersAcquisition must be a not empty collection")
+        self._parametersAcquisition = data
 
     @property
-    def filtered_beads(self):
-        return self._filtered_beads
+    def filteredBeads(self):
+        return self._filteredBeads
 
-    @filtered_beads.setter
-    def filtered_beads(self, data):
+    @filteredBeads.setter
+    def filteredBeads(self, data):
         if not isinstance(data, np.ndarray) or len(data) == 0:
-            raise ValueError("filtered_beads must be a not empty list")
-        self._filtered_beads = data
+            raise ValueError("filteredBeads must be a not empty list")
+        self._filteredBeads = data
 
     @property
-    def mean_SBR(self):
-        return self._mean_SBR
+    def meanSBR(self):
+        return self._meanSBR
 
-    @mean_SBR.setter
-    def mean_SBR(self, value):
+    @meanSBR.setter
+    def meanSBR(self, value):
         if not isinstance(value, float):
-            raise ValueError("Please enter a correct value for mean_SBR")
-        self._mean_SBR = value
+            raise ValueError("Please enter a correct value for meanSBR")
+        self._meanSBR = value
 
     @property
-    def theoretical_resolution(self):
-        return self._theoretical_resolution
+    def theoreticalResolution(self):
+        return self._theoreticalResolution
 
-    @theoretical_resolution.setter
-    def theoretical_resolution(self, data):
+    @theoreticalResolution.setter
+    def theoreticalResolution(self, data):
         if not isinstance(data, list):
             raise ValueError("Invalid format for theoretical resolution")
-        self._theoretical_resolution = data
+        self._theoreticalResolution = data
 
-    def get_active_path(self, index):
+    def getActivePath(self, index):
         """
         Args:
             index (int): Bead ID corresping to it's position in the list
@@ -111,12 +111,12 @@ class Report_Generator(object):
         Returns:
             Path: Folder's path found (or created) for the selected bead
         """
-        active_path = os.path.join(self._output_dir, f"bead_{index}")
-        if not os.path.exists(active_path):
-            os.makedirs(active_path)
-        return active_path
+        activePath = os.path.join(self._outputDir, f"bead_{index}")
+        if not os.path.exists(activePath):
+            os.makedirs(activePath)
+        return activePath
 
-    def draw_paragaph_on_pdf(self, textLines, x, y):
+    def drawParagaphOnPDF(self, textLines, x, y):
         """Helper to quickly write a paragraph on the pdf
 
         Args:
@@ -126,12 +126,12 @@ class Report_Generator(object):
         """
         stylesheet = getSampleStyleSheet()
         normalStyle = stylesheet["Normal"]
-        full_text = "<br/>".join(textLines)
-        p = Paragraph(full_text, normalStyle)
+        fullText = "<br/>".join(textLines)
+        p = Paragraph(fullText, normalStyle)
         p.wrapOn(self.pdf, 500, 100)
         p.drawOn(self.pdf, x, y)
 
-    def draw_table_on_pdf(self, data):
+    def drawTableOnPDF(self, data):
         """Helper to quickly add a table on the pdf
 
         Args:
@@ -159,11 +159,11 @@ class Report_Generator(object):
         t.wrapOn(self.pdf, 0, 0)
         t.drawOn(self.pdf, 40, 600)
 
-    def draw_single_bead_report_pdf(self, active_path, index):
+    def drawSingleBeadReportPDF(self, activePath, index):
         """Function to generate the report of a bead and add it to the pdf
 
         Args:
-            active_path (Path): Path to the folder of the current image
+            activePath (Path): Path to the folder of the current image
             index (int): Bead ID corresping to it's position in the list
         """
         stylesheet = getSampleStyleSheet()
@@ -171,7 +171,7 @@ class Report_Generator(object):
         self.pdf.setFont("Helvetica-Bold", 36)
         self.pdf.drawCentredString(150, 770, f"Bead {index}")
         self.pdf.drawImage(
-            os.path.join(active_path, "Localisation.png"),
+            os.path.join(activePath, "Localisation.png"),
             350,
             600,
             width=200,
@@ -179,10 +179,10 @@ class Report_Generator(object):
             preserveAspectRatio=True,
         )
         textLines = [
-            f"centroid: {self._filtered_beads[self._analysis_data[index]["id"]]}",
-            f"Signal to Background ratio: {self._analysis_data[index]["SBR"]:.4f}",
-            f"Lateral asymmetry ratio: {self._analysis_data[index]["LAR"]:.4f}",
-            f"Sphericity: {self._analysis_data[index]["sphericity"]:.4f}",
+            f"centroid: {self._filteredBeads[self._analysisData[index]["id"]]}",
+            f"Signal to Background ratio: {self._analysisData[index]["SBR"]:.4f}",
+            f"Lateral asymmetry ratio: {self._analysisData[index]["LAR"]:.4f}",
+            f"Sphericity: {self._analysisData[index]["sphericity"]:.4f}",
         ]
         text = self.pdf.beginText(40, 750)
         text.setFont(normalStyle.fontName, normalStyle.fontSize)
@@ -193,32 +193,32 @@ class Report_Generator(object):
             ["", "Z", "Y", "X"],
             [
                 "Theoretical resolution",
-                f"{self._theoretical_resolution[0]:.4f}",
-                f"{self._theoretical_resolution[1]:.4f}",
-                f"{self._theoretical_resolution[2]:.4f}",
+                f"{self._theoreticalResolution[0]:.4f}",
+                f"{self._theoreticalResolution[1]:.4f}",
+                f"{self._theoreticalResolution[2]:.4f}",
             ],
             [
                 "FWHM (µm)",
-                f"{self._analysis_data[index]["FWHM"][0]:.4f}",
-                f"{self._analysis_data[index]["FWHM"][1]:.4f}",
-                f"{self._analysis_data[index]["FWHM"][2]:.4f}",
+                f"{self._analysisData[index]["FWHM"][0]:.4f}",
+                f"{self._analysisData[index]["FWHM"][1]:.4f}",
+                f"{self._analysisData[index]["FWHM"][2]:.4f}",
             ],
             [
                 "Uncertainty",
-                f"{self._analysis_data[index]["uncertainty"][0][3]:.4f}",
-                f"{self._analysis_data[index]["uncertainty"][1][3]:.4f}",
-                f"{self._analysis_data[index]["uncertainty"][2][3]:.4f}",
+                f"{self._analysisData[index]["uncertainty"][0][3]:.4f}",
+                f"{self._analysisData[index]["uncertainty"][1][3]:.4f}",
+                f"{self._analysisData[index]["uncertainty"][2][3]:.4f}",
             ],
             [
                 "Determination",
-                f"{self._analysis_data[index]["determination"][0]:.4f}",
-                f"{self._analysis_data[index]["determination"][1]:.4f}",
-                f"{self._analysis_data[index]["determination"][2]:.4f}",
+                f"{self._analysisData[index]["determination"][0]:.4f}",
+                f"{self._analysisData[index]["determination"][1]:.4f}",
+                f"{self._analysisData[index]["determination"][2]:.4f}",
             ],
         ]
-        self.draw_table_on_pdf(data)
+        self.drawTableOnPDF(data)
         self.pdf.drawImage(
-            os.path.join(active_path, "YZ_view.png"),
+            os.path.join(activePath, "YZ_view.png"),
             50,
             425,
             width=150,
@@ -226,7 +226,7 @@ class Report_Generator(object):
             preserveAspectRatio=True,
         )
         self.pdf.drawImage(
-            os.path.join(active_path, "fit_curve_1D_X.png"),
+            os.path.join(activePath, "fit_curve_1D_X.png"),
             300,
             375,
             width=250,
@@ -234,7 +234,7 @@ class Report_Generator(object):
             preserveAspectRatio=True,
         )
         self.pdf.drawImage(
-            os.path.join(active_path, "XZ_view.png"),
+            os.path.join(activePath, "XZ_view.png"),
             50,
             225,
             width=150,
@@ -242,7 +242,7 @@ class Report_Generator(object):
             preserveAspectRatio=True,
         )
         self.pdf.drawImage(
-            os.path.join(active_path, "fit_curve_1D_Y.png"),
+            os.path.join(activePath, "fit_curve_1D_Y.png"),
             300,
             175,
             width=250,
@@ -250,7 +250,7 @@ class Report_Generator(object):
             preserveAspectRatio=True,
         )
         self.pdf.drawImage(
-            os.path.join(active_path, "XY_view.png"),
+            os.path.join(activePath, "XY_view.png"),
             50,
             25,
             width=150,
@@ -258,7 +258,7 @@ class Report_Generator(object):
             preserveAspectRatio=True,
         )
         self.pdf.drawImage(
-            os.path.join(active_path, "fit_curve_1D_Z.png"),
+            os.path.join(activePath, "fit_curve_1D_Z.png"),
             300,
             -25,
             width=250,
@@ -267,152 +267,152 @@ class Report_Generator(object):
         )
         self.pdf.showPage()
 
-    def generate_pdf_report(self, image_path):
+    def generatePDFReport(self, imagePath):
         """
         Args:
-            image_path (Path): Absolute path of the image
+            imagePath (Path): Absolute path of the image
         """
-        rois = [entry["ROI"] for entry in self._analysis_data]
-        self.pdf = canvas.Canvas(self._output_path, pagesize=A4)
+        rois = [entry["ROI"] for entry in self._analysisData]
+        self.pdf = canvas.Canvas(self._outputPath, pagesize=A4)
         self.pdf.setTitle("PSF analysis results")
         self.pdf.setFont("Helvetica-Bold", 36)
         self.pdf.drawCentredString(300, 770, "Analysis Results")
         textLines = [
-            f"Image location: {image_path}",
-            f"Identified beads: {len(self._filtered_beads)}",
+            f"Image location: {imagePath}",
+            f"Identified beads: {len(self._filteredBeads)}",
             f"Extracted ROIs: {len(rois)}",
-            f"Signal to background ratio: {self._mean_SBR:.2f}",
+            f"Signal to background ratio: {self._meanSBR:.2f}",
         ]
-        self.draw_paragaph_on_pdf(textLines, 40, 680)
+        self.drawParagaphOnPDF(textLines, 40, 680)
         self.pdf.setFont("Helvetica-Bold", 18)
         self.pdf.drawCentredString(300, 600, "Acquisition parameters")
         textLines = [
-            f"Pixel size: [{self._parameters_acquisition["Pixel size Z"]},{self._parameters_acquisition["Pixel size Y"]},{self._parameters_acquisition["Pixel size X"]}]",
-            f"Image shape: [{self.image_shape[0]},{self.image_shape[1]},{self.image_shape[2]}]",
-            f"Microscope type: {self._parameters_acquisition["Microscope type"]}",
-            f"Emission wavelength: {self._parameters_acquisition["Emission wavelength"]}nm",
-            f"Refractive index: {self._parameters_acquisition["Refraction index"]}",
-            f"Numerical aperture: {self._parameters_acquisition["Numerical aperture"]}",
+            f"Pixel size: [{self._parametersAcquisition["Pixel size Z"]},{self._parametersAcquisition["Pixel size Y"]},{self._parametersAcquisition["Pixel size X"]}]",
+            f"Image shape: [{self._imageShape[0]},{self._imageShape[1]},{self._imageShape[2]}]",
+            f"Microscope type: {self._parametersAcquisition["Microscope type"]}",
+            f"Emission wavelength: {self._parametersAcquisition["Emission wavelength"]}nm",
+            f"Refractive index: {self._parametersAcquisition["Refraction index"]}",
+            f"Numerical aperture: {self._parametersAcquisition["Numerical aperture"]}",
         ]
-        self.draw_paragaph_on_pdf(textLines, 40, 500)
+        self.drawParagaphOnPDF(textLines, 40, 500)
         self.pdf.setFont("Helvetica-Bold", 18)
         self.pdf.drawCentredString(300, 400, "Detection parameters")
         textLines = [
-            f"Detection method: {self._parameters_detection['Detection tool']}"
+            f"Detection method: {self._parametersDetection['Detection tool']}"
         ]
-        if self._parameters_detection['Detection tool'] == "peak local maxima":
+        if self._parametersDetection['Detection tool'] == "peak local maxima":
             textLines.append(
-                f"Minimal distance: {self._parameters_detection['Min dist']}"
+                f"Minimal distance: {self._parametersDetection['Min dist']}"
             )
         else:
-            textLines.append(f"Sigma: {self._parameters_detection['Sigma']}")
+            textLines.append(f"Sigma: {self._parametersDetection['Sigma']}")
         textLines.extend(
             [
-                f"Bead size: {self._parameters_detection['Theoretical bead size (µm)']}",
-                f"Crop factor: {self._parameters_detection['crop factor']}",
+                f"Bead size: {self._parametersDetection['Theoretical bead size (µm)']}",
+                f"Crop factor: {self._parametersDetection['crop factor']}",
             ]
         )
-        if self._parameters_detection["Threshold"] != "manual":
+        if self._parametersDetection["Threshold"] != "manual":
             textLines.append(
-                f"Threshold tool: {self._parameters_detection['Threshold']}"
+                f"Threshold tool: {self._parametersDetection['Threshold']}"
             )
         else:
             textLines.append(
-                f"Threshold relative: {self._parameters_detection['threshold']}"
+                f"Threshold relative: {self._parametersDetection['threshold']}"
             )
         textLines.extend(
             [
-                f"Distance ring-bead: {self._parameters_detection['Inner annulus distance to bead (µm)']}",
-                f"Ring thickness: {self._parameters_detection['Annulus thickness (µm)']}",
+                f"Distance ring-bead: {self._parametersDetection['Inner annulus distance to bead (µm)']}",
+                f"Ring thickness: {self._parametersDetection['Annulus thickness (µm)']}",
             ]
         )
-        self.draw_paragaph_on_pdf(textLines, 40, 300)
+        self.drawParagaphOnPDF(textLines, 40, 300)
 
         self.pdf.showPage()
 
         for i, _ in enumerate(rois):
-            active_path = self.get_active_path(index=i)
+            activePath = self.getActivePath(index=i)
             # Generating the HTML report
-            self.draw_single_bead_report_pdf(active_path, i)
+            self.drawSingleBeadReportPDF(activePath, i)
 
         self.pdf.save()
 
-    def generate_html_report(self):
-        for i, psf in enumerate(self._analysis_data):
-            path = self.get_active_path(i)
-            active_path = os.path.join(path, "PSF_analysis_result.html")
-            template_dir = os.path.join(os.path.dirname(__file__), "res", "template")
-            env = Environment(loader=FileSystemLoader(template_dir))
+    def generateHTMLReport(self):
+        for i, psf in enumerate(self._analysisData):
+            path = self.getActivePath(i)
+            activePath = os.path.join(path, "PSF_analysis_result.html")
+            templateDir = os.path.join(os.path.dirname(__file__), "res", "template")
+            env = Environment(loader=FileSystemLoader(templateDir))
             template = env.get_template("report_template.html")
             data = {
                 "title": i,
-                "bead": self._filtered_beads[psf["id"]],
+                "bead": self._filteredBeads[psf["id"]],
                 "results": psf,
                 "path": path,
-                "theoretical_resolution": self._theoretical_resolution,
+                "theoretical_resolution": self._theoreticalResolution,
             }
-            html_content = template.render(data)
-            with open(active_path, "w") as f:
-                f.write(html_content)
+            htmlContent = template.render(data)
+            with open(activePath, "w") as f:
+                f.write(htmlContent)
 
-    def generate_csv_report(self, output_path):
+    def generateCSVReport(self, outputPath):
         """
         Args:
-            output_path (Path): Path of the generated csv file
+            outputPath (Path): Path of the generated csv file
         """
-        with open(output_path, mode="w", newline="") as file:
+        with open(outputPath, mode="w", newline="") as file:
             writer = csv.writer(file)
-            for i, psf in enumerate(self._analysis_data):
+            for i, psf in enumerate(self._analysisData):
                 writer.writerow([f"Bead {i}"])
-                data_bead = [
+                dataBead = [
                     ["", "Z", "Y", "X"],
                     [
                         "Centroid coordinates",
-                        f"{self._filtered_beads[i][0]}",
-                        f"{self._filtered_beads[i][1]}",
-                        f"{self._filtered_beads[i][2]}",
+                        f"{self._filteredBeads[i][0]}",
+                        f"{self._filteredBeads[i][1]}",
+                        f"{self._filteredBeads[i][2]}",
                     ],
                 ]
-                data_fitting = [
+                dataFitting = [
                     ["", "Z", "Y", "X"],
                     [
                         "Theoretical resolution",
-                        f"{self._theoretical_resolution[0]}",
-                        f"{self._theoretical_resolution[1]}",
-                        f"{self._theoretical_resolution[2]}",
+                        f"{self._theoreticalResolution[0]}",
+                        f"{self._theoreticalResolution[1]}",
+                        f"{self._theoreticalResolution[2]}",
                     ],
                     [
                         "FWHM",
-                        f"{self._analysis_data[i]["FWHM"][0]}",
-                        f"{self._analysis_data[i]["FWHM"][1]}",
-                        f"{self._analysis_data[i]["FWHM"][2]}",
+                        f"{self._analysisData[i]["FWHM"][0]}",
+                        f"{self._analysisData[i]["FWHM"][1]}",
+                        f"{self._analysisData[i]["FWHM"][2]}",
                     ],
                     [
                         "Uncertainty",
-                        f"{self._analysis_data[i]["uncertainty"][0][3]}",
-                        f"{self._analysis_data[i]["uncertainty"][1][3]}",
-                        f"{self._analysis_data[i]["uncertainty"][2][3]}",
+                        f"{self._analysisData[i]["uncertainty"][0][3]}",
+                        f"{self._analysisData[i]["uncertainty"][1][3]}",
+                        f"{self._analysisData[i]["uncertainty"][2][3]}",
                     ],
                     [
                         "Determination",
-                        f"{self._analysis_data[i]["determination"][0]}",
-                        f"{self._analysis_data[i]["determination"][1]}",
-                        f"{self._analysis_data[i]["determination"][2]}",
+                        f"{self._analysisData[i]["determination"][0]}",
+                        f"{self._analysisData[i]["determination"][1]}",
+                        f"{self._analysisData[i]["determination"][2]}",
                     ],
                 ]
-                data_metrics = [
+                dataMetrics = [
                     ["Metric", "Value"],
-                    ["Signal to background ratio", f"{self._analysis_data[i]["SBR"]}"],
-                    ["Lateral asymmetry ratio", f"{self._analysis_data[i]["LAR"]}"],
-                    ["Sphericity", f"{self._analysis_data[i]["sphericity"]}"],
+                    ["Signal to background ratio", f"{self._analysisData[i]["SBR"]}"],
+                    ["Lateral asymmetry ratio", f"{self._analysisData[i]["LAR"]}"],
+                    ["Sphericity", f"{self._analysisData[i]["sphericity"]}"],
                 ]
                 writer.writerow(["Bead's datas"])
-                writer.writerows(data_bead)
+                writer.writerows(dataBead)
                 writer.writerow([])
                 writer.writerow(["Fitting's datas"])
-                writer.writerows(data_fitting)
+                writer.writerows(dataFitting)
                 writer.writerow([])
                 writer.writerow(["Meric's results"])
-                writer.writerows(data_metrics)
+                writer.writerows(dataMetrics)
                 writer.writerow([])
                 writer.writerow([])

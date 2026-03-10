@@ -8,7 +8,7 @@ import math
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
-def um_to_px(x, axisPhysicalSize):
+def umToPx(x, axisPhysicalSize):
     """
     Args:
         x (float): The value in um to convert
@@ -19,11 +19,11 @@ def um_to_px(x, axisPhysicalSize):
     """
     if axisPhysicalSize == 0.0:
         return 0.0
-    x_conv = x / axisPhysicalSize
-    return x_conv
+    xConv = x / axisPhysicalSize
+    return xConv
 
 
-def px_to_um(x, axisPhysicalSize):
+def pxToUm(x, axisPhysicalSize):
     """
     Args:
         x (float):  The value in pixels to convert
@@ -32,44 +32,44 @@ def px_to_um(x, axisPhysicalSize):
     Returns:
         float: The µm value corresponding to x
     """
-    x_conv = x * axisPhysicalSize
-    return x_conv
+    xConv = x * axisPhysicalSize
+    return xConv
 
 
-def is_roi_not_in_rejection(centroid, image_shape, rejection_zone):
+def isRoiNotInRejection(centroid, imageShape, rejectionZone):
     """
     Args:
         centroid (List): Coordinates of the bead's centroid
-        image_shape (List): Dimensions of the picture
-        rejection_zone (float): Minimal distance between top/bottom and the centroid
+        imageShape (List): Dimensions of the picture
+        rejectionZone (float): Minimal distance between top/bottom and the centroid
 
     Returns:
         Boolean: True if the bead is not in the rejection zone.
     """
-    if ((centroid[0] - rejection_zone) < 0) or (
-        (centroid[0] + rejection_zone) > image_shape[0]
+    if ((centroid[0] - rejectionZone) < 0) or (
+            (centroid[0] + rejectionZone) > imageShape[0]
     ):
         return False
     return True
 
 
-def is_roi_in_image(roi, image_shape):
+def isRoiInImage(roi, imageShape):
     """
     Args:
         roi (np.array): Coordinates of corners of the ROI
-        image_shape (List): Dimensions of the image
+        imageShape (List): Dimensions of the image
 
     Returns:
         Boolean: True if the ROI is contained in the image shape
     """
-    stack, height, width = image_shape
+    stack, height, width = imageShape
     for z, y, x in roi:
         if y < 0 or y >= height or x < 0 or x >= width:
             return False
     return True
 
 
-def is_roi_overlapped(rois, roi):
+def isRoiOverlapped(rois, roi):
     """
     Args:
         rois (List): List of all rois of the image
@@ -78,17 +78,17 @@ def is_roi_overlapped(rois, roi):
     Returns:
         Boolean: False if the ROI is not overlapped
     """
-    new_y_min = min(roi[:, 1])
-    new_y_max = max(roi[:, 1])
-    new_x_min = min(roi[:, 2])
-    new_x_max = max(roi[:, 2])
+    newYMin = min(roi[:, 1])
+    newYMax = max(roi[:, 1])
+    newXMin = min(roi[:, 2])
+    newXMax = max(roi[:, 2])
     for i, R in enumerate(rois):
-        y_min = min(R[:, 1])
-        y_max = max(R[:, 1])
-        x_min = min(R[:, 2])
-        x_max = max(R[:, 2])
-        no_overlap_x = (new_x_max < x_min) or (x_max < new_x_min)
-        no_overlap_y = (new_y_max < y_min) or (y_max < new_y_min)
-        if not (no_overlap_x or no_overlap_y):
+        yMin = min(R[:, 1])
+        yMax = max(R[:, 1])
+        xMin = min(R[:, 2])
+        xMax = max(R[:, 2])
+        noOverlapX = (newXMax < xMin) or (xMax < newXMin)
+        noOverlapY = (newYMax < yMin) or (yMax < newYMin)
+        if not (noOverlapX or noOverlapY):
             return True
     return False

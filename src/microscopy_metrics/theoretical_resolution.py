@@ -1,25 +1,25 @@
 from abc import ABC,abstractmethod
 import math
 
-class Theoretical_Resolution(object):
+class TheoreticalResolution(object):
     """Standard class for theoretical microscope resolution calculation"""
-    _microscopes_classes = {}
+    _microscopesClasses = {}
 
     def __init__(self):
-        self._numerical_aperture = 0.9
-        self._emission_wavelength = 490
-        self._refractive_index = 1.5
+        self._numericalAperture = 0.9
+        self._emissionWavelength = 490
+        self._refractiveIndex = 1.5
 
     def __init_subclass__(cls):
         name = cls.name
-        if name in cls._microscopes_classes:
+        if name in cls._microscopesClasses:
             raise ValueError("Class was already registered")
-        cls._microscopes_classes[name] = cls
+        cls._microscopesClasses[name] = cls
 
     @classmethod
-    def get_instance(cls,method_name):
-        microscope_class = cls._microscopes_classes[method_name]
-        return microscope_class()
+    def getInstance(cls, methodName):
+        microscopeClass = cls._microscopesClasses[methodName]
+        return microscopeClass()
 
     @property
     @abstractmethod
@@ -28,96 +28,96 @@ class Theoretical_Resolution(object):
 
 
     @property
-    def numerical_aperture(self):
-        return self._numerical_aperture
+    def numericalAperture(self):
+        return self._numericalAperture
 
-    @numerical_aperture.setter
-    def numerical_aperture(self, value):
+    @numericalAperture.setter
+    def numericalAperture(self, value):
         if not isinstance(value, float):
             raise ValueError(f"Numerical aperture must be a float : {value}")
-        self._numerical_aperture = value
+        self._numericalAperture = value
 
     @property
-    def emission_wavelength(self):
-        return self._emission_wavelength
+    def emissionWavelength(self):
+        return self._emissionWavelength
 
-    @emission_wavelength.setter
-    def emission_wavelength(self, value):
+    @emissionWavelength.setter
+    def emissionWavelength(self, value):
         if not isinstance(value, float) and not isinstance(value, int):
             raise ValueError("Emission wavelength must be a number")
-        self._emission_wavelength = value / 1000
+        self._emissionWavelength = value / 1000
 
     @property
-    def refractive_index(self):
-        return self._refractive_index
+    def refractiveIndex(self):
+        return self._refractiveIndex
 
-    @refractive_index.setter
-    def refractive_index(self, value):
+    @refractiveIndex.setter
+    def refractiveIndex(self, value):
         if not isinstance(value, float):
             raise ValueError("Refractive index must be a float")
-        self._refractive_index = value
+        self._refractiveIndex = value
 
-    def get_theoretical_resolution(self):
+    def getTheoreticalResolution(self):
         return [0, 0, 0]
 
 
-class Widefield_resolution(Theoretical_Resolution):
+class WidefieldResolution(TheoreticalResolution):
     name = "widefield"
     def __init__(self):
-        super(Widefield_resolution, self).__init__()
+        super(WidefieldResolution, self).__init__()
 
-    def get_theoretical_resolution(self):
-        r_xy = (0.51 * self._emission_wavelength) / self._numerical_aperture
-        r_z = (1.77 * self._refractive_index * self._emission_wavelength) / (
-            self._numerical_aperture**2
+    def getTheoreticalResolution(self):
+        resXY = (0.51 * self._emissionWavelength) / self._numericalAperture
+        resZ = (1.77 * self._refractiveIndex * self._emissionWavelength) / (
+                self._numericalAperture ** 2
         )
-        return [r_z, r_xy, r_xy]
+        return [resZ, resXY, resXY]
 
 
-class Confocal_resolution(Theoretical_Resolution):
+class ConfocalResolution(TheoreticalResolution):
     name="confocal"
     def __init__(self):
-        super(Confocal_resolution, self).__init__()
+        super(ConfocalResolution, self).__init__()
 
-    def get_theoretical_resolution(self):
-        r_xy = (0.51 * self._emission_wavelength) / self._numerical_aperture
-        r_z = (0.88 * self._emission_wavelength) / (
-            self._refractive_index
-            - math.sqrt(self._refractive_index**2 - self._numerical_aperture**2)
+    def getTheoreticalResolution(self):
+        resXY = (0.51 * self._emissionWavelength) / self._numericalAperture
+        resZ = (0.88 * self._emissionWavelength) / (
+            self._refractiveIndex
+            - math.sqrt(self._refractiveIndex ** 2 - self._numericalAperture ** 2)
         )
-        return [r_z, r_xy, r_xy]
+        return [resZ, resXY, resXY]
 
 
-class Spinning_disk_resolution(Theoretical_Resolution):
+class SpinningDiskResolution(TheoreticalResolution):
     name="spinning disk"
     def __init__(self):
-        super(Spinning_disk_resolution, self).__init__()
+        super(SpinningDiskResolution, self).__init__()
 
-    def get_theoretical_resolution(self):
-        r_xy = (0.51 * self._emission_wavelength) / self._numerical_aperture
-        r_z = self._emission_wavelength / (
-            self._refractive_index
-            - math.sqrt(self._refractive_index**2 - self._numerical_aperture**2)
+    def getTheoreticalResolution(self):
+        resXY = (0.51 * self._emissionWavelength) / self._numericalAperture
+        resZ = self._emissionWavelength / (
+            self._refractiveIndex
+            - math.sqrt(self._refractiveIndex ** 2 - self._numericalAperture ** 2)
         )
-        return [r_z, r_xy, r_xy]
+        return [resZ, resXY, resXY]
 
 
-class Multiphoton_resolution(Theoretical_Resolution):
+class MultiphotonResolution(TheoreticalResolution):
     name="multiphoton"
     def __init__(self):
-        super(Multiphoton_resolution, self).__init__()
+        super(MultiphotonResolution, self).__init__()
 
-    def get_theoretical_resolution(self):
-        if self._numerical_aperture < 0.7:
-            r_xy = (0.377 * self._emission_wavelength) / self._numerical_aperture
+    def getTheoreticalResolution(self):
+        if self._numericalAperture < 0.7:
+            resXY = (0.377 * self._emissionWavelength) / self._numericalAperture
         else:
-            r_xy = (0.383 * self._emission_wavelength) / (
-                self._numerical_aperture**0.91
+            resXY = (0.383 * self._emissionWavelength) / (
+                    self._numericalAperture ** 0.91
             )
-        r_z = (0.626 * self._emission_wavelength) / (
-            self._refractive_index
-            - math.sqrt(self._refractive_index**2 - self._numerical_aperture**2)
+        resZ = (0.626 * self._emissionWavelength) / (
+            self._refractiveIndex
+            - math.sqrt(self._refractiveIndex ** 2 - self._numericalAperture ** 2)
         )
-        return [r_z, r_xy, r_xy]
+        return [resZ, resXY, resXY]
 
 

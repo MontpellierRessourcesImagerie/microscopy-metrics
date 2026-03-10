@@ -6,29 +6,29 @@ import numpy as np
 from abc import ABC, abstractmethod
 
 
-class Detection_Tool(object):
-    _detection_classes = {}
+class DetectionTool(object):
+    _detectionClasses = {}
 
     def __init__(self):
         self._image = None
         self._sigma = 2.0
-        self._threshold_tool = None
-        self.normalized_image = None
-        self.high_passed_im = None
-        self.centroids = []
+        self._thresholdTool = None
+        self._normalizedImage = None
+        self._highPassedImage = None
+        self._centroids = []
 
     def __init_subclass__(cls):
         name = cls.name
-        if name in cls._detection_classes:
+        if name in cls._detectionClasses:
             raise ValueError("Class was already registered")
-        cls._detection_classes[name] = cls
+        cls._detectionClasses[name] = cls
 
     @classmethod
-    def get_instance(cls, method_name):
-        detection_class = cls._detection_classes[method_name]
-        return detection_class()
+    def getInstance(cls, methodName):
+        detectionClass = cls._detectionClasses[methodName]
+        return detectionClass()
 
-    def set_normalized_image(self):
+    def setNormalizedImage(self):
         """Method to normalize a 2D or 3D image and erase negative values
 
         Raises:
@@ -36,15 +36,15 @@ class Detection_Tool(object):
         """
         if self._image.ndim not in (2, 3):
             raise ValueError("Image have to be in 2D or 3D.")
-        self.normalized_image = self._image.astype(np.float32)
-        self.normalized_image = (
-            self.normalized_image - np.min(self.normalized_image)
-        ) / (np.max(self.normalized_image) - np.min(self.normalized_image) + 1e-6)
-        self.normalized_image[self.normalized_image < 0] = 0
+        self._normalizedImage = self._image.astype(np.float32)
+        self._normalizedImage = (
+                                        self._normalizedImage - np.min(self._normalizedImage)
+        ) / (np.max(self._normalizedImage) - np.min(self._normalizedImage) + 1e-6)
+        self._normalizedImage[self._normalizedImage < 0] = 0
 
-    def gaussian_high_pass(self):
-        low_pass = ndi.gaussian_filter(self.normalized_image, self._sigma)
-        self.high_passed_im = self.normalized_image - low_pass
+    def gaussianHighPass(self):
+        lowPass = ndi.gaussian_filter(self._normalizedImage, self._sigma)
+        self._highPassedImage = self._normalizedImage - lowPass
 
     @abstractmethod
     def detect(self):
@@ -56,68 +56,68 @@ class Detection_Tool(object):
     def name(self):
         pass
 
-class Peak_Local_Max_Detector(Detection_Tool):
+class PeakLocalMaxDetector(DetectionTool):
     name = "peak local maxima"
     
     def __init__(self):
-        super(Peak_Local_Max_Detector, self).__init__()
-        self._min_distance = 1
+        super(PeakLocalMaxDetector, self).__init__()
+        self._minDistance = 1
     
     def detect(self):
-        self.set_normalized_image()
-        self.normalized_image = ndi.gaussian_filter(self.normalized_image, sigma=2.0)
-        self.gaussian_high_pass()
-        self.centroids = peak_local_max(
-            self.high_passed_im,
-            min_distance=self._min_distance,
-            threshold_abs=self._threshold_tool.get_threshold(self.high_passed_im),
+        self.setNormalizedImage()
+        self._normalizedImage = ndi.gaussian_filter(self._normalizedImage, sigma=2.0)
+        self.gaussianHighPass()
+        self._centroids = peak_local_max(
+            self._highPassedImage,
+            min_distance=self._minDistance,
+            threshold_abs=self._thresholdTool.getThreshold(self._highPassedImage),
         )
 
-class Blob_Log_Detector(Detection_Tool):
+class BlobLogDetector(DetectionTool):
     name = "Laplacian of Gaussian"
     
     def __init__(self):
-        super(Blob_Log_Detector, self).__init__()
+        super(BlobLogDetector, self).__init__()
     
     def detect(self):
-        self.set_normalized_image()
+        self.setNormalizedImage()
         blobs = blob_log(
-            self.normalized_image,
+            self._normalizedImage,
             max_sigma=self._sigma,
-            threshold=self._threshold_tool.get_threshold(self.normalized_image),
+            threshold=self._thresholdTool.getThreshold(self._normalizedImage),
         )
-        self.centroids = np.array([[blob[0], blob[1], blob[2]] for blob in blobs])
+        self._centroids = np.array([[blob[0], blob[1], blob[2]] for blob in blobs])
 
-class Blob_Dog_Detector(Detection_Tool):
+class BlobDogDetector(DetectionTool):
     name = "Difference of Gaussian"
     
     def __init__(self):
-        super(Blob_Dog_Detector, self).__init__()
+        super(BlobDogDetector, self).__init__()
     
     def detect(self):
-        self.set_normalized_image()
+        self.setNormalizedImage()
         blobs = blob_dog(
-            self.normalized_image,
+            self._normalizedImage,
             max_sigma=self._sigma,
-            threshold=self._threshold_tool.get_threshold(self.normalized_image),
+            threshold=self._thresholdTool.getThreshold(self._normalizedImage),
         )
-        self.centroids = np.array([[blob[0], blob[1], blob[2]] for blob in blobs])
+        self._centroids = np.array([[blob[0], blob[1], blob[2]] for blob in blobs])
 
-class Centroid_Detector(Detection_Tool):
+class CentroidDetector(DetectionTool):
     name = "Centroids"
 
     def __init__(self):
-        super(Centroid_Detector, self).__init__()
+        super(CentroidDetector, self).__init__()
     
     def detect(self):
-        self.set_normalized_image()
-        self.normalized_image = ndi.gaussian_filter(self.normalized_image, sigma=2.0)
-        self.gaussian_high_pass()
-        binary_image = self.high_passed_im > self._threshold_tool.get_threshold(self.high_passed_im)
-        labeled_image = label(binary_image)
-        region_props = regionprops(labeled_image)
-        tmp_centroids = []
-        for prop in region_props:
-            tmp_centroids.append(prop.centroid)
+        self.setNormalizedImage()
+        self._normalizedImage = ndi.gaussian_filter(self._normalizedImage, sigma=2.0)
+        self.gaussianHighPass()
+        binaryImage = self._highPassedImage > self._thresholdTool.getThreshold(self._highPassedImage)
+        labeledImage = label(binaryImage)
+        regionProps = regionprops(labeledImage)
+        tmpCentroids = []
+        for prop in regionProps:
+            tmpCentroids.append(prop.centroid)
 
-        self.centroids = np.array(tmp_centroids)
+        self._centroids = np.array(tmpCentroids)
