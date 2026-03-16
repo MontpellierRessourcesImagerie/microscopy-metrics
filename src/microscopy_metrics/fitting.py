@@ -166,6 +166,15 @@ class FittingTool(object):
             int(self._centroid[2] - self._roi[0][2]),
         ]
 
+    def mip3d(self,image, axis=0):
+        if image.ndim != 3:
+            raise ValueError("Image have to be in 3 dimensions")
+        if axis not in {0, 1, 2}:
+            raise ValueError("Axis must be 0 (z), 1 (y) or 2 (x).")
+
+        return np.max(image, axis=axis)
+        
+
 class Fitting1D(FittingTool):
     name = "1D"
     def __init__(self):
@@ -224,12 +233,14 @@ class Fitting1D(FittingTool):
         )
         return popt, pcov
 
-    def plotSingleFit(self,coords,psf,fineCoords,fit,axeStr,outputPath):
+    def plotSingleFit(self,coords,psf,fineCoords,fit,axeStr,outputPath,sigma):
         yLim = [0.0,psf.max() * 1.1]
         fig1,ax1 = plt.subplots(figsize=(7, 5))
         ax1.plot(coords, psf, '-', label="PSF", color="k")
         ax1.scatter(coords, psf, color="k", alpha=0.5, label="measurement points")
         ax1.plot(fineCoords, fit, label="1D Curve Fit")
+        halfMax = (fit.max() + fit.min()) / 2.0
+        ax1.axhline(y=halfMax, color='r', linestyle='--', alpha=0.7, label='FWHM')
         ax1.set_ylim(yLim)
         ax1.set_title(f'{axeStr} Profile')
         ax1.legend()
@@ -243,7 +254,7 @@ class Fitting1D(FittingTool):
         psfs = [psf[:, center[1], center[2]], psf[center[0], :, center[2]], psf[center[0], center[1], :]]
         for i in range(3):
             fine = np.linspace(0, psf.shape[i] - 1, 500)
-            self.plotSingleFit(coords[i],psfs[i],fine,self.gauss(*params[i])(fine),axes[i],outputPath)
+            self.plotSingleFit(coords[i],psfs[i],fine,self.gauss(*params[i])(fine),axes[i],outputPath,params[i][3])
 
     def getCoords(self,psf):
         return np.arange(psf.shape[0])
@@ -408,7 +419,11 @@ class Fitting2D(FittingTool):
         ax1.plot(coords, psf, '-', label="PSF", color="k")
         ax1.scatter(coords, psf, color="k", alpha=0.5, label="measurement points")
         ax1.plot(fineCoords, fit1D, label="1D Curve Fit")
+        halfMax = (fit1D.max() + fit1D.min()) / 2.0
+        ax1.axhline(y=halfMax, color='g', linestyle='--', alpha=0.7, label='FWHM 1D fit')
         ax1.plot(fineCoords, fit2D, label="2D Curve Fit")
+        halfMax = (fit2D.max() + fit2D.min()) / 2.0
+        ax1.axhline(y=halfMax, color='r', linestyle='--', alpha=0.7, label='FWHM 2D fit')
         ax1.set_ylim(yLim)
         ax1.set_title(f'{axeStr} Profile')
         ax1.legend()
@@ -470,6 +485,13 @@ class Fitting2D(FittingTool):
             result[1].append(0.0)
         imageFloat = self.setNormalizedImage()
         physic = self.getLocalCentroid()
+        """ MIP
+        psf = [
+            self.mip3d(imageFloat,2),
+            self.mip3d(imageFloat,0),
+            self.mip3d(imageFloat,1)
+        ]
+        """
         psf = [
             imageFloat[:, :, physic[2]],
             imageFloat[physic[0], :, :],
@@ -686,7 +708,11 @@ class Fitting3D(FittingTool):
         ax1.plot(coords, psf, '-', label="PSF", color="k")
         ax1.scatter(coords, psf, color="k", alpha=0.5, label="measurement points")
         ax1.plot(fineCoords, fit1D, label="1D Curve Fit")
+        halfMax = (fit1D.max() + fit1D.min()) / 2.0
+        ax1.axhline(y=halfMax, color='g', linestyle='--', alpha=0.7, label='FWHM 1D fit')
         ax1.plot(fineCoords, fit3D, label="3D Curve Fit")
+        halfMax = (fit3D.max() + fit3D.min()) / 2.0
+        ax1.axhline(y=halfMax, color='r', linestyle='--', alpha=0.7, label='FWHM 3D fit')
         ax1.set_ylim(yLim)
         ax1.set_title(f'{axeStr} Profile')
         ax1.legend()
@@ -695,18 +721,21 @@ class Fitting3D(FittingTool):
     
     def plotFit3d(self, psf, center, params, popt, outputPath, coords):
         yLim = [0.0, psf.max() * 1.1]
-        zz_fine = np.linspace(0, psf.shape[0] - 1, 500)
-        yy_fine = np.linspace(0, psf.shape[1] - 1, 500)
-        xx_fine = np.linspace(0, psf.shape[2] - 1, 500)
-        fineCoordsZ = np.column_stack((zz_fine, np.full_like(zz_fine, center[1]), np.full_like(zz_fine, center[2])))
-        fineCoordsY = np.column_stack((np.full_like(yy_fine, center[0]), yy_fine, np.full_like(yy_fine, center[2])))
-        fineCoordsX = np.column_stack((np.full_like(xx_fine, center[0]), np.full_like(xx_fine, center[1]), xx_fine))
-        params1D = [params[0],params[1],params[2],params[5]]
-        self.plotSingleFit(coords[0],psf[:, center[1], center[2]],zz_fine,Fitting1D().gauss(*params1D)(zz_fine),self.gauss(*popt)(fineCoordsZ),"Z",outputPath)
-        params1D = [params[0],params[1],params[3],params[8]]
-        self.plotSingleFit(coords[1],psf[center[0], :, center[2]],yy_fine,Fitting1D().gauss(*params1D)(yy_fine),self.gauss(*popt)(fineCoordsY),"Y",outputPath)
-        params1D = [params[0],params[1],params[4],params[10]]
-        self.plotSingleFit(coords[2],psf[center[0], center[1], :],xx_fine,Fitting1D().gauss(*params1D)(xx_fine),self.gauss(*popt)(fineCoordsX),"X",outputPath)
+        params1D = [[params[0],params[1],params[2],params[5]],[params[0],params[1],params[3],params[8]],[params[0],params[1],params[4],params[10]]]
+        psfs = [psf[:, center[1], center[2]],psf[center[0], :, center[2]],psf[center[0], center[1], :]]
+        fine = [
+            np.linspace(0, psf.shape[0] - 1, 500),
+            np.linspace(0, psf.shape[1] - 1, 500),
+            np.linspace(0, psf.shape[2] - 1, 500)
+        ]
+        fineCoords = [
+            np.column_stack((fine[0], np.full_like(fine[0], center[1]), np.full_like(fine[0], center[2]))),
+            np.column_stack((np.full_like(fine[1], center[0]), fine[1], np.full_like(fine[1], center[2]))),
+            np.column_stack((np.full_like(fine[2], center[0]), np.full_like(fine[2], center[1]), fine[2]))
+        ]
+        Axes = ["Z","Y","X"]
+        for i in range(3):
+            self.plotSingleFit(coords[i],psfs[i],fine[i],Fitting1D().gauss(*params1D[i])(fine[i]),self.gauss(*popt)(fineCoords[i]),Axes[i],outputPath)
 
     def getCoords(self, psf):
         """Function to get a 1D list of 2D coordinates for the Gaussian fitting
