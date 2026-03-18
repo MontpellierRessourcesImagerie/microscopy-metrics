@@ -61,7 +61,7 @@ class FittingTool(object):
 
         if image.ndim == 1:
             x = grids[0].ravel() - centroid[0]
-            return cov(x, x, image.ravel())
+            return np.sqrt(cov(x, x, image.ravel()))
         elif image.ndim == 2:
             y = grids[0].ravel() - centroid[0]
             x = grids[1].ravel() - centroid[1]
@@ -192,7 +192,7 @@ class Fitting1D(FittingTool):
         Returns:
             float: Intensity value at x following the curve
         """
-        return lambda x: amp * np.exp(-((x - mu) ** 2) / (2 * sigma**2)) + bg
+        return lambda x: amp * np.exp(-(x - mu) ** 2 / (2 * sigma ** 2)) + bg
 
 
     def evalFun(self, x, amp, bg, mu, sigma):
@@ -210,18 +210,6 @@ class Fitting1D(FittingTool):
 
 
     def fitCurve(self, amp, bg, mu, sigma, coords, psf):
-        """
-        Args:
-            amp (float): amplitude of the curve
-            bg (float): background intensity
-            mu (float): center of the curve
-            sigma (float): standard deviation of the curve
-            coords (np.array(float)): List of X coordinates
-            psf (np.ndarray): 1D image of the psf
-
-        Returns:
-            List(float),Matrix(float): List of fitted parameters and covariance matrix
-        """
         params = [amp, bg, mu, sigma]
         popt, pcov = curve_fit(
             self.evalFun,
@@ -229,7 +217,7 @@ class Fitting1D(FittingTool):
             psf,
             p0=params,
             maxfev=5000,
-            bounds=([0, 0, 0, 0], [2, 1, max(coords), len(coords)]),
+            bounds=([0, 0, 0, 1e-6], [2, 1, len(coords), np.inf]),
         )
         return popt, pcov
 
@@ -288,12 +276,7 @@ class Fitting1D(FittingTool):
             lim = [0, psf[u].max() * 1.1]
             bg = np.median(psf[u])
             amp = psf[u].max() - bg
-            sigma = np.sqrt(
-                self.getCovMatrix(
-                    np.clip(psf[u] - bg, 0, psf[u].max()),
-                    (self._centroid - self._roi[0]),
-                )
-            )
+            sigma = self.getCovMatrix(psf[u],physic)
             mu = np.argmax(psf[u])
             params, pcov = self.fitCurve(amp, bg, mu, sigma, coords[u], psf[u])
             result[1].append(pxToUm(self.fwhm(params[3]), self._spacing[u]))
@@ -331,7 +314,7 @@ class Fitting2D(FittingTool):
     def __init__(self):
         super().__init__()
 
-    def gauss(self, amp, bg, muX, muY, cxx, cxy, cyy):
+    def gauss(self, amp, bg, muX, muY, sigmaX, sigmaY):
         """
         Args:
             amp (float): amplitude of the curve
@@ -344,18 +327,11 @@ class Fitting2D(FittingTool):
         """
 
         def fun(coords):
-            covInv = np.linalg.inv(np.array([[cxx, cxy], [cxy, cyy]]))
-            exponent = -0.5 * (
-                    covInv[0, 0] * (coords[:, 0] - muX) ** 2
-                    + 2 * covInv[0, 1] * (coords[:, 0] - muX) * (coords[:, 1] - muY)
-                    + covInv[1, 1] * (coords[:, 1] - muY) ** 2
-            )
-
+            exponent = (-(coords[:,0] - muX) ** 2 / (2 * sigmaX ** 2)-(coords[:,1] - muY) ** 2 / (2 * sigmaY ** 2)) 
             return amp * np.exp(exponent) + bg
-
         return fun
 
-    def evalFun(self, x, amp, bg, muX, muY, cxx, cxy, cyy):
+    def evalFun(self, x, amp, bg, muX, muY, sigmaX, sigmaY):
         """
         Args:
             amp (float): amplitude of the curve
@@ -366,7 +342,7 @@ class Fitting2D(FittingTool):
         Returns:
             float: Intensity value at (x,y) following the curve
         """
-        return self.gauss(amp=amp, bg=bg, muX=muX, muY=muY, cxx=cxx, cxy=cxy, cyy=cyy)(x)
+        return self.gauss(amp=amp, bg=bg, muX=muX, muY=muY, sigmaX=sigmaX, sigmaY=sigmaY)(x)
 
     def fitCurve(self, amp, bg, mu, sigma, coords, psf):
         """
@@ -389,15 +365,15 @@ class Fitting2D(FittingTool):
             p0=params,
             maxfev=5000,
             bounds=(
-                [0, 0, 0, 0, 1e-6, 0, 1e-6],
-                [2, 1, psf.shape[0], psf.shape[1], psf.shape[0], 0.5, psf.shape[1]],
+                [0, 0, 0, 0, 1e-6, 1e-6],
+                [2, 1, psf.shape[0], psf.shape[1], psf.shape[0], psf.shape[1]],
             ),
         )
         return popt, pcov
 
     def show2dFit(self, psf, outputPath,params):
-        yy_fine = np.linspace(0,psf.shape[0],psf.shape[0] * 10)
-        xx_fine = np.linspace(0, psf.shape[1], psf.shape[1] * 10)
+        yy_fine = np.linspace(0,psf.shape[0] - 1, psf.shape[0] * 10)
+        xx_fine = np.linspace(0, psf.shape[1] - 1, psf.shape[1] * 10)
         y_fine, x_fine = np.meshgrid(yy_fine, xx_fine, indexing="ij")
         fine_coords_yx = np.stack([y_fine.ravel(), x_fine.ravel()], -1)
         fit = self.gauss(*params)(fine_coords_yx)
@@ -435,9 +411,9 @@ class Fitting2D(FittingTool):
         yLim = [0.0, psf.max() * 1.1]
         axes = ["Z","Y","X"]
         params2D = [
-            [popt[0],popt[1],popt[2],popt[3],popt[5],0,popt[6]],
-            [popt[0],popt[1],popt[3],popt[4],popt[6],0,popt[7]],
-            [popt[0],popt[1],popt[2],popt[4],popt[5],0,popt[7]]
+            [popt[0],popt[1],popt[2],popt[3],popt[5],popt[6]],
+            [popt[0],popt[1],popt[3],popt[4],popt[6],popt[7]],
+            [popt[0],popt[1],popt[2],popt[4],popt[5],popt[7]]
         ]
         psfs = [
             psf[:, center[1], center[2]],
@@ -445,7 +421,7 @@ class Fitting2D(FittingTool):
             psf[center[0], center[1], :]
         ]
         for i in range (3):
-            fine = np.linspace(0, psf.shape[i] - 1, 500)
+            fine = np.linspace(0, psf.shape[i]-1, 500)
             if i < 2 :
                 index = i+1
                 fineCoords = np.column_stack((fine, np.full_like(fine, center[index])))
@@ -520,11 +496,11 @@ class Fitting2D(FittingTool):
             amp = params1D[u][0]
             if u + 1 < 3:
                 u2 = u + 1
-                sigma = [params1D[u][3], 0, params1D[u2][3]]
+                sigma = [params1D[u][3], params1D[u2][3]]
                 mu = [params1D[u][2], params1D[u2][2]]
             else:
                 u2 = 0
-                sigma = [params1D[u2][3], 0, params1D[u][3]]
+                sigma = [params1D[u2][3], params1D[u][3]]
                 mu = [params1D[u2][2], params1D[u][2]]
             params, pcov = self.fitCurve(amp, bg, mu, sigma, coords[u], psf[u])
             params2DMean[0] += params[0]/3.0
@@ -533,11 +509,11 @@ class Fitting2D(FittingTool):
                 params2DMean[2+u] += params[2]/2.0
                 params2DMean[2+u2] += params[3]/2.0
                 params2DMean[5+u] += params[4]/2.0
-                params2DMean[5+u2] += params[6]/2.0
+                params2DMean[5+u2] += params[5]/2.0
             else :
                 params2DMean[2+u] += params[3]/2.0
                 params2DMean[2+u2] += params[2]/2.0
-                params2DMean[5+u] += params[6]/2.0
+                params2DMean[5+u] += params[5]/2.0
                 params2DMean[5+u2] += params[4]/2.0
             pcov[0, 0] += pcovs1D[u][0, 0]
             pcov[1, 1] += pcovs1D[u][1, 1]
@@ -545,13 +521,13 @@ class Fitting2D(FittingTool):
             pcov[3, 3] += pcovs1D[u2][2, 2]
             if u + 1 < 3:
                 pcov[4, 4] += pcovs1D[u][3, 3]
-                pcov[6, 6] += pcovs1D[u2][3, 3]
+                pcov[5, 5] += pcovs1D[u2][3, 3]
                 result[1][u] += pxToUm(self.fwhm(params[4]), self._spacing[u])
-                result[1][u2] += pxToUm(self.fwhm(params[6]), self._spacing[u2])
+                result[1][u2] += pxToUm(self.fwhm(params[5]), self._spacing[u2])
             else:
                 pcov[4, 4] += pcovs1D[u2][3, 3]
-                pcov[6, 6] += pcovs1D[u][3, 3]
-                result[1][u] += pxToUm(self.fwhm(params[6]), self._spacing[u])
+                pcov[5, 5] += pcovs1D[u][3, 3]
+                result[1][u] += pxToUm(self.fwhm(params[5]), self._spacing[u])
                 result[1][u2] += pxToUm(self.fwhm(params[4]), self._spacing[u2])
             result[2].append(self.uncertainty(pcov))
             result[3].append(self.determination(params, coords[u], psf[u].flatten()))
@@ -594,7 +570,7 @@ class Fitting3D(FittingTool):
     def __init__(self):
         super().__init__()
 
-    def gauss(self, amp, bg, muX, muY, muZ, cxx, cxy, cxz, cyy, cyz, czz):
+    def gauss(self, amp, bg, muX, muY, muZ, sigmaX, sigmaY, sigmaZ):
         """
         Args:
             amp (float): amplitude of the curve
@@ -607,21 +583,11 @@ class Fitting3D(FittingTool):
         """
 
         def fun(coords):
-            covInv = np.linalg.inv(np.array([[cxx, cxy, cxz], [cxy, cyy, cyz], [cxz, cyz, czz]]))
-            exponent = -0.5 * (
-                covInv[0, 0] * (coords[:, 0] - muX) ** 2
-                + 2 * covInv[0, 1] * (coords[:, 0] - muX) * (coords[:, 1] - muY)
-                + 2 * covInv[0, 2] * (coords[:, 0] - muX) * (coords[:, 2] - muZ)
-                + covInv[1, 1] * (coords[:, 1] - muY) ** 2
-                + 2 * covInv[1, 2] * (coords[:, 1] - muY) * (coords[:, 2] - muZ)
-                + covInv[2, 2] * (coords[:, 2] - muZ) ** 2
-            )
-
-
+            exponent = (-(coords[:,0] - muX) ** 2 / (2 * sigmaX ** 2) -(coords[:,1] - muY) ** 2 / (2 * sigmaY ** 2) -(coords[:,2] - muZ)**2 / (2* sigmaZ **2)) 
             return amp * np.exp(exponent) + bg
         return fun
 
-    def evalFun(self, x, amp, bg, muX, muY, muZ, cxx, cxy, cxz, cyy, cyz, czz):
+    def evalFun(self, x, amp, bg, muX, muY, muZ, sigmaX, sigmaY, sigmaZ):
         """
         Args:
             amp (float): amplitude of the curve
@@ -632,7 +598,7 @@ class Fitting3D(FittingTool):
         Returns:
             float: Intensity value at (x,y) following the curve
         """
-        return self.gauss(amp=amp, bg=bg, muX=muX, muY=muY, muZ=muZ, cxx=cxx, cxy=cxy, cxz=cxz, cyy=cyy, cyz=cyz, czz=czz)(x)
+        return self.gauss(amp=amp, bg=bg, muX=muX, muY=muY, muZ=muZ, sigmaX=sigmaX, sigmaY=sigmaY, sigmaZ=sigmaZ)(x)
 
     def fitCurve(self, amp, bg, mu, sigma, coords, psf):
         """
@@ -721,7 +687,7 @@ class Fitting3D(FittingTool):
     
     def plotFit3d(self, psf, center, params, popt, outputPath, coords):
         yLim = [0.0, psf.max() * 1.1]
-        params1D = [[params[0],params[1],params[2],params[5]],[params[0],params[1],params[3],params[8]],[params[0],params[1],params[4],params[10]]]
+        params1D = [[params[0],params[1],params[2],params[5]],[params[0],params[1],params[3],params[6]],[params[0],params[1],params[4],params[7]]]
         psfs = [psf[:, center[1], center[2]],psf[center[0], :, center[2]],psf[center[0], center[1], :]]
         fine = [
             np.linspace(0, psf.shape[0] - 1, 500),
@@ -783,7 +749,7 @@ class Fitting3D(FittingTool):
         bg = (params1D[0][1])
         amp = (params1D[0][0])
         mu = [params1D[0][2], params1D[1][2], params1D[2][2]]
-        sigma = [params1D[0][3], 0, 0, params1D[1][3], 0, params1D[2][3]]
+        sigma = [params1D[0][3], params1D[1][3], params1D[2][3]]
         params, pcov = self.fitCurve(amp, bg, mu, sigma, coords, psf)
         x, y, z = np.arange(psf.shape[0]), np.arange(psf.shape[1]), np.arange(psf.shape[2])
         coordsTmp = [x, y, z]
@@ -797,12 +763,12 @@ class Fitting3D(FittingTool):
         pcov[3, 3] = (pcov[3,3] + pcovs1D[1][2, 2])
         pcov[4, 4] = (pcov[4,4] + pcovs1D[2][2, 2])
         pcov[5, 5] = (pcov[5,5] + pcovs1D[0][3, 3])
-        pcov[8, 8] = (pcov[8,8] + pcovs1D[1][3, 3])
-        pcov[10, 10] = (pcov[10,10] + pcovs1D[2][3, 3])
+        pcov[6, 6] = (pcov[6,6] + pcovs1D[1][3, 3])
+        pcov[7, 7] = (pcov[7,7] + pcovs1D[2][3, 3])
         result[1] = [
             pxToUm(self.fwhm(params[5]), self._spacing[0]),
-            pxToUm(self.fwhm(params[8]), self._spacing[1]),
-            pxToUm(self.fwhm(params[10]), self._spacing[2]),
+            pxToUm(self.fwhm(params[6]), self._spacing[1]),
+            pxToUm(self.fwhm(params[7]), self._spacing[2]),
         ]
         tmp = self.uncertainty(pcov)
         result[2] = [tmp,tmp,tmp]
