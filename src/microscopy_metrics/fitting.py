@@ -33,6 +33,7 @@ class FittingTool(object):
         self._roi = []
         self._outputDir = ""
         self._results = []
+        self._show = True
 
     def __init_subclass__(cls):
         name = cls.name
@@ -284,7 +285,8 @@ class Fitting1D(FittingTool):
             result[3].append(self.determination(params, coords[u], psf[u]))
             result[4].append(params)
             result[5].append(pcov)
-        self.plotFit1d(physic,result[4],activePath,coords)
+        if self._show == True: 
+            self.plotFit1d(physic,result[4],activePath,coords)
         return result
 
     
@@ -455,7 +457,7 @@ class Fitting2D(FittingTool):
             List(parameters): A list containing metrics, fwhm, parameters and covariance matrix of the fit.
         """
         result = [index]
-        for _ in range(3):
+        for _ in range(4):
             result.append([])
         for _ in range(3):
             result[1].append(0.0)
@@ -481,6 +483,7 @@ class Fitting2D(FittingTool):
         ]
         activePath = self.getActivePath(index)
         fitTool1D = Fitting1D()
+        fitTool1D._show = self._show
         fitTool1D._image = self._image
         fitTool1D._roi = self._roi
         fitTool1D._spacing = self._spacing
@@ -532,12 +535,13 @@ class Fitting2D(FittingTool):
             result[2].append(self.uncertainty(pcov))
             result[3].append(self.determination(params, coords[u], psf[u].flatten()))
             outputPath = os.path.join(activePath, f"2D_Gaussian_Image_{axe[u]}.png")
-            self.show2dFit(psf[u], outputPath,params)
+            if self._show : self.show2dFit(psf[u], outputPath,params)
         for i in range(len(result[1])):
             result[1][i] /= 2
         x, y, z = np.arange(imageFloat.shape[0]), np.arange(imageFloat.shape[1]), np.arange(imageFloat.shape[2])
         coordsTmp = [x, y, z]
-        self.plotFit3d(physic,params1D,params2DMean,activePath,coordsTmp)
+        if self._show : self.plotFit3d(physic,params1D,params2DMean,activePath,coordsTmp)
+        result[4] = params2DMean
         return result
 
     def determination(self, params, coords, psf):
@@ -614,6 +618,7 @@ class Fitting3D(FittingTool):
             List(float),Matrix(float): List of fitted parameters and covariance matrix
         """
         params = [amp, bg, *mu, *sigma]
+        bounds = ([0,0,0,0,0,0,0,0],[2, 1, psf.shape[0], psf.shape[1],psf.shape[2], np.inf, np.inf,np.inf])
         popt, pcov = curve_fit(
             self.evalFun,
             coords,
@@ -729,7 +734,7 @@ class Fitting3D(FittingTool):
             List(parameters): A list containing metrics, fwhm, parameters and covariance matrix of the fit.
         """
         result = [index]
-        for _ in range(3):
+        for _ in range(4):
             result.append([])
         for _ in range(3):
             result[1].append(0.0)
@@ -739,6 +744,7 @@ class Fitting3D(FittingTool):
         activePath = self.getActivePath(index)
         fitTool1D = Fitting1D()
         fitTool1D._image = self._image
+        fitTool1D._show = self._show
         fitTool1D._roi = self._roi
         fitTool1D._spacing = self._spacing
         fitTool1D._outputDir = self._outputDir
@@ -754,9 +760,9 @@ class Fitting3D(FittingTool):
         x, y, z = np.arange(psf.shape[0]), np.arange(psf.shape[1]), np.arange(psf.shape[2])
         coordsTmp = [x, y, z]
         fit = self.gauss(*params)(coords)
-        self.plotFit3d(psf,physic,[amp,bg,*mu,*sigma],params,activePath,coordsTmp)
+        if self._show : self.plotFit3d(psf,physic,[amp,bg,*mu,*sigma],params,activePath,coordsTmp)
         
-        self.show2dFit(psf,physic,activePath,params,coords)
+        if self._show : self.show2dFit(psf,physic,activePath,params,coords)
         pcov[0, 0] = (pcov[0,0] + pcovs1D[0][0, 0])
         pcov[1, 1] = (pcov[1,1] + pcovs1D[0][1, 1])
         pcov[2, 2] = (pcov[2,2] + pcovs1D[0][2, 2])
@@ -774,6 +780,7 @@ class Fitting3D(FittingTool):
         result[2] = [tmp,tmp,tmp]
         tmp = self.determination(params, coords, psf.flatten())
         result[3] = [tmp,tmp,tmp]
+        result[4] = params
         return result
 
     def determination(self, params, coords, psf):
