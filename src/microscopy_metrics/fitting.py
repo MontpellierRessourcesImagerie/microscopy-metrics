@@ -366,10 +366,7 @@ class Fitting2D(FittingTool):
             psf.ravel(),
             p0=params,
             maxfev=5000,
-            bounds=(
-                [0, 0, 0, 0, 1e-6, 1e-6],
-                [2, 1, psf.shape[0], psf.shape[1], psf.shape[0], psf.shape[1]],
-            ),
+            bounds=([0, -1e-3, 0, 0, 1e-6, 1e-6],[2, 1, psf.shape[0], psf.shape[1], psf.shape[0], psf.shape[1]],),
         )
         return popt, pcov
 
@@ -618,13 +615,14 @@ class Fitting3D(FittingTool):
             List(float),Matrix(float): List of fitted parameters and covariance matrix
         """
         params = [amp, bg, *mu, *sigma]
-        bounds = ([0,0,0,0,0,0,0,0],[2, 1, psf.shape[0], psf.shape[1],psf.shape[2], np.inf, np.inf,np.inf])
+        bounds = ([0,-1e-3,0,0,0,1e-6,1e-6,1e-6],[2, 1, psf.shape[0], psf.shape[1],psf.shape[2], np.inf, np.inf,np.inf])
         popt, pcov = curve_fit(
             self.evalFun,
             coords,
             psf.ravel(),
             p0=params,
             maxfev=5000,
+            #bounds=bounds
         )
         return popt, pcov
 

@@ -12,7 +12,7 @@ import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 
-PSF_SIZE = 100
+PSF_SIZE = 80
 
 TRUE_AMP = 1.0
 TRUE_BG = 0.0
@@ -75,16 +75,14 @@ def computePSNR(estimations, truths, maxI=1.0):
     return psnr
 
 
-def computeBhattacharyyaDistance(hist1, hist2):
-    hist1 = hist1 / np.sum(hist1 + 1e-10)
-    hist2 = hist2 / np.sum(hist2 + 1e-10)
-    return -np.log(np.sum(np.sqrt(hist1 * hist2)))
+def computeBhattacharyyaDistance(mu1,mu2,sigma1,sigma2):
+    return 0.25 * ((mu1 - mu2)**2 / (sigma1**2 + sigma2 **2)) + 0.5*np.log((sigma1**2 + sigma2**2)/(2*sigma1*sigma2))
 
 
 def generateRandomPSFParams(psf_size=10):
-    mu_x = np.random.uniform(psf_size * 0.45, psf_size * 0.55)
-    mu_y = np.random.uniform(psf_size * 0.45, psf_size * 0.55)
-    mu_z = np.random.uniform(psf_size * 0.45, psf_size * 0.55)
+    mu_x = psf_size * 0.5
+    mu_y = psf_size * 0.5
+    mu_z = psf_size * 0.5
 
     sigmaDefault = psf_size / 10.0
     sigma_x = np.random.uniform(0.95 * sigmaDefault, 1.05 * sigmaDefault)
@@ -126,7 +124,8 @@ def evaluatePsf():
     coords = np.stack([x.ravel(), y.ravel(), z.ravel()], -1)
     psf = fitTool.gauss(*params)(coords)
     psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
-    #psfReshape = addMicroscopyNoise(psfReshape)
+    psfReshapeTest = psfReshape
+    psfReshape = addMicroscopyNoise(psfReshape)
     FWHM = [fitTool.fwhm(params[5]), fitTool.fwhm(params[6]), fitTool.fwhm(params[7])]
     fitTool1D = Fitting1D()
     fitTool1D._image = psfReshape
@@ -149,15 +148,9 @@ def evaluatePsf():
     center = int(PSF_SIZE / 2)
     fit = fit.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
     DistBat1D = 0.0
-    DistBat1D += computeBhattacharyyaDistance(
-        psfReshape[:, center, center], fit[:, center, center]
-    )
-    DistBat1D += computeBhattacharyyaDistance(
-        psfReshape[center, :, center], fit[center, :, center]
-    )
-    DistBat1D += computeBhattacharyyaDistance(
-        psfReshape[center, center, :], fit[center, center, :]
-    )
+    DistBat1D += computeBhattacharyyaDistance(params[2],mu[0],params[5],sigma[0])
+    DistBat1D += computeBhattacharyyaDistance(params[3],mu[1],params[6],sigma[1])
+    DistBat1D += computeBhattacharyyaDistance(params[4],mu[2],params[7],sigma[2])
     DistBat1D /= 3.0
     determination1D = (result[3][0] + result[3][1] + result[3][2]) / 3.0
 
@@ -175,16 +168,12 @@ def evaluatePsf():
     fit = Fitting3D().gauss(*result[4])(coords)
     psnr2D = computePSNR(fit, psf)
     fit = fit.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    mu = [result[4][2], result[4][3], result[4][4]]
+    sigma = [result[4][5], result[4][6], result[4][7]]
     DistBat2D = 0.0
-    DistBat2D += computeBhattacharyyaDistance(
-        psfReshape[:, center, center], fit[:, center, center]
-    )
-    DistBat2D += computeBhattacharyyaDistance(
-        psfReshape[center, :, center], fit[center, :, center]
-    )
-    DistBat2D += computeBhattacharyyaDistance(
-        psfReshape[center, center, :], fit[center, center, :]
-    )
+    DistBat2D += computeBhattacharyyaDistance(params[2],mu[0],params[5],sigma[0])
+    DistBat2D += computeBhattacharyyaDistance(params[3],mu[1],params[6],sigma[1])
+    DistBat2D += computeBhattacharyyaDistance(params[4],mu[2],params[7],sigma[2])
     DistBat2D /= 3.0
     determination2D = (result[3][0] + result[3][1] + result[3][2]) / 3.0
 
@@ -202,16 +191,12 @@ def evaluatePsf():
     fit = Fitting3D().gauss(*result[4])(coords)
     psnr3D = computePSNR(fit, psf)
     fit = fit.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    mu = [result[4][2], result[4][3], result[4][4]]
+    sigma = [result[4][5], result[4][6], result[4][7]]
     DistBat3D = 0.0
-    DistBat3D += computeBhattacharyyaDistance(
-        psfReshape[:, center, center], fit[:, center, center]
-    )
-    DistBat3D += computeBhattacharyyaDistance(
-        psfReshape[center, :, center], fit[center, :, center]
-    )
-    DistBat3D += computeBhattacharyyaDistance(
-        psfReshape[center, center, :], fit[center, center, :]
-    )
+    DistBat3D += computeBhattacharyyaDistance(params[2],mu[0],params[5],sigma[0])
+    DistBat3D += computeBhattacharyyaDistance(params[3],mu[1],params[6],sigma[1])
+    DistBat3D += computeBhattacharyyaDistance(params[4],mu[2],params[7],sigma[2])
     DistBat3D /= 3.0
     determination3D = (result[3][0] + result[3][1] + result[3][2]) / 3.0
     return (
