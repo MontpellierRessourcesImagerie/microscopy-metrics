@@ -179,10 +179,10 @@ class ReportGenerator(object):
             preserveAspectRatio=True,
         )
         textLines = [
-            f"centroid: {self._filteredBeads[self._analysisData[index]["id"]]}",
-            f"Signal to Background ratio: {self._analysisData[index]["SBR"]:.4f}",
-            f"Lateral asymmetry ratio: {self._analysisData[index]["LAR"]:.4f}",
-            f"Sphericity: {self._analysisData[index]["sphericity"]:.4f}",
+            f"centroid: {self._filteredBeads[self._analysisData[index]['id']]}",
+            f"Signal to Background ratio: {self._analysisData[index]['SBR']:.4f}",
+            f"Lateral asymmetry ratio: {self._analysisData[index]['LAR']:.4f}",
+            f"Sphericity: {self._analysisData[index]['sphericity']:.4f}",
         ]
         text = self.pdf.beginText(40, 750)
         text.setFont(normalStyle.fontName, normalStyle.fontSize)
@@ -199,21 +199,21 @@ class ReportGenerator(object):
             ],
             [
                 "FWHM (µm)",
-                f"{self._analysisData[index]["FWHM"][0]:.4f}",
-                f"{self._analysisData[index]["FWHM"][1]:.4f}",
-                f"{self._analysisData[index]["FWHM"][2]:.4f}",
+                f"{self._analysisData[index]['FWHM'][0]:.4f}",
+                f"{self._analysisData[index]['FWHM'][1]:.4f}",
+                f"{self._analysisData[index]['FWHM'][2]:.4f}",
             ],
             [
                 "Uncertainty",
-                f"{self._analysisData[index]["uncertainty"][0][3]:.4f}",
-                f"{self._analysisData[index]["uncertainty"][1][3]:.4f}",
-                f"{self._analysisData[index]["uncertainty"][2][3]:.4f}",
+                f"{self._analysisData[index]['uncertainty'][0][3]:.4f}",
+                f"{self._analysisData[index]['uncertainty'][1][3]:.4f}",
+                f"{self._analysisData[index]['uncertainty'][2][3]:.4f}",
             ],
             [
                 "Determination",
-                f"{self._analysisData[index]["determination"][0]:.4f}",
-                f"{self._analysisData[index]["determination"][1]:.4f}",
-                f"{self._analysisData[index]["determination"][2]:.4f}",
+                f"{self._analysisData[index]['determination'][0]:.4f}",
+                f"{self._analysisData[index]['determination'][1]:.4f}",
+                f"{self._analysisData[index]['determination'][2]:.4f}",
             ],
         ]
         self.drawTableOnPDF(data)
@@ -287,12 +287,12 @@ class ReportGenerator(object):
         self.pdf.setFont("Helvetica-Bold", 18)
         self.pdf.drawCentredString(300, 600, "Acquisition parameters")
         textLines = [
-            f"Pixel size: [{self._parametersAcquisition["Pixel size Z"]},{self._parametersAcquisition["Pixel size Y"]},{self._parametersAcquisition["Pixel size X"]}]",
+            f"Pixel size: [{self._parametersAcquisition['Pixel size Z']},{self._parametersAcquisition['Pixel size Y']},{self._parametersAcquisition['Pixel size X']}]",
             f"Image shape: [{self._imageShape[0]},{self._imageShape[1]},{self._imageShape[2]}]",
-            f"Microscope type: {self._parametersAcquisition["Microscope type"]}",
-            f"Emission wavelength: {self._parametersAcquisition["Emission wavelength"]}nm",
-            f"Refractive index: {self._parametersAcquisition["Refraction index"]}",
-            f"Numerical aperture: {self._parametersAcquisition["Numerical aperture"]}",
+            f"Microscope type: {self._parametersAcquisition['Microscope type']}",
+            f"Emission wavelength: {self._parametersAcquisition['Emission wavelength']}nm",
+            f"Refractive index: {self._parametersAcquisition['Refraction index']}",
+            f"Numerical aperture: {self._parametersAcquisition['Numerical aperture']}",
         ]
         self.drawParagaphOnPDF(textLines, 40, 500)
         self.pdf.setFont("Helvetica-Bold", 18)
@@ -383,28 +383,28 @@ class ReportGenerator(object):
                     ],
                     [
                         "FWHM",
-                        f"{self._analysisData[i]["FWHM"][0]}",
-                        f"{self._analysisData[i]["FWHM"][1]}",
-                        f"{self._analysisData[i]["FWHM"][2]}",
+                        f"{self._analysisData[i]['FWHM'][0]}",
+                        f"{self._analysisData[i]['FWHM'][1]}",
+                        f"{self._analysisData[i]['FWHM'][2]}",
                     ],
                     [
                         "Uncertainty",
-                        f"{self._analysisData[i]["uncertainty"][0][3]}",
-                        f"{self._analysisData[i]["uncertainty"][1][3]}",
-                        f"{self._analysisData[i]["uncertainty"][2][3]}",
+                        f"{self._analysisData[i]['uncertainty'][0][3]}",
+                        f"{self._analysisData[i]['uncertainty'][1][3]}",
+                        f"{self._analysisData[i]['uncertainty'][2][3]}",
                     ],
                     [
                         "Determination",
-                        f"{self._analysisData[i]["determination"][0]}",
-                        f"{self._analysisData[i]["determination"][1]}",
-                        f"{self._analysisData[i]["determination"][2]}",
+                        f"{self._analysisData[i]['determination'][0]}",
+                        f"{self._analysisData[i]['determination'][1]}",
+                        f"{self._analysisData[i]['determination'][2]}",
                     ],
                 ]
                 dataMetrics = [
                     ["Metric", "Value"],
-                    ["Signal to background ratio", f"{self._analysisData[i]["SBR"]}"],
-                    ["Lateral asymmetry ratio", f"{self._analysisData[i]["LAR"]}"],
-                    ["Sphericity", f"{self._analysisData[i]["sphericity"]}"],
+                    ["Signal to background ratio", f"{self._analysisData[i]['SBR']}"],
+                    ["Lateral asymmetry ratio", f"{self._analysisData[i]['LAR']}"],
+                    ["Sphericity", f"{self._analysisData[i]['sphericity']}"],
                 ]
                 writer.writerow(["Bead's datas"])
                 writer.writerows(dataBead)

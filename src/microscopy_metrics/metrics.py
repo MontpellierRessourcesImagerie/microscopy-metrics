@@ -122,7 +122,7 @@ class Metrics(object):
         """
         if image.ndim not in (2, 3):
             raise ValueError("Image have to be in 2D or 3D.")
-        imageFloat = image.astype(np.float32)
+        imageFloat = image.astype(np.float64)
         imageFloat = (imageFloat - np.min(imageFloat)) / (
                 np.max(imageFloat) - np.min(imageFloat) + 1e-6
         )

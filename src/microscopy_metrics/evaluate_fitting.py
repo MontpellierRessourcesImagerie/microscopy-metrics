@@ -125,7 +125,7 @@ def evaluatePsf():
     psf = fitTool.gauss(*params)(coords)
     psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
     psfReshapeTest = psfReshape
-    psfReshape = addMicroscopyNoise(psfReshape)
+    #psfReshape = addMicroscopyNoise(psfReshape)
     FWHM = [fitTool.fwhm(params[5]), fitTool.fwhm(params[6]), fitTool.fwhm(params[7])]
     fitTool1D = Fitting1D()
     fitTool1D._image = psfReshape
@@ -315,9 +315,13 @@ best_value = meanCorr1D
 if meanCorr2D < best_value:
     best_fit = "2D"
     best_value = meanCorr2D
+elif meanCorr2D == best_value:
+    best_fit += " and 2D"
 if meanCorr3D < best_value:
     best_fit = "3D"
     best_value = meanCorr3D
+elif meanCorr3D == best_value:
+    best_fit += " and 3D"
 
 print("\n" + "=" * 50)
 print("RESULTS SUMMARY")
@@ -334,9 +338,14 @@ best_value = meanPSNR1D
 if meanPSNR2D > best_value:
     best_fit = "2D"
     best_value = meanPSNR2D
+elif meanPSNR2D == best_value:
+    best_fit += " and 2D"
 if meanPSNR3D > best_value:
     best_fit = "3D"
     best_value = meanPSNR3D
+elif meanPSNR3D == best_value:
+    best_fit += " and 3D"
+    
 
 print(f"Mean PSNR 1D: {meanPSNR1D:.2f}dB")
 print(f"Mean PSNR 2D: {meanPSNR2D:.2f}dB")
@@ -350,15 +359,19 @@ best_value = meanBat1D
 if meanBat2D < best_value:
     best_fit = "2D"
     best_value = meanBat2D
+elif meanBat2D == best_value:
+    best_fit += " and 2D"
 if meanBat3D < best_value:
     best_fit = "3D"
     best_value = meanBat3D
+elif meanBat3D == best_value:
+    best_fit += " and 3D"
 
-print(f"Mean distance 1D: {meanBat1D:.10f}")
-print(f"Mean distance 2D: {meanBat2D:.10f}")
-print(f"Mean distance 3D: {meanBat3D:.10f}")
+print(f"Mean distance 1D: {meanBat1D}")
+print(f"Mean distance 2D: {meanBat2D}")
+print(f"Mean distance 3D: {meanBat3D}")
 print("-" * 50)
-print(f"The best fitting method is: {best_fit} with a distance of {best_value:.10f}")
+print(f"The best fitting method is: {best_fit} with a distance of {best_value}")
 print("=" * 50)
 
 best_fit = "1D"
@@ -366,9 +379,13 @@ best_value = meanDetermination1D
 if meanDetermination2D > best_value:
     best_fit = "2D"
     best_value = meanDetermination2D
+elif meanDetermination2D == best_value:
+    best_fit += " and 2D"
 if meanDetermination3D > best_value:
     best_fit = "3D"
     best_value = meanDetermination3D
+elif meanDetermination3D == best_value:
+    best_fit += " and 3D"
 
 print(f"Mean determination (R^2) 1D: {meanDetermination1D}")
 print(f"Mean determination (R^2) 2D: {meanDetermination2D}")
@@ -382,9 +399,13 @@ best_value = meanDuration1D
 if meanDuration2D < best_value:
     best_fit = "2D"
     best_value = meanDuration2D
+elif meanDuration2D == best_value:
+    best_fit += " and 2D"
 if meanDuration3D < best_value:
     best_fit = "3D"
     best_value = meanDuration3D
+elif meanDuration3D == best_value:
+    best_fit += " and 3D"
 
 print(f"Mean duration 1D: {meanDuration1D} seconds")
 print(f"Mean duration 2D: {meanDuration2D} seconds")

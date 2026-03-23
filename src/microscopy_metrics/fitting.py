@@ -34,6 +34,7 @@ class FittingTool(object):
         self._outputDir = ""
         self._results = []
         self._show = True
+        self._amp = 1.0
 
     def __init_subclass__(cls):
         name = cls.name
@@ -121,7 +122,7 @@ class FittingTool(object):
         """
         if self._image.ndim not in (2, 3):
             raise ValueError("Image have to be in 2D or 3D.")
-        imageFloat = self._image.astype(np.float32)
+        imageFloat = self._image.astype(np.float64)
         imageFloat = (imageFloat - np.min(imageFloat)) / (
                 np.max(imageFloat) - np.min(imageFloat) + 1e-6
         )
@@ -193,7 +194,7 @@ class Fitting1D(FittingTool):
         Returns:
             float: Intensity value at x following the curve
         """
-        return lambda x: amp * np.exp(-(x - mu) ** 2 / (2 * sigma ** 2)) + bg
+        return lambda x: self._amp * np.exp(-(x - mu) ** 2 / (2 * sigma ** 2)) + bg
 
 
     def evalFun(self, x, amp, bg, mu, sigma):
@@ -330,7 +331,7 @@ class Fitting2D(FittingTool):
 
         def fun(coords):
             exponent = (-(coords[:,0] - muX) ** 2 / (2 * sigmaX ** 2)-(coords[:,1] - muY) ** 2 / (2 * sigmaY ** 2)) 
-            return amp * np.exp(exponent) + bg
+            return self._amp * np.exp(exponent) + bg
         return fun
 
     def evalFun(self, x, amp, bg, muX, muY, sigmaX, sigmaY):
@@ -585,7 +586,7 @@ class Fitting3D(FittingTool):
 
         def fun(coords):
             exponent = (-(coords[:,0] - muX) ** 2 / (2 * sigmaX ** 2) -(coords[:,1] - muY) ** 2 / (2 * sigmaY ** 2) -(coords[:,2] - muZ)**2 / (2* sigmaZ **2)) 
-            return amp * np.exp(exponent) + bg
+            return self._amp * np.exp(exponent) + bg
         return fun
 
     def evalFun(self, x, amp, bg, muX, muY, muZ, sigmaX, sigmaY, sigmaZ):
