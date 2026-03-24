@@ -194,7 +194,7 @@ class Fitting1D(FittingTool):
         Returns:
             float: Intensity value at x following the curve
         """
-        return lambda x: self._amp * np.exp(-(x - mu) ** 2 / (2 * sigma ** 2)) + bg
+        return lambda x: amp * np.exp(-(x - mu) ** 2 / (2 * sigma ** 2)) + bg
 
 
     def evalFun(self, x, amp, bg, mu, sigma):
@@ -223,7 +223,7 @@ class Fitting1D(FittingTool):
         )
         return popt, pcov
 
-    def plotSingleFit(self,coords,psf,fineCoords,fit,axeStr,outputPath,sigma):
+    def plotSingleFit(self,coords,psf,fineCoords,fit,axeStr,outputPath,params):
         yLim = [0.0,psf.max() * 1.1]
         fig1,ax1 = plt.subplots(figsize=(7, 5))
         ax1.plot(coords, psf, '-', label="PSF", color="k")
@@ -231,6 +231,10 @@ class Fitting1D(FittingTool):
         ax1.plot(fineCoords, fit, label="1D Curve Fit")
         halfMax = (fit.max() + fit.min()) / 2.0
         ax1.axhline(y=halfMax, color='r', linestyle='--', alpha=0.7, label='FWHM')
+        ax1.axhline(y=params[0], color='orange', linestyle='dotted', alpha=0.5, label=f"Amplitude: {params[0]:.2f}")
+        ax1.axvline(x=params[2], color='purple', linestyle='dotted',alpha=0.5, label=f"Mu: {params[2]:.2f}")
+        ax1.axhline(y=params[1], color='black', linestyle='--',alpha=0.5, label=f"BG: {params[1]:.2f}")
+        ax1.plot(params[2],params[0],'go', color='black')
         ax1.set_ylim(yLim)
         ax1.set_title(f'{axeStr} Profile')
         ax1.legend()
@@ -244,7 +248,7 @@ class Fitting1D(FittingTool):
         psfs = [psf[:, center[1], center[2]], psf[center[0], :, center[2]], psf[center[0], center[1], :]]
         for i in range(3):
             fine = np.linspace(0, psf.shape[i] - 1, 500)
-            self.plotSingleFit(coords[i],psfs[i],fine,self.gauss(*params[i])(fine),axes[i],outputPath,params[i][3])
+            self.plotSingleFit(coords[i],psfs[i],fine,self.gauss(*params[i])(fine),axes[i],outputPath,params[i])
 
     def getCoords(self,psf):
         return np.arange(psf.shape[0])
@@ -331,7 +335,7 @@ class Fitting2D(FittingTool):
 
         def fun(coords):
             exponent = (-(coords[:,0] - muX) ** 2 / (2 * sigmaX ** 2)-(coords[:,1] - muY) ** 2 / (2 * sigmaY ** 2)) 
-            return self._amp * np.exp(exponent) + bg
+            return amp * np.exp(exponent) + bg
         return fun
 
     def evalFun(self, x, amp, bg, muX, muY, sigmaX, sigmaY):
@@ -389,7 +393,7 @@ class Fitting2D(FittingTool):
         fig.savefig(outputPath, dpi=300, bbox_inches="tight")
         plt.close(fig)
 
-    def plotSingleFit(self,coords,psf,fineCoords,fit1D,fit2D,axeStr,outputPath):
+    def plotSingleFit(self,coords,psf,fineCoords,fit1D,fit2D,axeStr,outputPath,params):
         yLim = [0.0, psf.max() * 1.1]
         fig1,ax1 = plt.subplots(figsize=(7, 5))
         ax1.plot(coords, psf, '-', label="PSF", color="k")
@@ -400,6 +404,9 @@ class Fitting2D(FittingTool):
         ax1.plot(fineCoords, fit2D, label="2D Curve Fit")
         halfMax = (fit2D.max() + fit2D.min()) / 2.0
         ax1.axhline(y=halfMax, color='r', linestyle='--', alpha=0.7, label='FWHM 2D fit')
+        ax1.axhline(y=params[0], color='orange', linestyle='dotted', alpha=0.5, label=f"Amplitude: {params[0]:.2f}")
+        ax1.axvline(x=params[2], color='purple', linestyle='dotted',alpha=0.5, label=f"Mu: {params[2]:.2f}")
+        ax1.plot(params[2],params[0],'go', color='black')
         ax1.set_ylim(yLim)
         ax1.set_title(f'{axeStr} Profile')
         ax1.legend()
@@ -428,7 +435,7 @@ class Fitting2D(FittingTool):
             else :
                 index = 0
                 fineCoords = np.column_stack((np.full_like(fine, center[index]),fine))
-            self.plotSingleFit(coords[i],psfs[i],fine,Fitting1D().gauss(*params[i])(fine),self.gauss(*params2D[i])(fineCoords),axes[i],outputPath)
+            self.plotSingleFit(coords[i],psfs[i],fine,Fitting1D().gauss(*params[i])(fine),self.gauss(*params2D[i])(fineCoords),axes[i],outputPath,[popt[0],popt[1],popt[2+i]])
 
     def getCoords(self, psf):
         """Function to get a 1D list of 2D coordinates for the Gaussian fitting
@@ -586,7 +593,7 @@ class Fitting3D(FittingTool):
 
         def fun(coords):
             exponent = (-(coords[:,0] - muX) ** 2 / (2 * sigmaX ** 2) -(coords[:,1] - muY) ** 2 / (2 * sigmaY ** 2) -(coords[:,2] - muZ)**2 / (2* sigmaZ **2)) 
-            return self._amp * np.exp(exponent) + bg
+            return amp * np.exp(exponent) + bg
         return fun
 
     def evalFun(self, x, amp, bg, muX, muY, muZ, sigmaX, sigmaY, sigmaZ):
@@ -672,7 +679,7 @@ class Fitting3D(FittingTool):
         fig3.savefig(os.path.join(outputPath,"2D_Gaussian_Image_ZY.png"), dpi=300, bbox_inches="tight")
         plt.close(fig3)
 
-    def plotSingleFit(self,coords,psf,fineCoords,fit1D,fit3D,axeStr,outputPath):
+    def plotSingleFit(self,coords,psf,fineCoords,fit1D,fit3D,axeStr,outputPath,params):
         yLim = [0.0, psf.max() * 1.1]
         fig1,ax1 = plt.subplots(figsize=(7, 5))
         ax1.plot(coords, psf, '-', label="PSF", color="k")
@@ -683,6 +690,9 @@ class Fitting3D(FittingTool):
         ax1.plot(fineCoords, fit3D, label="3D Curve Fit")
         halfMax = (fit3D.max() + fit3D.min()) / 2.0
         ax1.axhline(y=halfMax, color='r', linestyle='--', alpha=0.7, label='FWHM 3D fit')
+        ax1.axhline(y=params[0], color='orange', linestyle='dotted', alpha=0.5, label=f"Amplitude: {params[0]:.2f}")
+        ax1.axvline(x=params[2], color='purple', linestyle='dotted',alpha=0.5, label=f"Mu: {params[2]:.2f}")
+        ax1.plot(params[2],params[0],'go', color='black')
         ax1.set_ylim(yLim)
         ax1.set_title(f'{axeStr} Profile')
         ax1.legend()
@@ -705,7 +715,7 @@ class Fitting3D(FittingTool):
         ]
         Axes = ["Z","Y","X"]
         for i in range(3):
-            self.plotSingleFit(coords[i],psfs[i],fine[i],Fitting1D().gauss(*params1D[i])(fine[i]),self.gauss(*popt)(fineCoords[i]),Axes[i],outputPath)
+            self.plotSingleFit(coords[i],psfs[i],fine[i],Fitting1D().gauss(*params1D[i])(fine[i]),self.gauss(*popt)(fineCoords[i]),Axes[i],outputPath,[popt[0],popt[1],popt[2+i]])
 
     def getCoords(self, psf):
         """Function to get a 1D list of 2D coordinates for the Gaussian fitting
@@ -817,6 +827,8 @@ class Fitting(object):
         self._outputDir = ""
         self.results = []
         self.fitType = "1D"
+        self._thresholdRSquared = 0.95
+        self.retainedId = []
 
     @property
     def images(self):
@@ -877,7 +889,6 @@ class Fitting(object):
         fitTool._roi = self._rois[index]
         fitTool._outputDir = self._outputDir
         return fitTool.processSingleFit(index)
-        
 
     def computeFitting(self):
         self.results = []
@@ -891,3 +902,17 @@ class Fitting(object):
             for future in as_completed(futures):
                 result = future.result()
                 self.results.append(result)
+        rSquared = [self.results[i][3] for i in range(len(self.results))] 
+        tmp = []
+        self.retainedId = []
+        for i,result in enumerate(self.results) :
+            meanDetermination = (result[3][0] + result[3][1] + result[3][2])/3.0
+            if meanDetermination > self._thresholdRSquared : 
+                tmp.append(result)
+                self.retainedId.append(result[0])
+        if len(tmp) > 0 :
+            self.results = tmp
+
+            
+
+

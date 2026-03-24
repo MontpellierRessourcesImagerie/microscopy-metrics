@@ -4,9 +4,10 @@ import math
 import os
 from PIL import Image
 from skimage.draw import polygon_perimeter
-from .detection_tool import DetectionTool
+from .detection_tool import DetectionTool,PeakLocalMaxDetector
 from .threshold_tool import Threshold
-
+from .fitting import Fitting1D
+from scipy.signal import find_peaks
 
 class Detection(object):
     """Standard class for operations relative to detection and extraction of PSFs"""
@@ -19,6 +20,7 @@ class Detection(object):
         self._beadSize = 0.6
         self._rejectionDistance = 0.5
         self._pixelSize = [0.1, 0.06, 0.06]
+        self._thresholdIntensity = 0.75
 
         self._thresholdTool = None
         self._detectionTool = None
@@ -110,6 +112,15 @@ class Detection(object):
     def thresholdTool(self, value):
         self._thresholdTool = value
 
+    def getMeanIntensity(self, centroids):
+        if len(centroids) > 0 :
+            result = 0.0
+            for i in centroids :
+                z,y,x = i
+                result += self._image[int(z),int(y),int(x)]
+            return result/len(centroids) 
+        return 0
+
     def extractRegionOfInterest(self):
         """Uses found _centroids to extract region of interest
         Automatically rejects the ones overlapped or too near from the edges.
@@ -151,17 +162,34 @@ class Detection(object):
                 )
                 overlapped = isRoiOverlapped(self._roisExtracted, tmp)
                 if not overlapped:
-                    if isRoiInImage(
-                        tmp, self._image.shape
-                    ) and isRoiNotInRejection(
-                        centroid,
-                        self._image.shape,
-                        math.ceil(
-                            umToPx(self._rejectionDistance, self._pixelSize[0])
-                        ),
-                    ):
+                    if isRoiInImage(tmp, self._image.shape) and isRoiNotInRejection(centroid,self._image.shape,math.ceil(umToPx(self._rejectionDistance, self._pixelSize[0]))):
                         self._roisExtracted.append(tmp)
                         self._listIdCentroidsRetained.append(i)
+        retainedCentroids = [self._centroids[i] for i in self._listIdCentroidsRetained]
+        meanIntensity = self.getMeanIntensity(retainedCentroids)
+        tmpRoisExtracted = []
+        tmpListIDCentroidsRetained = []
+        for i,centroid in enumerate(retainedCentroids) :
+            roi_image = self._image[..., self._roisExtracted[i][0][1] : self._roisExtracted[i][2][1], self._roisExtracted[i][0][2] : self._roisExtracted[i][1][2]]
+            centroidIdx = self._listIdCentroidsRetained[i]
+            physic = [
+                int(self._centroids[centroidIdx][0]),
+                int(self._centroids[centroidIdx][1] - self._roisExtracted[i][0][1]),
+                int(self._centroids[centroidIdx][2] - self._roisExtracted[i][0][2]),
+            ]
+            z = roi_image[:,physic[1],physic[2]]
+            y = roi_image[physic[0],:,physic[2]]
+            x = roi_image[physic[0],physic[1],:]
+            peaksX,_ = find_peaks(x,height=np.max(x)*0.5)
+            peaksY,_ = find_peaks(y,height=np.max(y)*0.5)
+            peaksZ,_ = find_peaks(z,height=np.max(z)*0.5)
+            if not(self._image[int(centroid[0]),int(centroid[1]),int(centroid[2])] < (self._thresholdIntensity * meanIntensity) or self._image[int(centroid[0]),int(centroid[1]),int(centroid[2])] > ((1+(1-self._thresholdIntensity)) * meanIntensity)) or len(peaksX) > 1 or len(peaksY) >1 or len(peaksZ) > 1 :
+                tmpRoisExtracted.append(self._roisExtracted[i])
+                tmpListIDCentroidsRetained.append(self._listIdCentroidsRetained[i])
+        if len(tmpListIDCentroidsRetained) > 0 :
+            self._roisExtracted = tmpRoisExtracted
+            self._listIdCentroidsRetained = tmpListIDCentroidsRetained
+            
 
     def run(self, outputDir=None, cropPsf=True):
         """Function to operate complete detection workflow
