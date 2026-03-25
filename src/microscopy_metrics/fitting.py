@@ -127,7 +127,7 @@ class FittingTool(object):
                 np.max(imageFloat) - np.min(imageFloat) + 1e-6
         )
         imageFloat[imageFloat < 0] = 0
-        return imageFloat
+        return self._image
 
     def getActivePath(self, index):
         """
@@ -219,7 +219,7 @@ class Fitting1D(FittingTool):
             psf,
             p0=params,
             maxfev=5000,
-            bounds=([0, 0, 0, 1e-6], [2, 1, len(coords), np.inf]),
+            bounds=([0, -np.inf, 0, 1e-6], [np.inf, np.inf, len(coords), np.inf]),
         )
         return popt, pcov
 

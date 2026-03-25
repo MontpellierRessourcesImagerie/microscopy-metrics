@@ -180,12 +180,18 @@ class Detection(object):
             z = roi_image[:,physic[1],physic[2]]
             y = roi_image[physic[0],:,physic[2]]
             x = roi_image[physic[0],physic[1],:]
-            peaksX,_ = find_peaks(x,height=np.max(x)*0.5)
-            peaksY,_ = find_peaks(y,height=np.max(y)*0.5)
-            peaksZ,_ = find_peaks(z,height=np.max(z)*0.5)
-            if not(self._image[int(centroid[0]),int(centroid[1]),int(centroid[2])] < (self._thresholdIntensity * meanIntensity) or self._image[int(centroid[0]),int(centroid[1]),int(centroid[2])] > ((1+(1-self._thresholdIntensity)) * meanIntensity)) or len(peaksX) > 1 or len(peaksY) >1 or len(peaksZ) > 1 :
-                tmpRoisExtracted.append(self._roisExtracted[i])
-                tmpListIDCentroidsRetained.append(self._listIdCentroidsRetained[i])
+            height = Threshold.getInstance("legacy").getThreshold(roi_image)
+            peaksX,_ = find_peaks(x,height=np.min(x)+(np.max(x)-np.min(x))*0.5, distance=3)
+            peaksY,_ = find_peaks(y,height=np.min(y)+(np.max(y)-np.min(y))*0.5, distance=3)
+            peaksZ,_ = find_peaks(z,height=np.min(z)+(np.max(z)-np.min(z))*0.5, distance=3)
+            if not(self._image[int(centroid[0]),int(centroid[1]),int(centroid[2])] < (self._thresholdIntensity * meanIntensity) or self._image[int(centroid[0]),int(centroid[1]),int(centroid[2])] > ((1+(1-self._thresholdIntensity)) * meanIntensity)) :
+                if not(len(peaksX) > 1 or len(peaksY) >1 or len(peaksZ) > 1) :
+                    tmpRoisExtracted.append(self._roisExtracted[i])
+                    tmpListIDCentroidsRetained.append(self._listIdCentroidsRetained[i])
+                else:
+                    print(f"ROI {i} removed because of two beads detected")
+            else :
+                print(f"ROI {i} removed because of intensity")
         if len(tmpListIDCentroidsRetained) > 0 :
             self._roisExtracted = tmpRoisExtracted
             self._listIdCentroidsRetained = tmpListIDCentroidsRetained
