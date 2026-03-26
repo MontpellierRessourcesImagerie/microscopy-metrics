@@ -14,7 +14,7 @@ import time
 
 PSF_SIZE = 80
 
-TRUE_AMP = 1.0
+TRUE_AMP = 255.0
 TRUE_BG = 0.0
 TRUE_MU_X = PSF_SIZE / 2
 TRUE_MU_Y = PSF_SIZE / 2
@@ -67,11 +67,12 @@ def computeMSE(estimations, truths):
     return np.mean((np.array(estimations) - np.array(truths)) ** 2)
 
 
-def computePSNR(estimations, truths, maxI=1.0):
+def computePSNR(estimations, truths):
     mse = computeMSE(estimations, truths)
     if mse == 0:
         return float("inf")
-    psnr = 10 * np.log10((maxI**2) / mse)
+    psnr = 10 * np.log10((TRUE_AMP**2) / mse)
+    #print(mse, maxI**2, np.log10((maxI**2) / mse))
     return psnr
 
 
@@ -89,7 +90,7 @@ def generateRandomPSFParams(psf_size=10):
     sigma_y = np.random.uniform(0.95 * sigmaDefault, 1.05 * sigmaDefault)
     sigma_z = np.random.uniform(0.95 * sigmaDefault, 1.05 * sigmaDefault)
 
-    amp = 1.0
+    amp = TRUE_AMP
     bg = 0.0
     return [amp, bg, mu_x, mu_y, mu_z, sigma_x, sigma_y, sigma_z]
 
@@ -99,7 +100,7 @@ def addMicroscopyNoise(image, maxPhotons=1000, readoutNoiseStd=5.0):
     noisyPoisson = np.random.poisson(scaledImage).astype(np.float32)
     gaussianNoise = np.random.normal(0, readoutNoiseStd, size=image.shape)
     finalNoisyImage = noisyPoisson + gaussianNoise
-    finalNoisyImage = np.maximum(finalNoisyImage, 0)
+    finalNoisyImage = np.minimum(np.maximum(finalNoisyImage, 0),maxPhotons)
     return finalNoisyImage
 
 
@@ -125,7 +126,7 @@ def evaluatePsf():
     psf = fitTool.gauss(*params)(coords)
     psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
     psfReshapeTest = psfReshape
-    #psfReshape = addMicroscopyNoise(psfReshape)
+    psfReshape = addMicroscopyNoise(psfReshape,maxPhotons=TRUE_AMP)
     FWHM = [fitTool.fwhm(params[5]), fitTool.fwhm(params[6]), fitTool.fwhm(params[7])]
     fitTool1D = Fitting1D()
     fitTool1D._image = psfReshape
@@ -145,8 +146,6 @@ def evaluatePsf():
     params1D = [amp, bg, *mu, *sigma]
     fit = Fitting3D().gauss(*params1D)(coords)
     psnr1D = computePSNR(fit, psf)
-    center = int(PSF_SIZE / 2)
-    fit = fit.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
     DistBat1D = 0.0
     DistBat1D += computeBhattacharyyaDistance(params[2],mu[0],params[5],sigma[0])
     DistBat1D += computeBhattacharyyaDistance(params[3],mu[1],params[6],sigma[1])

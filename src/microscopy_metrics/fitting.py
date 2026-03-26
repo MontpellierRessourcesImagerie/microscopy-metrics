@@ -194,7 +194,7 @@ class Fitting1D(FittingTool):
         Returns:
             float: Intensity value at x following the curve
         """
-        return lambda x: amp * np.exp(-(x - mu) ** 2 / (2 * sigma ** 2)) + bg
+        return lambda x: bg + (amp-bg) * np.exp(-(x - mu) ** 2 / (2 * sigma ** 2))
 
 
     def evalFun(self, x, amp, bg, mu, sigma):
@@ -220,6 +220,7 @@ class Fitting1D(FittingTool):
             p0=params,
             maxfev=5000,
             bounds=([0, -np.inf, 0, 1e-6], [np.inf, np.inf, len(coords), np.inf]),
+            #loss = 'soft_l1'
         )
         return popt, pcov
 
@@ -335,7 +336,7 @@ class Fitting2D(FittingTool):
 
         def fun(coords):
             exponent = (-(coords[:,0] - muX) ** 2 / (2 * sigmaX ** 2)-(coords[:,1] - muY) ** 2 / (2 * sigmaY ** 2)) 
-            return amp * np.exp(exponent) + bg
+            return bg + (amp-bg) * np.exp(exponent)
         return fun
 
     def evalFun(self, x, amp, bg, muX, muY, sigmaX, sigmaY):
@@ -371,7 +372,8 @@ class Fitting2D(FittingTool):
             psf.ravel(),
             p0=params,
             maxfev=5000,
-            bounds=([0, -1e-3, 0, 0, 1e-6, 1e-6],[2, 1, psf.shape[0], psf.shape[1], psf.shape[0], psf.shape[1]],),
+            bounds=([0, -np.inf, 0, 0, 1e-6, 1e-6],[np.inf, np.inf, psf.shape[0], psf.shape[1], psf.shape[0], psf.shape[1]],),
+            #loss = 'soft_l1'
         )
         return popt, pcov
 
@@ -593,7 +595,7 @@ class Fitting3D(FittingTool):
 
         def fun(coords):
             exponent = (-(coords[:,0] - muX) ** 2 / (2 * sigmaX ** 2) -(coords[:,1] - muY) ** 2 / (2 * sigmaY ** 2) -(coords[:,2] - muZ)**2 / (2* sigmaZ **2)) 
-            return amp * np.exp(exponent) + bg
+            return bg+(amp-bg) * np.exp(exponent)
         return fun
 
     def evalFun(self, x, amp, bg, muX, muY, muZ, sigmaX, sigmaY, sigmaZ):
@@ -623,14 +625,15 @@ class Fitting3D(FittingTool):
             List(float),Matrix(float): List of fitted parameters and covariance matrix
         """
         params = [amp, bg, *mu, *sigma]
-        bounds = ([0,-1e-3,0,0,0,1e-6,1e-6,1e-6],[2, 1, psf.shape[0], psf.shape[1],psf.shape[2], np.inf, np.inf,np.inf])
+        bounds = ([0,-np.inf,0,0,0,1e-6,1e-6,1e-6],[np.inf, np.inf, psf.shape[0], psf.shape[1],psf.shape[2], np.inf, np.inf,np.inf])
         popt, pcov = curve_fit(
             self.evalFun,
             coords,
             psf.ravel(),
             p0=params,
             maxfev=5000,
-            #bounds=bounds
+            bounds=bounds,
+            #loss = 'soft_l1'
         )
         return popt, pcov
 
