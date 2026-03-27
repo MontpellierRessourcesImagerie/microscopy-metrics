@@ -12,6 +12,7 @@ from skimage.filters import (
 )
 from skimage.measure import regionprops, label
 from skimage.exposure import adjust_sigmoid
+from scipy.signal import find_peaks
 from .utils import *
 import math
 from scipy.optimize import curve_fit
@@ -820,6 +821,53 @@ class Fitting3D(FittingTool):
         rSquared = 1 - (varResidual / varData)
         return rSquared
 
+class Prominence(FittingTool):
+    name = "Prominence"
+    def __init__(self):
+        super().__init__()
+        self._prominenceRel = 0.1
+
+    def processSingleFit(self,index):
+        def cross(a, b):
+            if a < 0 or b < 0 or a >= len(profile) or b >= len(profile):
+                return float(a) if 0 <= a < len(profile) else float(b)
+            v0, v1 = profile[a], profile[b]
+            return a + (h - v0) * (b - a) / (v1 - v0) if v0 != v1 else float(a)
+        
+        if self._image is None : 
+            return None
+        if self._centroid is None :
+            return None
+        physic = self.getLocalCentroid()
+        profiles = [
+            self._image[:,physic[1],physic[2]],
+            self._image[physic[0],:,physic[2]],
+            self._image[physic[0],physic[1],:],
+        ]
+        fwhms = []
+        for i,profile in enumerate(profiles) :
+            amp = float(np.max(profile) - np.min(profile))
+            prominenceMin = amp * float(self._prominenceRel)
+            peaks,props = find_peaks(profile, prominence=prominenceMin)
+            if not peaks.size:
+                return None
+            i = np.argmax(props['prominences'])
+            pk = peaks[i]
+            h = profile[pk] - props['prominences'][i] / 2.0
+            above = np.where(profile > h)[0]
+            if len(above) < 2 :
+                return None
+            lIdx,rIdx = above[0], above[-1]
+            if lIdx == 0 or rIdx >= len(profile) - 1 :
+                return None
+
+            
+            leftCrossing = cross(lIdx - 1, lIdx)
+            rightCrossing = cross(rIdx, rIdx + 1)
+            fwhms.append(pxToUm(rightCrossing - leftCrossing,self._spacing[i]))
+        return [index,fwhms, [[0.0000,0.0000,0.0000,0.0000],[0.0000,0.0000,0.0000,0.0000],[0.0000,0.0000,0.0000,0.0000]], [0.0000,0.0000,0.0000], [0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000]]
+
+
 
 class Fitting(object):
     def __init__(self):
@@ -832,6 +880,7 @@ class Fitting(object):
         self.fitType = "1D"
         self._thresholdRSquared = 0.95
         self.retainedId = []
+        self._prominenceRel = None
 
     @property
     def images(self):
@@ -891,6 +940,8 @@ class Fitting(object):
         fitTool._spacing = self.spacing
         fitTool._roi = self._rois[index]
         fitTool._outputDir = self._outputDir
+        if hasattr(fitTool,"_prominenceRel") and self._prominenceRel is not None:
+            fitTool._prominenceRel = self._prominenceRel
         return fitTool.processSingleFit(index)
 
     def computeFitting(self):
@@ -905,12 +956,14 @@ class Fitting(object):
             for future in as_completed(futures):
                 result = future.result()
                 self.results.append(result)
-        rSquared = [self.results[i][3] for i in range(len(self.results))] 
         tmp = []
         self.retainedId = []
         for i,result in enumerate(self.results) :
+            if result is None : 
+                print(f"Bead {i} is None")
+                continue
             meanDetermination = (result[3][0] + result[3][1] + result[3][2])/3.0
-            if meanDetermination > self._thresholdRSquared : 
+            if meanDetermination >= self._thresholdRSquared : 
                 tmp.append(result)
                 self.retainedId.append(result[0])
         if len(tmp) > 0 :

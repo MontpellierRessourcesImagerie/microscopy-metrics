@@ -1,4 +1,4 @@
-from microscopy_metrics.fitting import FittingTool, Fitting3D, Fitting1D, Fitting2D
+from microscopy_metrics.fitting import FittingTool, Fitting3D, Fitting1D, Fitting2D, Prominence
 import numpy as np
 import matplotlib
 
@@ -126,7 +126,7 @@ def evaluatePsf():
     psf = fitTool.gauss(*params)(coords)
     psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
     psfReshapeTest = psfReshape
-    psfReshape = addMicroscopyNoise(psfReshape,maxPhotons=TRUE_AMP)
+    #psfReshape = addMicroscopyNoise(psfReshape,maxPhotons=TRUE_AMP)
     FWHM = [fitTool.fwhm(params[5]), fitTool.fwhm(params[6]), fitTool.fwhm(params[7])]
     fitTool1D = Fitting1D()
     fitTool1D._image = psfReshape
@@ -198,6 +198,15 @@ def evaluatePsf():
     DistBat3D += computeBhattacharyyaDistance(params[4],mu[2],params[7],sigma[2])
     DistBat3D /= 3.0
     determination3D = (result[3][0] + result[3][1] + result[3][2]) / 3.0
+    prominence = Prominence()
+    prominence._image = psfReshape
+    prominence._roi = [np.array([0, 0, 0])]
+    prominence._centroid = [int(PSF_SIZE / 2), int(PSF_SIZE / 2), int(PSF_SIZE / 2)]
+    start = time.time()
+    result = prominence.processSingleFit(0)
+    end = time.time()
+    elapsedProminence = end - start
+    corrProminence = computeMape(result[1],FWHM)
     return (
         corr1D,
         corr2D,
@@ -214,6 +223,8 @@ def evaluatePsf():
         elapsed1D,
         elapsed2D,
         elapsed3D,
+        corrProminence,
+        elapsedProminence
     )
 
 
@@ -244,6 +255,7 @@ meanPSNR1D, meanPSNR2D, meanPSNR3D = 0, 0, 0
 meanBat1D, meanBat2D, meanBat3D = 0, 0, 0
 meanDetermination1D, meanDetermination2D, meanDetermination3D = 0, 0, 0
 meanDuration1D, meanDuration2D, meanDuration3D = 0, 0, 0
+meanDurationProminence, meanCorrProminence = 0, 0
 n_tests = 100
 pbar = tqdm(total=n_tests, desc="Evaluating PSF Fitting", unit="test")
 workers = int(os.cpu_count() * 0.75)
@@ -266,6 +278,8 @@ with ThreadPoolExecutor(max_workers=workers) as executor:
             duration1D,
             duration2D,
             duration3D,
+            corrProminence,
+            durationProminence
         ) = future.result()
         meanCorr1D += corr1D
         meanCorr2D += corr2D
@@ -282,6 +296,8 @@ with ThreadPoolExecutor(max_workers=workers) as executor:
         meanDuration1D += duration1D
         meanDuration2D += duration2D
         meanDuration3D += duration3D
+        meanCorrProminence += corrProminence
+        meanDurationProminence += durationProminence
         pbar.update(1)
         pbar.set_postfix(
             {
@@ -309,6 +325,9 @@ meanDuration1D /= n_tests
 meanDuration2D /= n_tests
 meanDuration3D /= n_tests
 
+meanCorrProminence /= n_tests
+meanDurationProminence /= n_tests
+
 best_fit = "1D"
 best_value = meanCorr1D
 if meanCorr2D < best_value:
@@ -321,6 +340,11 @@ if meanCorr3D < best_value:
     best_value = meanCorr3D
 elif meanCorr3D == best_value:
     best_fit += " and 3D"
+if meanCorrProminence < best_value:
+    best_fit = "Prominence"
+    best_value = meanCorrProminence
+elif meanCorrProminence == best_value:
+    best_fit += "and Prominence"
 
 print("\n" + "=" * 50)
 print("RESULTS SUMMARY")
@@ -328,6 +352,7 @@ print("=" * 50)
 print(f"Mean MAPE 1D: {meanCorr1D:.8f}%")
 print(f"Mean MAPE 2D: {meanCorr2D:.8f}%")
 print(f"Mean MAPE 3D: {meanCorr3D:.8f}%")
+print(f"Mean MAPE Prominence: {meanCorrProminence:.8f}%")
 print("-" * 50)
 print(f"The best fitting method is: {best_fit} with a MAPE of {best_value:.8f}%")
 print("=" * 50)
@@ -405,10 +430,16 @@ if meanDuration3D < best_value:
     best_value = meanDuration3D
 elif meanDuration3D == best_value:
     best_fit += " and 3D"
+if meanDurationProminence < best_value:
+    best_fit = "Prominence"
+    best_value = meanDurationProminence
+elif meanDurationProminence == best_value:
+    best_fit += "and Prominence"
 
 print(f"Mean duration 1D: {meanDuration1D} seconds")
 print(f"Mean duration 2D: {meanDuration2D} seconds")
 print(f"Mean duration 3D: {meanDuration3D} seconds")
+print(f"Mean duration Prominence: {meanDurationProminence} seconds")
 print("-" * 50)
 print(f"The best fitting method is: {best_fit} with a duration of {best_value} seconds")
 print("=" * 50)
