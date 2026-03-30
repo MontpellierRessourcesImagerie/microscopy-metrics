@@ -16,14 +16,18 @@ def test_detect_beads_peak_local_max():
     shape = (50,100,100)
     bead_positions = [(10,30,40),(20,50,60),(30,70,80)]
     image = create_test_image(shape=shape,bead_positions=bead_positions)
-    detected_beads = detect_psf_peak_local_max(image,threshold_auto=True)
+    detectionTool = DetectionTool.getInstance("peak local maxima")
+    detectionTool._image = image
+    detectionTool._thresholdTool = Threshold.getInstance("legacy")
+    detectionTool.detect()
+    detected_beads = detectionTool._centroids
     assert len(detected_beads) > 0
     tolerance = 3
     found = False
     for expected in bead_positions:
         if not found :
             for detected in detected_beads :
-                if dist(expected,detected) < tolerance :
+                if np.linalg.norm(expected - detected) < tolerance :
                     found = True
                     break
     assert found, "No expected bead found"
@@ -33,14 +37,18 @@ def test_detect_beads_blob_log():
     shape = (50,100,100)
     bead_positions = [(10,30,40),(20,50,60),(30,70,80)]
     image = create_test_image(shape=shape,bead_positions=bead_positions)
-    detected_beads = detect_psf_blob_log(image,threshold_auto=True)
+    detectionTool = DetectionTool.getInstance("Laplacian of Gaussian")
+    detectionTool._image = image
+    detectionTool._thresholdTool = Threshold.getInstance("legacy")
+    detectionTool.detect()
+    detected_beads = detectionTool._centroids
     assert len(detected_beads) > 0
     tolerance = 3
     found = False
     for expected in bead_positions:
         if not found :
             for detected in detected_beads :
-                if dist(expected,detected) < tolerance :
+                if np.linalg.norm(expected - detected) < tolerance :
                     found = True
                     break
     assert found, "No expected bead found"
@@ -51,15 +59,18 @@ def test_detect_beads_blob_dog():
     shape = (50,100,100)
     bead_positions = [(10,30,40),(20,50,60),(30,70,80)]
     image = create_test_image(shape=shape,bead_positions=bead_positions)
-    detected_beads = detect_psf_blob_dog(image,threshold_auto=True)
+    detectionTool = DetectionTool.getInstance("Difference of Gaussian")
+    detectionTool._image = image
+    detectionTool._thresholdTool = Threshold.getInstance("otsu")
+    detectionTool.detect()
+    detected_beads = detectionTool._centroids
     assert len(detected_beads) > 0
     tolerance = 3
     found = False
-    print(detected_beads)
     for expected in bead_positions:
         if not found :
             for detected in detected_beads :
-                if dist(expected,detected) < tolerance :
+                if np.linalg.norm(expected - detected) < tolerance :
                     found = True
                     break
     assert found, "No expected bead found"
@@ -69,7 +80,11 @@ def test_detect_beads_centroid():
     shape = (50,100,100)
     bead_positions = [(10,30,40),(20,50,60),(30,70,80)]
     image = create_test_image(shape=shape,bead_positions=bead_positions)
-    detected_beads = detect_psf_centroid(image,threshold_auto=True)
+    detectionTool = DetectionTool.getInstance("Centroids")
+    detectionTool._image = image
+    detectionTool._thresholdTool = Threshold.getInstance("legacy")
+    detectionTool.detect()
+    detected_beads = detectionTool._centroids
     assert len(detected_beads) > 0
     print(detected_beads)
     tolerance = 3
@@ -77,7 +92,7 @@ def test_detect_beads_centroid():
     for expected in bead_positions:
         if not found :
             for detected in detected_beads :
-                if dist(expected,detected) < tolerance :
+                if np.linalg.norm(expected - detected) < tolerance :
                     found = True
                     break
     assert found, "No expected bead found"
@@ -87,6 +102,17 @@ def test_extract_ROI():
     shape = (50,100,100)
     bead_positions = [(10,30,40),(20,50,60),(40,70,80)]
     image = create_test_image(shape=shape,bead_positions=bead_positions)
-    detected_beads = detect_psf_centroid(image,threshold_auto=True)
-    rois,centroid_ROI = extract_Region_Of_Interest(image,detected_beads,crop_factor=5,bead_size=3,rejection_zone=15)
+    detector = Detection()
+    detector.image = image
+    detectionTool = DetectionTool.getInstance("Centroids")
+    detectionTool._image = image
+    detectionTool._thresholdTool = Threshold.getInstance("legacy")
+    detectionTool.detect()
+    detector._centroids = detectionTool._centroids
+    detector.crop_factor = 5
+    detector.bead_size = 3
+    detector._rejectionDistance = 15
+    detector.pixelSize = np.array([1,1,1])
+    detector.extractRegionOfInterest()
+    rois,centroid_ROI = detector._roisExtracted, detector._listIdCentroidsRetained
     assert len(centroid_ROI) == 1 and centroid_ROI[0] == 1

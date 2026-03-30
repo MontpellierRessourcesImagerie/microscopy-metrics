@@ -11,45 +11,23 @@ def create_test_image(shape,bead_positions,radius=3,intensity=255):
         image[z,cc,rr] = intensity
     return image
 
-def generate_psf_profil(length=100,amplitude=1.0,center=50.0,sigma=5.0):
-    """Generate synthetic PSF profile"""
-    coords = np.linspace(0,length - 1, length)
-    psf = amplitude * np.exp(-0.5*((coords - center) / sigma) ** 2)
-    return coords,psf
-
 def test_signal_to_background_ratio():
     """Unit test for signal to background ratio of a picture"""
     shape = (50,100,100)
     bead_positions = [(25,50,50)]
-    image = create_test_image(shape=shape,bead_positions=bead_positions)
-    mean_SBR,SBR = signal_to_background_ratio(images=[image])
-    assert len(SBR) == 1 and mean_SBR == np.inf
-
-def test_signal_to_background_ratio_annulus():
-    """Unit test for signal to background ratio using an annulus of a picture"""
-    shape = (50,100,100)
-    bead_positions = [(25,50,50)]
-    image = create_test_image(shape=shape,bead_positions=bead_positions)
-    mean_SBR,SBR = signal_to_background_ratio_annulus(images=[image],inner_annulus_distance=2,annulus_thickness=5)
-    assert len(SBR) == 1 and mean_SBR == np.inf
-
-def test_uncertainty():
-    """Unit test for uncertainty calculation"""
-    shape = (4,4)
-    pcov = np.ones(shape=shape)
-    uncert = uncertainty(pcov)
-    assert uncert[3] == 1
-
-def test_determination_perfect():
-    """Unit test for determination calculation"""
-    coords,psf = generate_psf_profil()
-    params = (1.0,0.0,50.0,5.0)
-    r_squared = determination(params,coords,psf)
-    assert np.isclose(r_squared,1.0)
-
-def test_determination_bad():
-    """Unit test for bad determination calculation"""
-    coords,psf = generate_psf_profil()
-    params = (1.0,0.0,30.0,10.0)
-    r_squared = determination(params,coords,psf)
-    assert r_squared < 0.9
+    metrics = Metrics()
+    PSF_SIZE = 100
+    fitTool = Fitting3D()
+    fitTool._show = False
+    params = [255,0,PSF_SIZE/2,PSF_SIZE/2,PSF_SIZE/2,PSF_SIZE/10,PSF_SIZE/10,PSF_SIZE/10]
+    zz = np.arange(PSF_SIZE)
+    yy = np.arange(PSF_SIZE)
+    xx = np.arange(PSF_SIZE)
+    x, y, z = np.meshgrid(xx, yy, zz, indexing="ij")
+    coords = np.stack([x.ravel(), y.ravel(), z.ravel()], -1)
+    psf = fitTool.gauss(*params)(coords)
+    image = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    metrics._images = image
+    metrics._ringInnerDistance = 13.0
+    SBR = metrics.processSingleSBRRing(0,image)
+    assert SBR > 10

@@ -13,6 +13,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 
 PSF_SIZE = 80
+NOISE = False
+FIT_METHODS = ["1D","2D","3D","Prominence"]
 
 TRUE_AMP = 255.0
 TRUE_BG = 0.0
@@ -22,26 +24,6 @@ TRUE_MU_Z = PSF_SIZE / 2
 TRUE_SIGMA_X = PSF_SIZE / 10
 TRUE_SIGMA_Y = PSF_SIZE / 10
 TRUE_SIGMA_Z = PSF_SIZE / 10
-
-
-def show3DPsf(X, Y, Z, psf_3d):
-    fig = plt.figure(figsize=(10, 8))
-    ax = fig.add_subplot(111, projection="3d")
-    zz = np.arange(PSF_SIZE)
-    yy = np.arange(PSF_SIZE)
-    xx = np.arange(PSF_SIZE)
-    x, y, z = np.meshgrid(xx, yy, zz, indexing="ij")
-    alphas = np.stack([x.ravel(), y.ravel(), z.ravel()], -1)
-
-    ax.scatter(X, Y, Z, c=psf_3d, cmap="viridis", s=1, alpha=alphas)
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_zlabel("Z")
-    plt.title("PSF 3D (Gaussienne)")
-    mappable = plt.cm.ScalarMappable(cmap="viridis")
-    mappable.set_array(psf_3d)
-    plt.colorbar(mappable, ax=ax, label="Intensité")
-    plt.show()
 
 
 def show2DPsf(psf, center):
@@ -72,7 +54,6 @@ def computePSNR(estimations, truths):
     if mse == 0:
         return float("inf")
     psnr = 10 * np.log10((TRUE_AMP**2) / mse)
-    #print(mse, maxI**2, np.log10((maxI**2) / mse))
     return psnr
 
 
@@ -84,12 +65,10 @@ def generateRandomPSFParams(psf_size=10):
     mu_x = psf_size * 0.5
     mu_y = psf_size * 0.5
     mu_z = psf_size * 0.5
-
     sigmaDefault = psf_size / 10.0
     sigma_x = np.random.uniform(0.95 * sigmaDefault, 1.05 * sigmaDefault)
     sigma_y = np.random.uniform(0.95 * sigmaDefault, 1.05 * sigmaDefault)
     sigma_z = np.random.uniform(0.95 * sigmaDefault, 1.05 * sigmaDefault)
-
     amp = TRUE_AMP
     bg = 0.0
     return [amp, bg, mu_x, mu_y, mu_z, sigma_x, sigma_y, sigma_z]
@@ -103,41 +82,40 @@ def addMicroscopyNoise(image, maxPhotons=1000, readoutNoiseStd=5.0):
     finalNoisyImage = np.minimum(np.maximum(finalNoisyImage, 0),maxPhotons)
     return finalNoisyImage
 
-
-def evaluatePsf():
+def generatePSF(params):
     fitTool = Fitting3D()
     fitTool._show = False
-    params = [
-        TRUE_AMP,
-        TRUE_BG,
-        TRUE_MU_X,
-        TRUE_MU_Y,
-        TRUE_MU_Z,
-        TRUE_SIGMA_X,
-        TRUE_SIGMA_Y,
-        TRUE_SIGMA_Z,
-    ]
-    params = generateRandomPSFParams(PSF_SIZE)
     zz = np.arange(PSF_SIZE)
     yy = np.arange(PSF_SIZE)
     xx = np.arange(PSF_SIZE)
     x, y, z = np.meshgrid(xx, yy, zz, indexing="ij")
     coords = np.stack([x.ravel(), y.ravel(), z.ravel()], -1)
     psf = fitTool.gauss(*params)(coords)
-    psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
-    psfReshapeTest = psfReshape
-    #psfReshape = addMicroscopyNoise(psfReshape,maxPhotons=TRUE_AMP)
-    FWHM = [fitTool.fwhm(params[5]), fitTool.fwhm(params[6]), fitTool.fwhm(params[7])]
-    fitTool1D = Fitting1D()
-    fitTool1D._image = psfReshape
-    fitTool1D._show = False
-    fitTool1D._centroid = [int(PSF_SIZE / 2), int(PSF_SIZE / 2), int(PSF_SIZE / 2)]
-    fitTool1D._roi = [np.array([0, 0, 0])]
-    fitTool1D._outputDir = Path(__file__).parent / "EvalFitResult" / "1D"
+    return psf,coords
+
+def fitPSF(fitName, image):
+    fitTool = FittingTool.getInstance(fitName)
+    fitTool._image = image
+    fitTool._show = False
+    fitTool._centroid = [int(PSF_SIZE / 2), int(PSF_SIZE / 2), int(PSF_SIZE / 2)]
+    fitTool._roi = [np.array([0, 0, 0])]
+    fitTool._outputDir = Path(__file__).parent / "EvalFitResult" / fitName
     start = time.time()
-    result = fitTool1D.processSingleFit(0)
+    result = fitTool.processSingleFit(0)
     end = time.time()
-    elapsed1D = end - start
+    elapsed = end - start
+    return result,elapsed
+
+def getBhattacharyyaFit(params, mu, sigma):
+    DistBat = 0.0
+    DistBat += computeBhattacharyyaDistance(params[2],mu[0],params[5],sigma[0])
+    DistBat += computeBhattacharyyaDistance(params[3],mu[1],params[6],sigma[1])
+    DistBat += computeBhattacharyyaDistance(params[4],mu[2],params[7],sigma[2])
+    DistBat /= 3.0
+    return DistBat
+
+def evaluate1DPsf(psf,psfReshape,FWHM,coords,params):
+    result,elapsed1D = fitPSF("1D", psfReshape)
     corr1D = computeMape(result[1], FWHM)
     amp = (result[4][0][0] + result[4][1][0] + result[4][2][0]) / 3.0
     bg = (result[4][0][1] + result[4][1][1] + result[4][2][1]) / 3.0
@@ -146,300 +124,130 @@ def evaluatePsf():
     params1D = [amp, bg, *mu, *sigma]
     fit = Fitting3D().gauss(*params1D)(coords)
     psnr1D = computePSNR(fit, psf)
-    DistBat1D = 0.0
-    DistBat1D += computeBhattacharyyaDistance(params[2],mu[0],params[5],sigma[0])
-    DistBat1D += computeBhattacharyyaDistance(params[3],mu[1],params[6],sigma[1])
-    DistBat1D += computeBhattacharyyaDistance(params[4],mu[2],params[7],sigma[2])
-    DistBat1D /= 3.0
+    DistBat1D = getBhattacharyyaFit(params, mu, sigma)
     determination1D = (result[3][0] + result[3][1] + result[3][2]) / 3.0
+    return corr1D,psnr1D,DistBat1D,determination1D,elapsed1D
 
-    fitTool2D = Fitting2D()
-    fitTool2D._image = psfReshape
-    fitTool2D._show = False
-    fitTool2D._centroid = [int(PSF_SIZE / 2), int(PSF_SIZE / 2), int(PSF_SIZE / 2)]
-    fitTool2D._roi = [np.array([0, 0, 0])]
-    fitTool2D._outputDir = Path(__file__).parent / "EvalFitResult" / "2D"
-    start = time.time()
-    result = fitTool2D.processSingleFit(0)
-    end = time.time()
-    elapsed2D = end - start
-    corr2D = computeMape(result[1], FWHM)
+def evaluateXDPsf(psf,psfReshape,FWHM,coords,params,fitMethod = "2D"):
+    result, elapsed = fitPSF(fitMethod, psfReshape)
+    corr = computeMape(result[1], FWHM)
     fit = Fitting3D().gauss(*result[4])(coords)
-    psnr2D = computePSNR(fit, psf)
-    fit = fit.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    psnr = computePSNR(fit, psf)
     mu = [result[4][2], result[4][3], result[4][4]]
     sigma = [result[4][5], result[4][6], result[4][7]]
-    DistBat2D = 0.0
-    DistBat2D += computeBhattacharyyaDistance(params[2],mu[0],params[5],sigma[0])
-    DistBat2D += computeBhattacharyyaDistance(params[3],mu[1],params[6],sigma[1])
-    DistBat2D += computeBhattacharyyaDistance(params[4],mu[2],params[7],sigma[2])
-    DistBat2D /= 3.0
-    determination2D = (result[3][0] + result[3][1] + result[3][2]) / 3.0
+    DistBat = getBhattacharyyaFit(params, mu, sigma)
+    determination = (result[3][0] + result[3][1] + result[3][2]) / 3.0
+    return corr,psnr,DistBat,determination,elapsed
 
-    fitTool3D = Fitting3D()
-    fitTool3D._image = psfReshape
-    fitTool3D._show = False
-    fitTool3D._centroid = [int(PSF_SIZE / 2), int(PSF_SIZE / 2), int(PSF_SIZE / 2)]
-    fitTool3D._roi = [np.array([0, 0, 0])]
-    fitTool3D._outputDir = Path(__file__).parent / "EvalFitResult" / "3D"
-    start = time.time()
-    result = fitTool3D.processSingleFit(0)
-    end = time.time()
-    elapsed3D = end - start
-    corr3D = computeMape(result[1], FWHM)
-    fit = Fitting3D().gauss(*result[4])(coords)
-    psnr3D = computePSNR(fit, psf)
-    fit = fit.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
-    mu = [result[4][2], result[4][3], result[4][4]]
-    sigma = [result[4][5], result[4][6], result[4][7]]
-    DistBat3D = 0.0
-    DistBat3D += computeBhattacharyyaDistance(params[2],mu[0],params[5],sigma[0])
-    DistBat3D += computeBhattacharyyaDistance(params[3],mu[1],params[6],sigma[1])
-    DistBat3D += computeBhattacharyyaDistance(params[4],mu[2],params[7],sigma[2])
-    DistBat3D /= 3.0
-    determination3D = (result[3][0] + result[3][1] + result[3][2]) / 3.0
-    prominence = Prominence()
-    prominence._image = psfReshape
-    prominence._roi = [np.array([0, 0, 0])]
-    prominence._centroid = [int(PSF_SIZE / 2), int(PSF_SIZE / 2), int(PSF_SIZE / 2)]
-    start = time.time()
-    result = prominence.processSingleFit(0)
-    end = time.time()
-    elapsedProminence = end - start
+
+def evaluatePsf():
+    params = generateRandomPSFParams(PSF_SIZE)
+    psf,coords = generatePSF(params)
+    psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    if NOISE :
+        psfReshape = addMicroscopyNoise(psfReshape,maxPhotons=TRUE_AMP)
+    FWHM = [FittingTool().fwhm(params[5]), FittingTool().fwhm(params[6]), FittingTool().fwhm(params[7])]
+    
+    corr1D,psnr1D,DistBat1D,determination1D,elapsed1D = evaluate1DPsf(psf,psfReshape,FWHM,coords,params)
+    corr2D,psnr2D,DistBat2D,determination2D,elapsed2D = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"2D")
+    corr3D,psnr3D,DistBat3D,determination3D,elapsed3D = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"3D")
+
+    result, elapsedProminence = fitPSF("Prominence", psfReshape)
     corrProminence = computeMape(result[1],FWHM)
     return (
-        corr1D,
-        corr2D,
-        corr3D,
-        psnr1D,
-        psnr2D,
-        psnr3D,
-        DistBat1D,
-        DistBat2D,
-        DistBat3D,
-        determination1D,
-        determination2D,
-        determination3D,
-        elapsed1D,
-        elapsed2D,
-        elapsed3D,
-        corrProminence,
-        elapsedProminence
+        [corr1D,corr2D,corr3D,corrProminence],
+        [psnr1D,psnr2D,psnr3D],
+        [DistBat1D,DistBat2D,DistBat3D],
+        [determination1D,determination2D,determination3D],
+        [elapsed1D,elapsed2D,elapsed3D,elapsedProminence],
     )
 
+def addTab(tabA, tabB) :
+    minRange = min(len(tabA), len(tabB))
+    tabC = []
+    for i in range(minRange):
+        tabC.append(tabA[i] + tabB[i])
+    return tabC
 
-fitTool = Fitting3D()
-fitTool._show = False
-params = [
-    TRUE_AMP,
-    TRUE_BG,
-    TRUE_MU_X,
-    TRUE_MU_Y,
-    TRUE_MU_Z,
-    TRUE_SIGMA_X,
-    TRUE_SIGMA_Y,
-    TRUE_SIGMA_Z,
-]
-params = generateRandomPSFParams(PSF_SIZE)
-zz = np.arange(PSF_SIZE)
-yy = np.arange(PSF_SIZE)
-xx = np.arange(PSF_SIZE)
-x, y, z = np.meshgrid(xx, yy, zz, indexing="ij")
-coords = np.stack([x.ravel(), y.ravel(), z.ravel()], -1)
-psf = fitTool.gauss(*params)(coords)
-psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
-psfReshape = addMicroscopyNoise(psfReshape)
-show2DPsf(psfReshape, int(PSF_SIZE / 2))
-meanCorr1D, meanCorr2D, meanCorr3D = 0, 0, 0
-meanPSNR1D, meanPSNR2D, meanPSNR3D = 0, 0, 0
-meanBat1D, meanBat2D, meanBat3D = 0, 0, 0
-meanDetermination1D, meanDetermination2D, meanDetermination3D = 0, 0, 0
-meanDuration1D, meanDuration2D, meanDuration3D = 0, 0, 0
-meanDurationProminence, meanCorrProminence = 0, 0
-n_tests = 100
-pbar = tqdm(total=n_tests, desc="Evaluating PSF Fitting", unit="test")
-workers = int(os.cpu_count() * 0.75)
-with ThreadPoolExecutor(max_workers=workers) as executor:
-    futures = {executor.submit(evaluatePsf) for _ in range(n_tests)}
-    for future in as_completed(futures):
-        (
-            corr1D,
-            corr2D,
-            corr3D,
-            psnr1D,
-            psnr2D,
-            psnr3D,
-            DistBat1D,
-            DistBat2D,
-            DistBat3D,
-            determination1D,
-            determination2D,
-            determination3D,
-            duration1D,
-            duration2D,
-            duration3D,
-            corrProminence,
-            durationProminence
-        ) = future.result()
-        meanCorr1D += corr1D
-        meanCorr2D += corr2D
-        meanCorr3D += corr3D
-        meanPSNR1D += psnr1D
-        meanPSNR2D += psnr2D
-        meanPSNR3D += psnr3D
-        meanBat1D += DistBat1D
-        meanBat2D += DistBat2D
-        meanBat3D += DistBat3D
-        meanDetermination1D += determination1D
-        meanDetermination2D += determination2D
-        meanDetermination3D += determination3D
-        meanDuration1D += duration1D
-        meanDuration2D += duration2D
-        meanDuration3D += duration3D
-        meanCorrProminence += corrProminence
-        meanDurationProminence += durationProminence
-        pbar.update(1)
-        pbar.set_postfix(
-            {
-                "MAPE 1D": f"{corr1D:.8f}%",
-                "MAPE 2D": f"{corr2D:.8f}%",
-                "MAPE 3D": f"{corr3D:.8f}%",
-                "PSNR 1D": f"{psnr1D:.2f}dB",
-                "PSNR 2D": f"{psnr2D:.2f}dB",
-                "PSNR 3D": f"{psnr3D:.2f}dB",
-            }
-        )
-meanCorr1D /= n_tests
-meanCorr2D /= n_tests
-meanCorr3D /= n_tests
-meanPSNR1D /= n_tests
-meanPSNR2D /= n_tests
-meanPSNR3D /= n_tests
-meanBat1D /= n_tests
-meanBat2D /= n_tests
-meanBat3D /= n_tests
-meanDetermination1D /= n_tests
-meanDetermination2D /= n_tests
-meanDetermination3D /= n_tests
-meanDuration1D /= n_tests
-meanDuration2D /= n_tests
-meanDuration3D /= n_tests
+def divTab(tab, div):
+    return [x / div for x in tab]
 
-meanCorrProminence /= n_tests
-meanDurationProminence /= n_tests
+def superior(a,b):
+    return a > b
 
-best_fit = "1D"
-best_value = meanCorr1D
-if meanCorr2D < best_value:
-    best_fit = "2D"
-    best_value = meanCorr2D
-elif meanCorr2D == best_value:
-    best_fit += " and 2D"
-if meanCorr3D < best_value:
-    best_fit = "3D"
-    best_value = meanCorr3D
-elif meanCorr3D == best_value:
-    best_fit += " and 3D"
-if meanCorrProminence < best_value:
-    best_fit = "Prominence"
-    best_value = meanCorrProminence
-elif meanCorrProminence == best_value:
-    best_fit += "and Prominence"
+def inferior(a,b):
+    return a < b
 
-print("\n" + "=" * 50)
-print("RESULTS SUMMARY")
-print("=" * 50)
-print(f"Mean MAPE 1D: {meanCorr1D:.8f}%")
-print(f"Mean MAPE 2D: {meanCorr2D:.8f}%")
-print(f"Mean MAPE 3D: {meanCorr3D:.8f}%")
-print(f"Mean MAPE Prominence: {meanCorrProminence:.8f}%")
-print("-" * 50)
-print(f"The best fitting method is: {best_fit} with a MAPE of {best_value:.8f}%")
-print("=" * 50)
-
-best_fit = "1D"
-best_value = meanPSNR1D
-if meanPSNR2D > best_value:
-    best_fit = "2D"
-    best_value = meanPSNR2D
-elif meanPSNR2D == best_value:
-    best_fit += " and 2D"
-if meanPSNR3D > best_value:
-    best_fit = "3D"
-    best_value = meanPSNR3D
-elif meanPSNR3D == best_value:
-    best_fit += " and 3D"
+def printResults(metricStr,metric,unitStr,comparison=superior):
+    print("=" * 20,metricStr.upper(), "="*20)
+    best_fit = FIT_METHODS[0]
+    best_value = metric[0]
+    print(f"Mean {metricStr} {FIT_METHODS[0]}: {metric[0]:.8f}{unitStr}")
+    for i in range(1,len(metric)):
+        if comparison(metric[i],best_value) :
+            best_fit = FIT_METHODS[i]
+            best_value = metric[i]
+        elif metric[i] == best_value:
+            best_fit += f" and {FIT_METHODS[i]}"
+        print(f"Mean {metricStr} {FIT_METHODS[i]}: {metric[i]:.8f}{unitStr}")
+    print("-" * 50)
+    print(f"The best fitting method is: {best_fit} | with a {metricStr} of {best_value:.8f}{unitStr}", "\n")
     
+        
+if __name__ == "__main__":
+    params = generateRandomPSFParams(PSF_SIZE)
+    psf,coords = generatePSF(params)
+    psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    if NOISE : 
+        psfReshape = addMicroscopyNoise(psfReshape)
+    show2DPsf(psfReshape, int(PSF_SIZE / 2))
 
-print(f"Mean PSNR 1D: {meanPSNR1D:.2f}dB")
-print(f"Mean PSNR 2D: {meanPSNR2D:.2f}dB")
-print(f"Mean PSNR 3D: {meanPSNR3D:.2f}dB")
-print("-" * 50)
-print(f"The best fitting method is: {best_fit} with a PSNR of {best_value:.2f}dB")
-print("=" * 50)
+    meanCorr = [0, 0, 0, 0]
+    meanPSNR = [0, 0, 0]
+    meanBat = [0, 0, 0]
+    meanDetermination = [0, 0, 0]
+    meanDuration = [0, 0, 0, 0]
 
-best_fit = "1D"
-best_value = meanBat1D
-if meanBat2D < best_value:
-    best_fit = "2D"
-    best_value = meanBat2D
-elif meanBat2D == best_value:
-    best_fit += " and 2D"
-if meanBat3D < best_value:
-    best_fit = "3D"
-    best_value = meanBat3D
-elif meanBat3D == best_value:
-    best_fit += " and 3D"
+    n_tests = 100
 
-print(f"Mean distance 1D: {meanBat1D}")
-print(f"Mean distance 2D: {meanBat2D}")
-print(f"Mean distance 3D: {meanBat3D}")
-print("-" * 50)
-print(f"The best fitting method is: {best_fit} with a distance of {best_value}")
-print("=" * 50)
+    pbar = tqdm(total=n_tests, desc="Evaluating PSF Fitting", unit="test")
+    workers = int(os.cpu_count() * 0.75)
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {executor.submit(evaluatePsf) for _ in range(n_tests)}
+        for future in as_completed(futures):
+            (corr,psnr,bat,determination,duration) = future.result()
+            meanCorr = addTab(meanCorr, corr)
+            meanPSNR = addTab(meanPSNR,psnr)
+            meanBat = addTab(meanBat,bat)
+            meanDetermination = addTab(meanDetermination, determination)
+            meanDuration = addTab(meanDuration, duration)
+            pbar.update(1)
+            pbar.set_postfix(
+                {
+                    "MAPE 1D": f"{corr[0]:.8f}%",
+                    "MAPE 2D": f"{corr[1]:.8f}%",
+                    "MAPE 3D": f"{corr[2]:.8f}%",
+                    "PSNR 1D": f"{psnr[0]:.2f}dB",
+                    "PSNR 2D": f"{psnr[1]:.2f}dB",
+                    "PSNR 3D": f"{psnr[2]:.2f}dB",
+                }
+            )
+    meanCorr = divTab(meanCorr,n_tests)
+    meanPSNR = divTab(meanPSNR,n_tests)
+    meanBat = divTab(meanBat,n_tests)
+    meanDetermination = divTab(meanDetermination,n_tests)
+    meanDuration = divTab(meanDuration,n_tests)
 
-best_fit = "1D"
-best_value = meanDetermination1D
-if meanDetermination2D > best_value:
-    best_fit = "2D"
-    best_value = meanDetermination2D
-elif meanDetermination2D == best_value:
-    best_fit += " and 2D"
-if meanDetermination3D > best_value:
-    best_fit = "3D"
-    best_value = meanDetermination3D
-elif meanDetermination3D == best_value:
-    best_fit += " and 3D"
+    print("\n\n" + "=" * 50)
+    print("RESULTS SUMMARY")
+    print("=" * 50,"\n")
 
-print(f"Mean determination (R^2) 1D: {meanDetermination1D}")
-print(f"Mean determination (R^2) 2D: {meanDetermination2D}")
-print(f"Mean determination (R^2) 3D: {meanDetermination3D}")
-print("-" * 50)
-print(f"The best fitting method is: {best_fit} with a determination of {best_value}")
-print("=" * 50)
+    printResults("MAPE",meanCorr,"%",inferior)
+    printResults("PSNR",meanPSNR,"dB",superior)
+    printResults("distance",meanBat,"",inferior)
+    printResults("R2 score", meanDetermination,"",superior)
+    printResults("duration",meanDuration,"seconds",inferior)
 
-best_fit = "1D"
-best_value = meanDuration1D
-if meanDuration2D < best_value:
-    best_fit = "2D"
-    best_value = meanDuration2D
-elif meanDuration2D == best_value:
-    best_fit += " and 2D"
-if meanDuration3D < best_value:
-    best_fit = "3D"
-    best_value = meanDuration3D
-elif meanDuration3D == best_value:
-    best_fit += " and 3D"
-if meanDurationProminence < best_value:
-    best_fit = "Prominence"
-    best_value = meanDurationProminence
-elif meanDurationProminence == best_value:
-    best_fit += "and Prominence"
-
-print(f"Mean duration 1D: {meanDuration1D} seconds")
-print(f"Mean duration 2D: {meanDuration2D} seconds")
-print(f"Mean duration 3D: {meanDuration3D} seconds")
-print(f"Mean duration Prominence: {meanDurationProminence} seconds")
-print("-" * 50)
-print(f"The best fitting method is: {best_fit} with a duration of {best_value} seconds")
-print("=" * 50)
+    print("=" * 50)
+    print("END SUMMARY")
+    print("=" * 50,"\n")
