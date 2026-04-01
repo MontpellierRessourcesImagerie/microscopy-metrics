@@ -1,12 +1,11 @@
 import numpy as np
-from .utils import *
+from microscopy_metrics.utils import umToPx
 import math
 import os
 from PIL import Image
 from skimage.draw import polygon_perimeter
-from .detection_tool import DetectionTool,PeakLocalMaxDetector
-from .threshold_tool import Threshold
-from .fitting import Fitting1D
+from microscopy_metrics.detectionTools.detection_tool import DetectionTool
+from microscopy_metrics.thresholdTools.threshold_tool import Threshold
 from scipy.signal import find_peaks
 
 class Detection(object):
@@ -160,9 +159,9 @@ class Detection(object):
                         ],
                     ]
                 )
-                overlapped = isRoiOverlapped(self._roisExtracted, tmp)
+                overlapped = self.isRoiOverlapped(tmp)
                 if not overlapped:
-                    if isRoiInImage(tmp, self._image.shape) and isRoiNotInRejection(centroid,self._image.shape,math.ceil(umToPx(self._rejectionDistance, self._pixelSize[0]))):
+                    if self.isRoiInImage(tmp) and self.isRoiNotInRejection(centroid):
                         self._roisExtracted.append(tmp)
                         self._listIdCentroidsRetained.append(i)
         retainedCentroids = [self._centroids[i] for i in self._listIdCentroidsRetained]
@@ -195,6 +194,61 @@ class Detection(object):
         if len(tmpListIDCentroidsRetained) > 0 :
             self._roisExtracted = tmpRoisExtracted
             self._listIdCentroidsRetained = tmpListIDCentroidsRetained
+
+    def isRoiOverlapped(self, roi):
+        """
+        Args:
+            roi (np.array): Coordinates of vertices of the ROI
+
+        Returns:
+            Boolean: False if the ROI is not overlapped
+        """
+        newYMin = min(roi[:, 1])
+        newYMax = max(roi[:, 1])
+        newXMin = min(roi[:, 2])
+        newXMax = max(roi[:, 2])
+        for i, R in enumerate(self._roisExtracted):
+            yMin = min(R[:, 1])
+            yMax = max(R[:, 1])
+            xMin = min(R[:, 2])
+            xMax = max(R[:, 2])
+            noOverlapX = (newXMax < xMin) or (xMax < newXMin)
+            noOverlapY = (newYMax < yMin) or (yMax < newYMin)
+            if not (noOverlapX or noOverlapY):
+                return True
+        return False
+
+    def isRoiNotInRejection(self,centroid):
+        """
+        Args:
+            centroid (List): Coordinates of the bead's centroid
+            imageShape (List): Dimensions of the picture
+            rejectionZone (float): Minimal distance between top/bottom and the centroid
+
+        Returns:
+            Boolean: True if the bead is not in the rejection zone.
+        """
+        rejectionZone = math.ceil(umToPx(self._rejectionDistance, self._pixelSize[0]))
+        if ((centroid[0] - rejectionZone) < 0) or (
+                (centroid[0] + rejectionZone) > self._image.shape[0]
+        ):
+            return False
+        return True
+
+
+    def isRoiInImage(self,roi):
+        """
+        Args:
+            roi (np.array): Coordinates of corners of the ROI
+
+        Returns:
+            Boolean: True if the ROI is contained in the image shape
+        """
+        stack, height, width = self._image.shape
+        for z, y, x in roi:
+            if y < 0 or y >= height or x < 0 or x >= width:
+                return False
+        return True
             
 
     def run(self, outputDir=None, cropPsf=True):

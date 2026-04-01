@@ -1,4 +1,4 @@
-from microscopy_metrics.threshold_tool import Threshold
+from microscopy_metrics.thresholdTools.threshold_tool import Threshold
 import numpy as np
 
 def create_uniform_image(shape=(100, 100), low=0, high=1):

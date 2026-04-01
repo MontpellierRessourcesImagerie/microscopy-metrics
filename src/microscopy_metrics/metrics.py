@@ -1,17 +1,15 @@
 import numpy as np
 from scipy import ndimage as ndi
 from skimage.feature import peak_local_max, blob_log, blob_dog
-from skimage.filters import threshold_otsu
 from skimage.measure import regionprops, label
-from skimage.exposure import adjust_sigmoid
-from sklearn.metrics import r2_score
 from scipy.ndimage import median_filter
 import math
-from .utils import *
 from matplotlib import pyplot as plt
-from .fitting import *
-from .theoretical_resolution import *
-from .threshold_tool import ThresholdLegacy
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from microscopy_metrics.utils import umToPx
+from microscopy_metrics.fitting import Fitting
+from microscopy_metrics.resolutionTools.theoretical_resolution import TheoreticalResolution
+from microscopy_metrics.thresholdTools.legacy import ThresholdLegacy
         
 
 class Metrics(object):

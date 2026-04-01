@@ -1,4 +1,4 @@
-from microscopy_metrics.theoretical_resolution import TheoreticalResolution
+from microscopy_metrics.resolutionTools.theoretical_resolution import TheoreticalResolution
 import numpy as np
 
 def test_WidefieldResolution():

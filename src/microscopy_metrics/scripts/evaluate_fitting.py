@@ -1,11 +1,13 @@
-from microscopy_metrics.fitting import FittingTool, Fitting3D, Fitting1D, Fitting2D, Prominence
+from microscopy_metrics.fittingTools.fittingTool import FittingTool
+from microscopy_metrics.fittingTools.fitting1D import Fitting1D
+from microscopy_metrics.fittingTools.fitting2D import Fitting2D
+from microscopy_metrics.fittingTools.fitting3D import Fitting3D
+from microscopy_metrics.fittingTools.frominence import Prominence
 import numpy as np
 import matplotlib
 
 matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from skimage.measure import marching_cubes
 from pathlib import Path
 from tqdm import tqdm
 import os
@@ -13,7 +15,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 
 PSF_SIZE = 80
-NOISE = False
+NOISE = True
 FIT_METHODS = ["1D","2D","3D","Prominence"]
 
 TRUE_AMP = 255.0

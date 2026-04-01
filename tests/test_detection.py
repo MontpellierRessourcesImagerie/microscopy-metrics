@@ -1,21 +1,23 @@
 import pytest
 import numpy as np
 from skimage.draw import disk
-from microscopy_metrics.detection import *
+from microscopy_metrics.detectionTools.detection_tool import DetectionTool
+from microscopy_metrics.detection import Detection
+from microscopy_metrics.thresholdTools.threshold_tool import Threshold
 
-def create_test_image(shape,bead_positions,radius=3,intensity=255):
-    """Create a test image containing beads with known positions"""
+@pytest.fixture
+def image():
+    shape = (50,100,100)
+    bead_positions = [(10,30,40),(20,50,60),(40,70,80)]
     image = np.zeros(shape,dtype=np.uint8)
     for z,y,x in bead_positions:
-        rr,cc = disk((x,y), radius,shape=shape[1:])
-        image[z,cc,rr] = intensity
-    return image
+        rr,cc = disk((x,y), 3,shape=shape[1:])
+        image[z,cc,rr] = 255
+    yield image
 
-def test_detect_beads_peak_local_max():
+def test_detect_beads_peak_local_max(image):
     """Unit test for beads detection using peak_local_max"""
-    shape = (50,100,100)
-    bead_positions = [(10,30,40),(20,50,60),(30,70,80)]
-    image = create_test_image(shape=shape,bead_positions=bead_positions)
+    bead_positions = [(10,30,40),(20,50,60),(40,70,80)]
     detectionTool = DetectionTool.getInstance("peak local maxima")
     detectionTool._image = image
     detectionTool._thresholdTool = Threshold.getInstance("legacy")
@@ -32,11 +34,9 @@ def test_detect_beads_peak_local_max():
                     break
     assert found, "No expected bead found"
 
-def test_detect_beads_blob_log():
+def test_detect_beads_blob_log(image):
     """Unit test for beads detection using blob_log"""
-    shape = (50,100,100)
-    bead_positions = [(10,30,40),(20,50,60),(30,70,80)]
-    image = create_test_image(shape=shape,bead_positions=bead_positions)
+    bead_positions = [(10,30,40),(20,50,60),(40,70,80)]
     detectionTool = DetectionTool.getInstance("Laplacian of Gaussian")
     detectionTool._image = image
     detectionTool._thresholdTool = Threshold.getInstance("legacy")
@@ -54,11 +54,9 @@ def test_detect_beads_blob_log():
     assert found, "No expected bead found"
 
 
-def test_detect_beads_blob_dog():
+def test_detect_beads_blob_dog(image):
     """Unit test for beads detection using blob_dog"""
-    shape = (50,100,100)
-    bead_positions = [(10,30,40),(20,50,60),(30,70,80)]
-    image = create_test_image(shape=shape,bead_positions=bead_positions)
+    bead_positions = [(10,30,40),(20,50,60),(40,70,80)]
     detectionTool = DetectionTool.getInstance("Difference of Gaussian")
     detectionTool._image = image
     detectionTool._thresholdTool = Threshold.getInstance("otsu")
@@ -75,11 +73,9 @@ def test_detect_beads_blob_dog():
                     break
     assert found, "No expected bead found"
 
-def test_detect_beads_centroid():
+def test_detect_beads_centroid(image):
     """Unit test for beads detection using centroid"""
-    shape = (50,100,100)
-    bead_positions = [(10,30,40),(20,50,60),(30,70,80)]
-    image = create_test_image(shape=shape,bead_positions=bead_positions)
+    bead_positions = [(10,30,40),(20,50,60),(40,70,80)]
     detectionTool = DetectionTool.getInstance("Centroids")
     detectionTool._image = image
     detectionTool._thresholdTool = Threshold.getInstance("legacy")
@@ -97,11 +93,9 @@ def test_detect_beads_centroid():
                     break
     assert found, "No expected bead found"
 
-def test_extract_ROI():
+def test_extract_ROI(image):
     """Unit test for ROI extraction"""
-    shape = (50,100,100)
     bead_positions = [(10,30,40),(20,50,60),(40,70,80)]
-    image = create_test_image(shape=shape,bead_positions=bead_positions)
     detector = Detection()
     detector.image = image
     detectionTool = DetectionTool.getInstance("Centroids")

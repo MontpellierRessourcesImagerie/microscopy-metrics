@@ -1,15 +1,8 @@
 import pytest
 import numpy as np
 from skimage.draw import disk
-from microscopy_metrics.metrics import *
-
-def create_test_image(shape,bead_positions,radius=3,intensity=255):
-    """Create a test image containing beads with known positions"""
-    image = np.zeros(shape,dtype=np.uint8)
-    for z,y,x in bead_positions:
-        rr,cc = disk((x,y), radius,shape=shape[1:])
-        image[z,cc,rr] = intensity
-    return image
+from microscopy_metrics.metrics import Metrics
+from microscopy_metrics.fittingTools.fitting3D import Fitting3D
 
 def test_signal_to_background_ratio():
     """Unit test for signal to background ratio of a picture"""

@@ -1,34 +1,14 @@
 import pytest
 import numpy as np
 from skimage.draw import disk
-from microscopy_metrics.fitting import *
+from microscopy_metrics.fittingTools.fittingTool import FittingTool
+from microscopy_metrics.fittingTools.fitting1D import Fitting1D
+from microscopy_metrics.fittingTools.fitting2D import Fitting2D
+from microscopy_metrics.fittingTools.fitting3D import Fitting3D
+PSF_SIZE = 100
 
-def generate_psf_profil(length=100,amplitude=1.0,center=50.0,sigma=5.0):
-    coords = np.linspace(0,length - 1, length)
-    psf = amplitude * np.exp(-0.5*((coords - center) / sigma) ** 2)
-    return coords,psf
-
-def create_test_image_1d(length=10, centroid=5):
-    image = np.zeros(length)
-    image[centroid] = 1.0
-    return image
-
-def create_test_image_2d(shape=(10, 10), centroid=(5, 5)):
-    image = np.zeros(shape)
-    image[centroid] = 1.0
-    return image
-
-def create_test_image_3d(shape=(10, 10, 10), centroid=(5, 5, 5)):
-    image = np.zeros(shape)
-    image[centroid] = 1.0
-    return image
-
-def test_fwhm_calculation():
-    FWHM = round(FittingTool().fwhm(1),2)
-    assert FWHM == 2.35
-
-def test_1D_Fitting():
-    PSF_SIZE = 100
+@pytest.fixture
+def psf():
     fitTool = Fitting3D()
     fitTool._show = False
     params = [255,0,PSF_SIZE/2,PSF_SIZE/2,PSF_SIZE/2,PSF_SIZE/10,PSF_SIZE/10,PSF_SIZE/10]
@@ -38,9 +18,18 @@ def test_1D_Fitting():
     x, y, z = np.meshgrid(xx, yy, zz, indexing="ij")
     coords = np.stack([x.ravel(), y.ravel(), z.ravel()], -1)
     psf = fitTool.gauss(*params)(coords)
+    FWHM = [fitTool.fwhm(params[5]), fitTool.fwhm(params[6]), fitTool.fwhm(params[7])]
+    yield psf,FWHM
+
+
+def test_fwhm_calculation():
+    FWHM = round(FittingTool().fwhm(1),2)
+    assert FWHM == 2.35
+
+def test_1D_Fitting(psf):
+    psf,FWHM = psf
     psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
     psfReshapeTest = psfReshape
-    FWHM = [fitTool.fwhm(params[5]), fitTool.fwhm(params[6]), fitTool.fwhm(params[7])]
     fitTool1D = Fitting1D()
     fitTool1D._image = psfReshape
     fitTool1D._show = False
@@ -58,20 +47,10 @@ def test_1D_Fitting():
     fwhms = [fitTool1D.fwhm(sigma[0]), fitTool1D.fwhm(sigma[1]), fitTool1D.fwhm(sigma[2])]
     assert np.isclose(FWHM[0],fwhms[0],rtol=1) and np.isclose(FWHM[1],fwhms[1],rtol=1) and np.isclose(FWHM[2],fwhms[2],rtol=1)
 
-def test_2D_Fitting():
-    PSF_SIZE = 100
-    fitTool = Fitting3D()
-    fitTool._show = False
-    params = [255,0,PSF_SIZE/2,PSF_SIZE/2,PSF_SIZE/2,PSF_SIZE/10,PSF_SIZE/10,PSF_SIZE/10]
-    zz = np.arange(PSF_SIZE)
-    yy = np.arange(PSF_SIZE)
-    xx = np.arange(PSF_SIZE)
-    x, y, z = np.meshgrid(xx, yy, zz, indexing="ij")
-    coords = np.stack([x.ravel(), y.ravel(), z.ravel()], -1)
-    psf = fitTool.gauss(*params)(coords)
+def test_2D_Fitting(psf):
+    psf,FWHM = psf
     psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
     psfReshapeTest = psfReshape
-    FWHM = [fitTool.fwhm(params[5]), fitTool.fwhm(params[6]), fitTool.fwhm(params[7])]
     fitTool2D = Fitting2D()
     fitTool2D._image = psfReshape
     fitTool2D._show = False
@@ -89,20 +68,10 @@ def test_2D_Fitting():
     fwhms = [fitTool2D.fwhm(sigma[0]), fitTool2D.fwhm(sigma[1]), fitTool2D.fwhm(sigma[2])]
     assert np.isclose(FWHM[0],fwhms[0],rtol=1) and np.isclose(FWHM[1],fwhms[1],rtol=1) and np.isclose(FWHM[2],fwhms[2],rtol=1)
 
-def test_3D_Fitting():
-    PSF_SIZE = 100
-    fitTool = Fitting3D()
-    fitTool._show = False
-    params = [255,0,PSF_SIZE/2,PSF_SIZE/2,PSF_SIZE/2,PSF_SIZE/10,PSF_SIZE/10,PSF_SIZE/10]
-    zz = np.arange(PSF_SIZE)
-    yy = np.arange(PSF_SIZE)
-    xx = np.arange(PSF_SIZE)
-    x, y, z = np.meshgrid(xx, yy, zz, indexing="ij")
-    coords = np.stack([x.ravel(), y.ravel(), z.ravel()], -1)
-    psf = fitTool.gauss(*params)(coords)
+def test_3D_Fitting(psf):
+    psf,FWHM = psf
     psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
     psfReshapeTest = psfReshape
-    FWHM = [fitTool.fwhm(params[5]), fitTool.fwhm(params[6]), fitTool.fwhm(params[7])]
     fitTool3D = Fitting3D()
     fitTool3D._image = psfReshape
     fitTool3D._show = False
