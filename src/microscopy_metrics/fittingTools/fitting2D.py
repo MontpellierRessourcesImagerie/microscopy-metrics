@@ -220,18 +220,10 @@ class Fitting2D(FittingTool):
                 params2DMean[2+u2] += params[2]/2.0
                 params2DMean[5+u] += params[5]/2.0
                 params2DMean[5+u2] += params[4]/2.0
-            pcov[0, 0] += pcovs1D[u][0, 0]
-            pcov[1, 1] += pcovs1D[u][1, 1]
-            pcov[2, 2] += pcovs1D[u][2, 2]
-            pcov[3, 3] += pcovs1D[u2][2, 2]
             if u + 1 < 3:
-                pcov[4, 4] += pcovs1D[u][3, 3]
-                pcov[5, 5] += pcovs1D[u2][3, 3]
                 result[1][u] += pxToUm(self.fwhm(params[4]), self._spacing[u])
                 result[1][u2] += pxToUm(self.fwhm(params[5]), self._spacing[u2])
             else:
-                pcov[4, 4] += pcovs1D[u2][3, 3]
-                pcov[5, 5] += pcovs1D[u][3, 3]
                 result[1][u] += pxToUm(self.fwhm(params[5]), self._spacing[u])
                 result[1][u2] += pxToUm(self.fwhm(params[4]), self._spacing[u2])
             result[2].append(self.uncertainty(pcov))

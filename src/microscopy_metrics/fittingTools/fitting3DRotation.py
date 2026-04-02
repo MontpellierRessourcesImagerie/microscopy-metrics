@@ -1,3 +1,4 @@
+import math
 import os
 import numpy as np
 from scipy.optimize import curve_fit
@@ -12,12 +13,13 @@ matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 
 
-class Fitting3D(FittingTool):
-    name = "3D"
+class Fitting3DRotation(FittingTool):
+    name = "3D Rotation"
     def __init__(self):
         super().__init__()
+        self.thetas = [0,0,0]
 
-    def gauss(self, amp, bg, muX, muY, muZ, sigmaX, sigmaY, sigmaZ):
+    def gauss(self, amp, bg, muX, muY, muZ, sigmaX, sigmaY, sigmaZ, thetaX, thetaY, thetaZ):
         """
         Args:
             amp (float): amplitude of the curve
@@ -30,22 +32,34 @@ class Fitting3D(FittingTool):
         """
 
         def fun(coords):
-            exponent = (-(coords[:,0] - muX) ** 2 / (2 * sigmaX ** 2) -(coords[:,1] - muY) ** 2 / (2 * sigmaY ** 2) -(coords[:,2] - muZ)**2 / (2* sigmaZ **2)) 
+            x = coords[:, 0] - muX
+            y = coords[:, 1] - muY
+            z = coords[:, 2] - muZ
+            cx, sx = np.cos(thetaX), np.sin(thetaX)
+            cy, sy = np.cos(thetaY), np.sin(thetaY)
+            cz, sz = np.cos(thetaZ), np.sin(thetaZ)
+
+            x_rot = (cy*cz) * x + (cz*sx*sy - cx*sz) * y + (cx*cz*sy + sx*sz) * z
+            y_rot = (cy*sz) * x + (cx*cz + sx*sy*sz) * y + (-cz*sx + cx*sy*sz) * z
+            z_rot = (-sy) * x   + (cy*sx) * y     
+            
+            exponent = (-(x_rot ** 2) / (2 * sigmaX ** 2) -(y_rot ** 2) / (2 * sigmaY ** 2) -(z_rot ** 2) / (2* sigmaZ **2)) 
             return bg+(amp-bg) * np.exp(exponent)
         return fun
 
-    def evalFun(self, x, amp, bg, muX, muY, muZ, sigmaX, sigmaY, sigmaZ):
+    def evalFun(self, x, amp, bg, muX, muY, muZ, sigmaX, sigmaY, sigmaZ, thetaX, thetaY, thetaZ):
         """
         Args:
             amp (float): amplitude of the curve
             bg (float): background intensity
-            muX,muY (float): center coordinates of the Gaussian
-            cxx,cxy,cyy (float): standard deviation of the Gaussian
+            muX,muY,muZ (float): center coordinates of the Gaussian
+            sigmaX,sigmaY,sigmaZ (float): standard deviation of the Gaussian
+            thetaX,thetaY,thetaZ (float): rotation angles around each axis
 
         Returns:
-            float: Intensity value at (x,y) following the curve
+            float: Intensity value at (x,y,z) following the curve
         """
-        return self.gauss(amp=amp, bg=bg, muX=muX, muY=muY, muZ=muZ, sigmaX=sigmaX, sigmaY=sigmaY, sigmaZ=sigmaZ)(x)
+        return self.gauss(amp=amp, bg=bg, muX=muX, muY=muY, muZ=muZ, sigmaX=sigmaX, sigmaY=sigmaY, sigmaZ=sigmaZ, thetaX=thetaX, thetaY=thetaY, thetaZ=thetaZ)(x)
 
     def fitCurve(self, amp, bg, mu, sigma, coords, psf):
         """
@@ -54,14 +68,14 @@ class Fitting3D(FittingTool):
             bg (float): background intensity
             mu (List(float)): center of the Gaussian
             sigma (List(float)): standard deviation of the Gaussian
-            coords (np.array(float)): List of X,Y coordinates
+            coords (np.array(float)): List of X,Y,Z coordinates
             psf (np.ndarray): 1D image of the flatten 2D psf
 
         Returns:
             List(float),Matrix(float): List of fitted parameters and covariance matrix
         """
-        params = [amp, bg, *mu, *sigma]
-        bounds = ([0,-np.inf,0,0,0,1e-6,1e-6,1e-6],[np.inf, np.inf, psf.shape[0], psf.shape[1],psf.shape[2], np.inf, np.inf,np.inf])
+        params = [amp, bg, *mu, *sigma, 0, 0, 0]
+        bounds = ([0,-np.inf,0,0,0,1e-6,1e-6,1e-6,-np.pi,-np.pi,-np.pi],[np.inf, np.inf, psf.shape[0], psf.shape[1],psf.shape[2], np.inf, np.inf,np.inf,np.pi,np.pi,np.pi])
         popt, pcov = curve_fit(
             self.evalFun,
             coords,
@@ -69,6 +83,7 @@ class Fitting3D(FittingTool):
             p0=params,
             maxfev=5000,
             bounds=bounds,
+            method="dogbox",
             #loss = 'soft_l1'
         )
         return popt, pcov
@@ -82,8 +97,23 @@ class Fitting3D(FittingTool):
         xx_fine = np.linspace(0, psf.shape[2], fitShapeX)
         z_fine, y_fine, x_fine = np.meshgrid(zz_fine, yy_fine, xx_fine, indexing="ij")
         fine_coords_zyx = np.stack([z_fine.ravel(), y_fine.ravel(), x_fine.ravel()], -1)
+        z0 = params[2] * 5
+        y0 = params[3] * 5
+        x0 = params[4] * 5
+        L = min(max(psf.shape) * 5 / 4, 30)
+        thetaX = params[8]
+        thetaY = params[9]
+        thetaZ = params[10]
         fit = self.gauss(*params)(fine_coords_zyx)
         fit = fit.reshape((fitShapeZ,fitShapeY,fitShapeX))
+        if params[6] > params[7]:
+            dy = L * np.cos(thetaY)
+            dx = -L * np.sin(thetaY)
+        else:
+            dy = L * np.sin(thetaX)
+            dx = L * np.cos(thetaX)  
+        x1 = x0 + dx
+        y1 = y0 + dy
         fig = plt.figure(figsize=(10, 5))
         ax1 = fig.add_subplot(1, 2, 1)
         ax1.imshow(psf[center[0]], cmap="viridis")
@@ -92,9 +122,21 @@ class Fitting3D(FittingTool):
         centerFit = int(fitShapeZ * (center[0]/psf.shape[0]))
         ax2.imshow(fit[centerFit], cmap="viridis")
         ax2.set_title("Fit")
+        ax2.plot([x0,x1],[y0,y1], color="red", linewidth=2)
+        ax2.scatter([x0],[y0],color="red", alpha=0.7)
+        ax2.axhline(y=fitShapeY / 2, color='k', alpha=0.5, linestyle='--')
+        ax2.axvline(x=fitShapeX / 2, color='k', alpha=0.5, linestyle='--')
         plt.tight_layout()
         fig.savefig(os.path.join(outputPath,"2D_Gaussian_Image_YX.png"), dpi=300, bbox_inches="tight")
         plt.close(fig)
+        if params[5] > params[6]:
+            dy = L * np.cos(thetaY)
+            dx = -L * np.sin(thetaY)
+        else:
+            dy = L * np.sin(thetaX)
+            dx = L * np.cos(thetaX)
+        x1 = x0 + dx
+        y1 = y0 + dy
         fig2 = plt.figure(figsize=(10, 5))
         ax1 = fig2.add_subplot(1, 2, 1)
         ax1.imshow(psf[:,center[1],:], cmap="viridis")
@@ -103,9 +145,21 @@ class Fitting3D(FittingTool):
         centerFit = int(fitShapeY * (center[1]/psf.shape[1]))
         ax2.imshow(fit[:,centerFit,:], cmap="viridis")
         ax2.set_title("Fit")
+        ax2.plot([x0,x1],[y0,y1], color="red", linewidth=2)
+        ax2.scatter([x0],[y0],color="red", alpha=0.7)
+        ax2.axhline(y=fitShapeZ / 2, color='k', alpha=0.5, linestyle='--')
+        ax2.axvline(x=fitShapeX / 2, color='k', alpha=0.5, linestyle='--')
         plt.tight_layout()
         fig2.savefig(os.path.join(outputPath,"2D_Gaussian_Image_XZ.png"), dpi=300, bbox_inches="tight")
         plt.close(fig2)
+        if params[5] > params[7]:
+            dy = L * np.cos(thetaZ)
+            dx = -L * np.sin(thetaZ)
+        else:
+            dy = L * np.sin(thetaX)
+            dx = L * np.cos(thetaX)
+        x1 = x0 + dx
+        y1 = y0 + dy
         fig3 = plt.figure(figsize=(10, 5))
         ax1 = fig3.add_subplot(1, 2, 1)
         ax1.imshow(psf[:,:,center[2]], cmap="viridis")
@@ -114,6 +168,10 @@ class Fitting3D(FittingTool):
         centerFit = int(fitShapeX * (center[2]/psf.shape[2]))
         ax2.imshow(fit[:,:,centerFit], cmap="viridis")
         ax2.set_title("Fit")
+        ax2.plot([x0,x1],[y0,y1], color="red", linewidth=2)
+        ax2.scatter([x0],[y0],color="red", alpha=0.7)
+        ax2.axhline(y=fitShapeY / 2, color='k', alpha=0.5, linestyle='--')
+        ax2.axvline(x=fitShapeX / 2, color='k', alpha=0.5, linestyle='--')
         plt.tight_layout()
         fig3.savefig(os.path.join(outputPath,"2D_Gaussian_Image_ZY.png"), dpi=300, bbox_inches="tight")
         plt.close(fig3)
@@ -205,11 +263,15 @@ class Fitting3D(FittingTool):
         mu = [params1D[0][2], params1D[1][2], params1D[2][2]]
         sigma = [params1D[0][3], params1D[1][3], params1D[2][3]]
         params, pcov = self.fitCurve(amp, bg, mu, sigma, coords, psf)
+        self.thetas = params[8:11]
         x, y, z = np.arange(psf.shape[0]), np.arange(psf.shape[1]), np.arange(psf.shape[2])
         coordsTmp = [x, y, z]
         if self._show : self.plotFit3d(psf,physic,params1D,params,activePath,coordsTmp)
         
-        if self._show : self.show2dFit(psf,physic,activePath,params,coords)
+        if self._show : 
+            self.show2dFit(psf,physic,activePath,params,coords)
+            for i in range(3):
+                print(f"Angle {i}: {math.degrees(self.thetas[i])} ")
         result[1] = [
             pxToUm(self.fwhm(params[5]), self._spacing[0]),
             pxToUm(self.fwhm(params[6]), self._spacing[1]),

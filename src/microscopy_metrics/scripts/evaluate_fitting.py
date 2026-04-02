@@ -1,8 +1,10 @@
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.fittingTools.fitting1D import Fitting1D
 from microscopy_metrics.fittingTools.fitting2D import Fitting2D
+from microscopy_metrics.fittingTools.fitting2DEllips import Fitting2DEllips
+from microscopy_metrics.fittingTools.fitting2DRotate import Fitting2DRotation
 from microscopy_metrics.fittingTools.fitting3D import Fitting3D
-from microscopy_metrics.fittingTools.frominence import Prominence
+from microscopy_metrics.fittingTools.prominence import Prominence
 import numpy as np
 import matplotlib
 
@@ -16,7 +18,7 @@ import time
 
 PSF_SIZE = 80
 NOISE = True
-FIT_METHODS = ["1D","2D","3D","Prominence"]
+FIT_METHODS = ["1D","2D","3D","Prominence","2DEllips","2DRotation"]
 
 TRUE_AMP = 255.0
 TRUE_BG = 0.0
@@ -156,12 +158,18 @@ def evaluatePsf():
 
     result, elapsedProminence = fitPSF("Prominence", psfReshape)
     corrProminence = computeMape(result[1],FWHM)
+
+    result, elapsed2DEllips = fitPSF("2D Ellipse",psfReshape)
+    corr2DEllips = computeMape(result[1],FWHM)
+
+    result, elapsed2DRotation = fitPSF("2D rotation", psfReshape)
+    corr2DRotation = computeMape(result[1],FWHM)
     return (
-        [corr1D,corr2D,corr3D,corrProminence],
+        [corr1D,corr2D,corr3D,corrProminence,corr2DEllips,corr2DRotation],
         [psnr1D,psnr2D,psnr3D],
         [DistBat1D,DistBat2D,DistBat3D],
         [determination1D,determination2D,determination3D],
-        [elapsed1D,elapsed2D,elapsed3D,elapsedProminence],
+        [elapsed1D,elapsed2D,elapsed3D,elapsedProminence,elapsed2DEllips,elapsed2DRotation],
     )
 
 def addTab(tabA, tabB) :
@@ -204,11 +212,11 @@ if __name__ == "__main__":
         psfReshape = addMicroscopyNoise(psfReshape)
     show2DPsf(psfReshape, int(PSF_SIZE / 2))
 
-    meanCorr = [0, 0, 0, 0]
+    meanCorr = [0 for _ in range(len(FIT_METHODS))]
     meanPSNR = [0, 0, 0]
     meanBat = [0, 0, 0]
     meanDetermination = [0, 0, 0]
-    meanDuration = [0, 0, 0, 0]
+    meanDuration = [0 for _ in range(len(FIT_METHODS))]
 
     n_tests = 100
 

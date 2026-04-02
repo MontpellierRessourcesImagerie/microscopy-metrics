@@ -1,11 +1,10 @@
 import os
-import numpy as np
 import math
+import numpy as np
 from scipy.optimize import curve_fit
 
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.fittingTools.fitting1D import Fitting1D
-from microscopy_metrics.fittingTools.fitting2D import Fitting2D
 from microscopy_metrics.utils import pxToUm
 from sklearn.metrics import r2_score
 import matplotlib
@@ -14,34 +13,35 @@ matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 
 
-class Fitting2DEllips(FittingTool):
-    name = "2D Ellipse"
+class Fitting2DRotation(FittingTool):
+    name = "2D rotation"
     def __init__(self):
         super().__init__()
         self.thetas = [0,0,0]
 
-    def gauss(self, amp, bg, muX, muY, a, b, c):
+    def gauss(self, amp, bg, muX, muY, sigmaX, sigmaY,theta):
         """
         Args:
             amp (float): amplitude of the curve
             bg (float): background intensity
             muX,muY (float): center coordinates of the Gaussian
-            cxx,cxy,cyy (float): standard deviation of the Gaussian
+            sigmaX,sigmaY (float): standard deviation of the Gaussian
+            theta (float): rotation angle in radians
 
         Returns:
             float: Intensity value at (x,y) following the curve
         """
 
         def fun(coords):
-            exponent = ( 
-                (a * ((coords[:,0] - muX) ** 2)) + 
-                (c * ((coords[:,1] - muY) ** 2)) + 
-                (2.0 * b * (coords[:,0] - muX) * (coords[:,1] - muY)) 
-            )
-            return bg + (amp-bg) * np.exp(-exponent)
+            x = coords[:, 0]
+            y = coords[:, 1]
+            x_rot = (x - muX) * np.cos(theta) - (y - muY) * np.sin(theta)
+            y_rot = (x - muX) * np.sin(theta) + (y - muY) * np.cos(theta)
+            exponent = -( (x_rot ** 2) / (2 * sigmaX ** 2) + (y_rot ** 2) / (2 * sigmaY ** 2) )
+            return bg + (amp - bg) * np.exp(exponent)
         return fun
 
-    def evalFun(self, x, amp, bg, muX, muY, a, b, c):
+    def evalFun(self, x, amp, bg, muX, muY, sigmaX, sigmaY,theta):
         """
         Args:
             amp (float): amplitude of the curve
@@ -52,9 +52,9 @@ class Fitting2DEllips(FittingTool):
         Returns:
             float: Intensity value at (x,y) following the curve
         """
-        return self.gauss(amp=amp, bg=bg, muX=muX, muY=muY, a=a, b=b, c=c)(x)
+        return self.gauss(amp=amp, bg=bg, muX=muX, muY=muY, sigmaX=sigmaX, sigmaY=sigmaY,theta=theta)(x)
 
-    def fitCurve(self, amp, bg, mu, sigma, coords, psf):
+    def fitCurve(self, amp, bg, mu, sigma,theta, coords, psf):
         """
         Args:
             amp (float): amplitude of the Gaussian
@@ -67,30 +67,19 @@ class Fitting2DEllips(FittingTool):
         Returns:
             List(float),Matrix(float): List of fitted parameters and covariance matrix
         """
-        params = [amp, bg, *mu, *sigma]
+        params = [amp, bg, *mu, *sigma,theta]
         popt, pcov = curve_fit(
             self.evalFun,
             coords,
             psf.ravel(),
             p0=params,
             maxfev=5000,
-            bounds=([0, -np.inf, 0, 0, 1e-6, -np.inf,1e-6],[np.inf, np.inf, psf.shape[0], psf.shape[1], np.inf,np.inf,np.inf])
+            bounds=([0, -np.inf, 0, 0, 1e-6, 1e-6, -np.pi],[np.inf, np.inf, psf.shape[0], psf.shape[1], psf.shape[0], psf.shape[1], np.pi],),
+            #loss = 'soft_l1'
         )
         return popt, pcov
 
-    def ellipseParmConversion(self,a,b,c):
-        t = math.sqrt(4.0 * (b**2) + ((a-c)**2))
-        s = math.sqrt(abs((b**2) - (a*c)))
-        sx = math.sqrt(abs(-a+t-c))/2.0/s
-        sy = math.sqrt(abs(-a-t-c))/2.0/s        
-        theta = math.sqrt(1.0+((a-c)/t))/math.sqrt(2.0)
-        theta = math.acos(theta)
-        theta_sign = 4*b*(sx**2)*(sy**2)/((sx**2)-(sy**2))
-        theta_sign = np.sign(-0.5 * math.asin(theta_sign))
-        theta = ((math.pi/2)-theta) * theta_sign
-        return theta,sx,sy
-
-    def show2dFit(self, psf, outputPath,params,theta):
+    def show2dFit(self, psf, outputPath,params):
         yy_fine = np.linspace(0,psf.shape[0] - 1, psf.shape[0] * 10)
         xx_fine = np.linspace(0, psf.shape[1] - 1, psf.shape[1] * 10)
         y_fine, x_fine = np.meshgrid(yy_fine, xx_fine, indexing="ij")
@@ -98,12 +87,13 @@ class Fitting2DEllips(FittingTool):
         y0 = params[2] * 10
         x0 = params[3] * 10
         L = min(max(psf.shape) * 10 / 4, 30)
+        theta = params[6]
         if params[4] > params[5]:
             dy = L * np.cos(theta)
             dx = -L * np.sin(theta)
         else:
             dy = L * np.sin(theta)
-            dx = L * np.cos(theta) 
+            dx = L * np.cos(theta)  
         x1 = x0 + dx
         y1 = y0 + dy
         fit = self.gauss(*params)(fine_coords_yx)
@@ -147,6 +137,11 @@ class Fitting2DEllips(FittingTool):
         psf = self.setNormalizedImage()
         yLim = [0.0, psf.max() * 1.1]
         axes = ["Z","Y","X"]
+        params2D = [
+            [popt[0],popt[1],popt[2],popt[3],popt[5],popt[6],self.thetas[0]],
+            [popt[0],popt[1],popt[3],popt[4],popt[6],popt[7],self.thetas[1]],
+            [popt[0],popt[1],popt[2],popt[4],popt[5],popt[7],self.thetas[2]]
+        ]
         psfs = [
             psf[:, center[1], center[2]],
             psf[center[0], :, center[2]],
@@ -157,12 +152,10 @@ class Fitting2DEllips(FittingTool):
             if i < 2 :
                 index = i+1
                 fineCoords = np.column_stack((fine, np.full_like(fine, center[index])))
-                mu = popt[i][2]
             else :
                 index = 0
                 fineCoords = np.column_stack((np.full_like(fine, center[index]),fine))
-                mu = popt[i][3]
-            self.plotSingleFit(coords[i],psfs[i],fine,Fitting1D().gauss(*params[i])(fine),self.gauss(*popt[i])(fineCoords),axes[i],outputPath,[popt[i][0],popt[i][1],mu])
+            self.plotSingleFit(coords[i],psfs[i],fine,Fitting1D().gauss(*params[i])(fine),self.gauss(*params2D[i])(fineCoords),axes[i],outputPath,[popt[0],popt[1],popt[2+i]])
 
     def getCoords(self, psf):
         """Function to get a 1D list of 2D coordinates for the Gaussian fitting
@@ -224,41 +217,52 @@ class Fitting2DEllips(FittingTool):
         results1D = fitTool1D.processSingleFit(index)
         params1D = results1D[4]
         pcovs1D = results1D[5]
-        params2D = []
+        params2DMean = [0,0,0,0,0,0,0,0]
         for u in range(3):
             lim = [0, psf[u].max() * 1.1]
             bg = params1D[u][1]
             amp = params1D[u][0]
             if u + 1 < 3:
                 u2 = u + 1
+                sigma = [params1D[u][3], params1D[u2][3]]
                 mu = [params1D[u][2], params1D[u2][2]]
             else:
                 u2 = 0
+                sigma = [params1D[u2][3], params1D[u][3]]
                 mu = [params1D[u2][2], params1D[u][2]]
-            sigma = [1,0,1]
-            params, pcov = self.fitCurve(amp, bg, mu, sigma, coords[u], psf[u])
-            params2D.append(params)
-            theta,s1,s2 = self.ellipseParmConversion(params[4],params[5],params[6])
-            self.thetas[u] = math.degrees(theta)
+            params, pcov = self.fitCurve(amp, bg, mu, sigma, 0, coords[u], psf[u])
+            params2DMean[0] += params[0]/3.0
+            params2DMean[1] += params[1]/3.0
+            self.thetas[u] = params[6]
+            if u+1 <3 : 
+                params2DMean[2+u] += params[2]/2.0
+                params2DMean[2+u2] += params[3]/2.0
+                params2DMean[5+u] += params[4]/2.0
+                params2DMean[5+u2] += params[5]/2.0
+            else :
+                params2DMean[2+u] += params[3]/2.0
+                params2DMean[2+u2] += params[2]/2.0
+                params2DMean[5+u] += params[5]/2.0
+                params2DMean[5+u2] += params[4]/2.0
             if u + 1 < 3:
-                result[1][u] += pxToUm(self.fwhm(s1), self._spacing[u])
-                result[1][u2] += pxToUm(self.fwhm(s2), self._spacing[u2])
+                result[1][u] += pxToUm(self.fwhm(params[4]), self._spacing[u])
+                result[1][u2] += pxToUm(self.fwhm(params[5]), self._spacing[u2])
             else:
-                result[1][u] += pxToUm(self.fwhm(s1), self._spacing[u])
-                result[1][u2] += pxToUm(self.fwhm(s2), self._spacing[u2])
+                result[1][u] += pxToUm(self.fwhm(params[5]), self._spacing[u])
+                result[1][u2] += pxToUm(self.fwhm(params[4]), self._spacing[u2])
             result[2].append(self.uncertainty(pcov))
             result[3].append(self.determination(params, coords[u], psf[u].flatten()))
             outputPath = os.path.join(activePath, f"2D_Gaussian_Image_{axe[u]}.png")
-            if self._show : self.show2dFit(psf[u], outputPath,params,theta)
+            if self._show : self.show2dFit(psf[u], outputPath,params)
         for i in range(len(result[1])):
             result[1][i] /= 2
         x, y, z = np.arange(imageFloat.shape[0]), np.arange(imageFloat.shape[1]), np.arange(imageFloat.shape[2])
         coordsTmp = [x, y, z]
-        if self._show :     
-            self.plotFit3d(physic,params1D,params2D,activePath,coordsTmp)
+        if self._show : 
+            self.plotFit3d(physic,params1D,params2DMean,activePath,coordsTmp)
             for i in range(3):
-                print(f"mean angle {axe[i]}: {self.thetas[i]}")
-        result[4] = params2D
+                print(f"Angle {axe[i]}: {math.degrees(self.thetas[i])} ")
+        result[4] = params2DMean
         return result
 
     def determination(self, params, coords, psf):

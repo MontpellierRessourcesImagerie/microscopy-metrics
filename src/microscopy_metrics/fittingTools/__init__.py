@@ -2,4 +2,6 @@ from microscopy_metrics.fittingTools.fitting1D import Fitting1D
 from microscopy_metrics.fittingTools.fitting2D import Fitting2D
 from microscopy_metrics.fittingTools.fitting3D import Fitting3D
 from microscopy_metrics.fittingTools.fitting2DEllips import Fitting2DEllips
+from microscopy_metrics.fittingTools.fitting2DRotation import Fitting2DRotation
+from microscopy_metrics.fittingTools.fitting3DRotation import Fitting3DRotation
 from microscopy_metrics.fittingTools.prominence import Prominence
