@@ -145,7 +145,6 @@ class Fitting2DEllips(FittingTool):
 
     def plotFit3d(self, center, params, popt, outputPath, coords):
         psf = self.setNormalizedImage()
-        yLim = [0.0, psf.max() * 1.1]
         axes = ["Z","Y","X"]
         psfs = [
             psf[:, center[1], center[2]],
@@ -223,10 +222,8 @@ class Fitting2DEllips(FittingTool):
         fitTool1D._centroid = self._centroid
         results1D = fitTool1D.processSingleFit(index)
         params1D = results1D[4]
-        pcovs1D = results1D[5]
         params2D = []
         for u in range(3):
-            lim = [0, psf[u].max() * 1.1]
             bg = params1D[u][1]
             amp = params1D[u][0]
             if u + 1 < 3:

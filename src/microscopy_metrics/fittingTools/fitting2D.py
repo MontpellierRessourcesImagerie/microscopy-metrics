@@ -112,7 +112,6 @@ class Fitting2D(FittingTool):
 
     def plotFit3d(self, center, params, popt, outputPath, coords):
         psf = self.setNormalizedImage()
-        yLim = [0.0, psf.max() * 1.1]
         axes = ["Z","Y","X"]
         params2D = [
             [popt[0],popt[1],popt[2],popt[3],popt[5],popt[6]],
@@ -193,10 +192,8 @@ class Fitting2D(FittingTool):
         fitTool1D._centroid = self._centroid
         results1D = fitTool1D.processSingleFit(index)
         params1D = results1D[4]
-        pcovs1D = results1D[5]
         params2DMean = [0,0,0,0,0,0,0,0]
         for u in range(3):
-            lim = [0, psf[u].max() * 1.1]
             bg = params1D[u][1]
             amp = params1D[u][0]
             if u + 1 < 3:

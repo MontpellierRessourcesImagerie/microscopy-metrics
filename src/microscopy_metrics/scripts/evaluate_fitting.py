@@ -2,8 +2,9 @@ from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.fittingTools.fitting1D import Fitting1D
 from microscopy_metrics.fittingTools.fitting2D import Fitting2D
 from microscopy_metrics.fittingTools.fitting2DEllips import Fitting2DEllips
-from microscopy_metrics.fittingTools.fitting2DRotate import Fitting2DRotation
+from microscopy_metrics.fittingTools.fitting2DRotation import Fitting2DRotation
 from microscopy_metrics.fittingTools.fitting3D import Fitting3D
+from microscopy_metrics.fittingTools.fitting3DRotation import Fitting3DRotation
 from microscopy_metrics.fittingTools.prominence import Prominence
 import numpy as np
 import matplotlib
@@ -18,7 +19,7 @@ import time
 
 PSF_SIZE = 80
 NOISE = True
-FIT_METHODS = ["1D","2D","3D","Prominence","2DEllips","2DRotation"]
+FIT_METHODS = ["1D","2D","3D","2DRotation","3DRotation","Prominence","2DEllips"]
 
 TRUE_AMP = 255.0
 TRUE_BG = 0.0
@@ -162,14 +163,14 @@ def evaluatePsf():
     result, elapsed2DEllips = fitPSF("2D Ellipse",psfReshape)
     corr2DEllips = computeMape(result[1],FWHM)
 
-    result, elapsed2DRotation = fitPSF("2D rotation", psfReshape)
-    corr2DRotation = computeMape(result[1],FWHM)
+    corr2DRotation,psnr2DRotation,DistBat2DRotation,determination2DRotation,elapsed2DRotation = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"2D rotation")
+    corr3DRotation,psnr3DRotation,DistBat3DRotation,determination3DRotation,elapsed3DRotation = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"3D Rotation")
     return (
-        [corr1D,corr2D,corr3D,corrProminence,corr2DEllips,corr2DRotation],
-        [psnr1D,psnr2D,psnr3D],
-        [DistBat1D,DistBat2D,DistBat3D],
-        [determination1D,determination2D,determination3D],
-        [elapsed1D,elapsed2D,elapsed3D,elapsedProminence,elapsed2DEllips,elapsed2DRotation],
+        [corr1D,corr2D,corr3D,corr2DRotation,corr3DRotation,corrProminence,corr2DEllips],
+        [psnr1D,psnr2D,psnr3D,psnr2DRotation,psnr3DRotation],
+        [DistBat1D,DistBat2D,DistBat3D,DistBat2DRotation,DistBat3DRotation],
+        [determination1D,determination2D,determination3D,determination2DRotation,determination3DRotation],
+        [elapsed1D,elapsed2D,elapsed3D,elapsed2DRotation,elapsed3DRotation,elapsedProminence,elapsed2DEllips],
     )
 
 def addTab(tabA, tabB) :
@@ -213,9 +214,9 @@ if __name__ == "__main__":
     show2DPsf(psfReshape, int(PSF_SIZE / 2))
 
     meanCorr = [0 for _ in range(len(FIT_METHODS))]
-    meanPSNR = [0, 0, 0]
-    meanBat = [0, 0, 0]
-    meanDetermination = [0, 0, 0]
+    meanPSNR = [0, 0, 0, 0, 0, 0]
+    meanBat = [0, 0, 0, 0, 0, 0]
+    meanDetermination = [0, 0, 0, 0, 0, 0]
     meanDuration = [0 for _ in range(len(FIT_METHODS))]
 
     n_tests = 100

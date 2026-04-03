@@ -94,6 +94,9 @@ class Fitting2DRotation(FittingTool):
         else:
             dy = L * np.sin(theta)
             dx = L * np.cos(theta)  
+            
+        display_angle = np.degrees(np.arctan2(dy, dx))
+        
         x1 = x0 + dx
         y1 = y0 + dy
         fit = self.gauss(*params)(fine_coords_yx)
@@ -104,8 +107,8 @@ class Fitting2DRotation(FittingTool):
         ax1.set_title("PSF Data")
         ax2 = fig.add_subplot(1, 2, 2)
         ax2.imshow(fit, cmap="viridis")
-        ax2.set_title("Fit")
-        ax2.plot([x0,x1],[y0,y1], color="red", linewidth=2)
+        ax2.set_title(f"Fit (Angle: {display_angle:.1f}°)")
+        ax2.plot([x0 - dx, x1], [y0 - dy, y1], color="red", linewidth=2)
         ax2.scatter([x0],[y0],color="red", alpha=0.7)
         ax2.axhline(y=psf.shape[0] * 10 / 2, color='k', alpha=0.5, linestyle='--')
         ax2.axvline(x=psf.shape[1] * 10 / 2, color='k', alpha=0.5, linestyle='--')
@@ -216,10 +219,9 @@ class Fitting2DRotation(FittingTool):
         fitTool1D._centroid = self._centroid
         results1D = fitTool1D.processSingleFit(index)
         params1D = results1D[4]
-        pcovs1D = results1D[5]
         params2DMean = [0,0,0,0,0,0,0,0]
+        visual_angles = []
         for u in range(3):
-            lim = [0, psf[u].max() * 1.1]
             bg = params1D[u][1]
             amp = params1D[u][0]
             if u + 1 < 3:
@@ -233,7 +235,12 @@ class Fitting2DRotation(FittingTool):
             params, pcov = self.fitCurve(amp, bg, mu, sigma, 0, coords[u], psf[u])
             params2DMean[0] += params[0]/3.0
             params2DMean[1] += params[1]/3.0
-            self.thetas[u] = params[6]
+            self.thetas[u] = params[6]            
+            if params[4] > params[5]:
+                angle_app = math.degrees(math.atan2(np.cos(params[6]), -np.sin(params[6])))
+            else:
+                angle_app = math.degrees(math.atan2(np.sin(params[6]), np.cos(params[6])))
+            visual_angles.append(angle_app)
             if u+1 <3 : 
                 params2DMean[2+u] += params[2]/2.0
                 params2DMean[2+u2] += params[3]/2.0
@@ -261,7 +268,7 @@ class Fitting2DRotation(FittingTool):
         if self._show : 
             self.plotFit3d(physic,params1D,params2DMean,activePath,coordsTmp)
             for i in range(3):
-                print(f"Angle {axe[i]}: {math.degrees(self.thetas[i])} ")
+                print(f"Plane {axe[i]} | Local Angle: {math.degrees(self.thetas[i]):.2f}° => Major axis: {visual_angles[i]:.2f}°")
         result[4] = params2DMean
         return result
 

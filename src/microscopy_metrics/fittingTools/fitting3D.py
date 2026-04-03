@@ -139,7 +139,6 @@ class Fitting3D(FittingTool):
         plt.close(fig1)
     
     def plotFit3d(self, psf, center, params, popt, outputPath, coords):
-        yLim = [0.0, psf.max() * 1.1]
         psfs = [psf[:, center[1], center[2]],psf[center[0], :, center[2]],psf[center[0], center[1], :]]
         fine = [
             np.linspace(0, psf.shape[0] - 1, 500),
@@ -199,7 +198,6 @@ class Fitting3D(FittingTool):
         fitTool1D._centroid = self._centroid
         results1D = fitTool1D.processSingleFit(index)
         params1D = results1D[4]
-        pcovs1D = results1D[5]
         bg = (params1D[0][1])
         amp = (params1D[0][0])
         mu = [params1D[0][2], params1D[1][2], params1D[2][2]]
@@ -207,9 +205,9 @@ class Fitting3D(FittingTool):
         params, pcov = self.fitCurve(amp, bg, mu, sigma, coords, psf)
         x, y, z = np.arange(psf.shape[0]), np.arange(psf.shape[1]), np.arange(psf.shape[2])
         coordsTmp = [x, y, z]
-        if self._show : self.plotFit3d(psf,physic,params1D,params,activePath,coordsTmp)
-        
-        if self._show : self.show2dFit(psf,physic,activePath,params,coords)
+        if self._show : 
+            self.plotFit3d(psf,physic,params1D,params,activePath,coordsTmp)
+            self.show2dFit(psf,physic,activePath,params,coords)
         result[1] = [
             pxToUm(self.fwhm(params[5]), self._spacing[0]),
             pxToUm(self.fwhm(params[6]), self._spacing[1]),

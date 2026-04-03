@@ -41,7 +41,7 @@ class Fitting3DRotation(FittingTool):
 
             x_rot = (cy*cz) * x + (cz*sx*sy - cx*sz) * y + (cx*cz*sy + sx*sz) * z
             y_rot = (cy*sz) * x + (cx*cz + sx*sy*sz) * y + (-cz*sx + cx*sy*sz) * z
-            z_rot = (-sy) * x   + (cy*sx) * y     
+            z_rot = (-sy) * x   + (cy*sx) * y + (cy*cx) * z
             
             exponent = (-(x_rot ** 2) / (2 * sigmaX ** 2) -(y_rot ** 2) / (2 * sigmaY ** 2) -(z_rot ** 2) / (2* sigmaZ **2)) 
             return bg+(amp-bg) * np.exp(exponent)
@@ -89,31 +89,48 @@ class Fitting3DRotation(FittingTool):
         return popt, pcov
 
     def show2dFit(self, psf, center, outputPath,params,coords):
-        fitShapeZ = max(psf.shape[0]*5,512)
-        fitShapeY = max(psf.shape[1]*5,256)
-        fitShapeX = max(psf.shape[2]*5,256)
+        fitShapeZ = min(psf.shape[0]*5,512)
+        fitShapeY = min(psf.shape[1]*5,256)
+        fitShapeX = min(psf.shape[2]*5,256)
         zz_fine = np.linspace(0, psf.shape[0], fitShapeZ)
         yy_fine = np.linspace(0, psf.shape[1], fitShapeY)
         xx_fine = np.linspace(0, psf.shape[2], fitShapeX)
         z_fine, y_fine, x_fine = np.meshgrid(zz_fine, yy_fine, xx_fine, indexing="ij")
         fine_coords_zyx = np.stack([z_fine.ravel(), y_fine.ravel(), x_fine.ravel()], -1)
-        z0 = params[2] * 5
-        y0 = params[3] * 5
-        x0 = params[4] * 5
+        z0 = params[2] * (fitShapeZ/psf.shape[0])
+        y0 = params[3] * (fitShapeY/psf.shape[1])
+        x0 = params[4] * (fitShapeX/psf.shape[2])
         L = min(max(psf.shape) * 5 / 4, 30)
-        thetaX = params[8]
-        thetaY = params[9]
-        thetaZ = params[10]
+        thetaX = self.thetas[0]
+        thetaY = self.thetas[1]
+        thetaZ = self.thetas[2]
+        
+        cx, sx = np.cos(thetaX), np.sin(thetaX)
+        cy, sy = np.cos(thetaY), np.sin(thetaY)
+        cz, sz = np.cos(thetaZ), np.sin(thetaZ)
+        
+        R = np.array([
+            [cy*cz, cz*sx*sy - cx*sz, cx*cz*sy + sx*sz],
+            [cy*sz, cx*cz + sx*sy*sz, -cz*sx + cx*sy*sz],
+            [-sy,   cy*sx,            cy*cx]
+        ]).T
+        
+        idx_major = np.argmax([params[5], params[6], params[7]])
+        v_major = R[:, idx_major]
+        
+        vz, vy, vx = v_major
+        
+        L = min(max(psf.shape) * 5 / 4, 30)
+
         fit = self.gauss(*params)(fine_coords_zyx)
         fit = fit.reshape((fitShapeZ,fitShapeY,fitShapeX))
-        if params[6] > params[7]:
-            dy = L * np.cos(thetaY)
-            dx = -L * np.sin(thetaY)
-        else:
-            dy = L * np.sin(thetaX)
-            dx = L * np.cos(thetaX)  
-        x1 = x0 + dx
-        y1 = y0 + dy
+        
+        angle_yx = np.degrees(np.arctan2(vy, vx))
+        dx_yx = L * np.cos(np.arctan2(vy, vx))
+        dy_yx = L * np.sin(np.arctan2(vy, vx))
+        x1_yx = x0 + dx_yx
+        y1_yx = y0 + dy_yx
+        
         fig = plt.figure(figsize=(10, 5))
         ax1 = fig.add_subplot(1, 2, 1)
         ax1.imshow(psf[center[0]], cmap="viridis")
@@ -121,22 +138,21 @@ class Fitting3DRotation(FittingTool):
         ax2 = fig.add_subplot(1, 2, 2)
         centerFit = int(fitShapeZ * (center[0]/psf.shape[0]))
         ax2.imshow(fit[centerFit], cmap="viridis")
-        ax2.set_title("Fit")
-        ax2.plot([x0,x1],[y0,y1], color="red", linewidth=2)
+        ax2.set_title(f"Fit (YX angle: {angle_yx:.1f}°)")
+        ax2.plot([x0 - dx_yx, x1_yx], [y0 - dy_yx, y1_yx], color="red", linewidth=2)
         ax2.scatter([x0],[y0],color="red", alpha=0.7)
         ax2.axhline(y=fitShapeY / 2, color='k', alpha=0.5, linestyle='--')
         ax2.axvline(x=fitShapeX / 2, color='k', alpha=0.5, linestyle='--')
         plt.tight_layout()
         fig.savefig(os.path.join(outputPath,"2D_Gaussian_Image_YX.png"), dpi=300, bbox_inches="tight")
         plt.close(fig)
-        if params[5] > params[6]:
-            dy = L * np.cos(thetaY)
-            dx = -L * np.sin(thetaY)
-        else:
-            dy = L * np.sin(thetaX)
-            dx = L * np.cos(thetaX)
-        x1 = x0 + dx
-        y1 = y0 + dy
+        
+        angle_xz = np.degrees(np.arctan2(vz, vx))
+        dx_xz = L * np.cos(np.arctan2(vz, vx))
+        dz_xz = L * np.sin(np.arctan2(vz, vx))
+        z1_xz = z0 + dz_xz
+        x1_xz = x0 + dx_xz
+        
         fig2 = plt.figure(figsize=(10, 5))
         ax1 = fig2.add_subplot(1, 2, 1)
         ax1.imshow(psf[:,center[1],:], cmap="viridis")
@@ -144,22 +160,21 @@ class Fitting3DRotation(FittingTool):
         ax2 = fig2.add_subplot(1, 2, 2)
         centerFit = int(fitShapeY * (center[1]/psf.shape[1]))
         ax2.imshow(fit[:,centerFit,:], cmap="viridis")
-        ax2.set_title("Fit")
-        ax2.plot([x0,x1],[y0,y1], color="red", linewidth=2)
-        ax2.scatter([x0],[y0],color="red", alpha=0.7)
+        ax2.set_title(f"Fit (XZ angle: {angle_xz:.1f}°)")
+        ax2.plot([x0 - dx_xz, x1_xz], [z0 - dz_xz, z1_xz], color="red", linewidth=2)
+        ax2.scatter([x0],[z0],color="red", alpha=0.7)
         ax2.axhline(y=fitShapeZ / 2, color='k', alpha=0.5, linestyle='--')
         ax2.axvline(x=fitShapeX / 2, color='k', alpha=0.5, linestyle='--')
         plt.tight_layout()
         fig2.savefig(os.path.join(outputPath,"2D_Gaussian_Image_XZ.png"), dpi=300, bbox_inches="tight")
         plt.close(fig2)
-        if params[5] > params[7]:
-            dy = L * np.cos(thetaZ)
-            dx = -L * np.sin(thetaZ)
-        else:
-            dy = L * np.sin(thetaX)
-            dx = L * np.cos(thetaX)
-        x1 = x0 + dx
-        y1 = y0 + dy
+        
+        angle_zy = np.degrees(np.arctan2(vz, vy))
+        dy_zy = L * np.cos(np.arctan2(vz, vy))
+        dz_zy = L * np.sin(np.arctan2(vz, vy))
+        z1_zy = z0 + dz_zy
+        y1_zy = y0 + dy_zy
+        
         fig3 = plt.figure(figsize=(10, 5))
         ax1 = fig3.add_subplot(1, 2, 1)
         ax1.imshow(psf[:,:,center[2]], cmap="viridis")
@@ -167,11 +182,11 @@ class Fitting3DRotation(FittingTool):
         ax2 = fig3.add_subplot(1, 2, 2)
         centerFit = int(fitShapeX * (center[2]/psf.shape[2]))
         ax2.imshow(fit[:,:,centerFit], cmap="viridis")
-        ax2.set_title("Fit")
-        ax2.plot([x0,x1],[y0,y1], color="red", linewidth=2)
-        ax2.scatter([x0],[y0],color="red", alpha=0.7)
-        ax2.axhline(y=fitShapeY / 2, color='k', alpha=0.5, linestyle='--')
-        ax2.axvline(x=fitShapeX / 2, color='k', alpha=0.5, linestyle='--')
+        ax2.set_title(f"Fit (ZY angle: {angle_zy:.1f}°)")
+        ax2.plot([y0 - dy_zy, y1_zy], [z0 - dz_zy, z1_zy], color="red", linewidth=2)
+        ax2.scatter([y0],[z0],color="red", alpha=0.7)
+        ax2.axhline(y=fitShapeZ / 2, color='k', alpha=0.5, linestyle='--')
+        ax2.axvline(x=fitShapeY / 2, color='k', alpha=0.5, linestyle='--')
         plt.tight_layout()
         fig3.savefig(os.path.join(outputPath,"2D_Gaussian_Image_ZY.png"), dpi=300, bbox_inches="tight")
         plt.close(fig3)
@@ -257,7 +272,6 @@ class Fitting3DRotation(FittingTool):
         fitTool1D._centroid = self._centroid
         results1D = fitTool1D.processSingleFit(index)
         params1D = results1D[4]
-        pcovs1D = results1D[5]
         bg = (params1D[0][1])
         amp = (params1D[0][0])
         mu = [params1D[0][2], params1D[1][2], params1D[2][2]]
@@ -266,12 +280,26 @@ class Fitting3DRotation(FittingTool):
         self.thetas = params[8:11]
         x, y, z = np.arange(psf.shape[0]), np.arange(psf.shape[1]), np.arange(psf.shape[2])
         coordsTmp = [x, y, z]
-        if self._show : self.plotFit3d(psf,physic,params1D,params,activePath,coordsTmp)
-        
         if self._show : 
-            self.show2dFit(psf,physic,activePath,params,coords)
-            for i in range(3):
-                print(f"Angle {i}: {math.degrees(self.thetas[i])} ")
+            self.plotFit3d(psf,physic,params1D,params,activePath,coordsTmp)
+            self.show2dFit(psf,physic,activePath,params,coords)            
+            thetaX, thetaY, thetaZ = self.thetas
+            cx, sx, cy, sy, cz, sz = np.cos(thetaX), np.sin(thetaX), np.cos(thetaY), np.sin(thetaY), np.cos(thetaZ), np.sin(thetaZ)
+            R = np.array([
+                [cy*cz, cz*sx*sy - cx*sz, cx*cz*sy + sx*sz],
+                [cy*sz, cx*cz + sx*sy*sz, -cz*sx + cx*sy*sz],
+                [-sy,cy*sx,cy*cx]
+            ]).T
+            idx_major = np.argmax([params[5], params[6], params[7]])
+            axes_names = ["Z", "Y", "X"]
+            major_axis = axes_names[idx_major]
+            vz, vy, vx = R[:, idx_major]
+            
+            print("---")
+            print(f"Thetas : X={math.degrees(thetaX):.2f}°, Y={math.degrees(thetaY):.2f}°, Z={math.degrees(thetaZ):.2f}°")
+            print(f"Major axis  : {major_axis} (sigma = {params[5+idx_major]:.2f} px)")
+            print(f"Angles of major axis : YX={np.degrees(np.arctan2(vy, vx)):.2f}°, XZ={np.degrees(np.arctan2(vz, vx)):.2f}°, ZY={np.degrees(np.arctan2(vz, vy)):.2f}°")
+            print("---")
         result[1] = [
             pxToUm(self.fwhm(params[5]), self._spacing[0]),
             pxToUm(self.fwhm(params[6]), self._spacing[1]),
@@ -281,7 +309,7 @@ class Fitting3DRotation(FittingTool):
         result[2] = [tmp,tmp,tmp]
         tmp = self.determination(params, coords, psf.flatten())
         result[3] = [tmp,tmp,tmp]
-        result[4] = params
+        result[4] = params[0:8]
         return result
 
     def determination(self, params, coords, psf):

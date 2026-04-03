@@ -77,7 +77,6 @@ class Fitting1D(FittingTool):
 
     def plotFit1d(self, center, params, outputPath, coords):
         psf = self.setNormalizedImage()
-        yLim = [0.0, psf.max() * 1.1]
         axes = ["Z","Y","X"]
         psfs = [psf[:, center[1], center[2]], psf[center[0], :, center[2]], psf[center[0], center[1], :]]
         for i in range(3):
@@ -113,7 +112,6 @@ class Fitting1D(FittingTool):
             self.getCoords(psf[2]),
         ]
         for u in range(3):
-            lim = [0, psf[u].max() * 1.1]
             bg = np.median(psf[u])
             amp = psf[u].max() - bg
             sigma = self.getCovMatrix(psf[u],physic)
