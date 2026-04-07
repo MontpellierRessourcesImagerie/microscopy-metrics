@@ -86,6 +86,7 @@ class Fitting2DEllips(FittingTool):
         theta = math.sqrt(1.0+((a-c)/t))/math.sqrt(2.0)
         theta = math.acos(theta)
         theta_sign = 4*b*(sx**2)*(sy**2)/((sx**2)-(sy**2))
+        theta_sign = max(-1.0, min(1.0, theta_sign))
         theta_sign = np.sign(-0.5 * math.asin(theta_sign))
         theta = ((math.pi/2)-theta) * theta_sign
         return theta,sx,sy

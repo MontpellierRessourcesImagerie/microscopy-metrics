@@ -6,6 +6,9 @@ from microscopy_metrics.fittingTools.fitting2DRotation import Fitting2DRotation
 from microscopy_metrics.fittingTools.fitting3D import Fitting3D
 from microscopy_metrics.fittingTools.fitting3DRotation import Fitting3DRotation
 from microscopy_metrics.fittingTools.prominence import Prominence
+from microscopy_metrics.scripts.PSFGenerator.BornWolfPSF import BornWolfPSF
+from microscopy_metrics.scripts.PSFGenerator.Data3D import Data3D
+from microscopy_metrics.utils import pxToUm
 import numpy as np
 import matplotlib
 
@@ -14,11 +17,12 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from tqdm import tqdm
 import os
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import time
+from concurrent.futures import ProcessPoolExecutor, as_completed
+import time 
 
+BORNOWOLF_PSF = True
 PSF_SIZE = 80
-NOISE = True
+NOISE = False
 FIT_METHODS = ["1D","2D","3D","2DRotation","3DRotation","Prominence","2DEllips"]
 
 TRUE_AMP = 255.0
@@ -98,12 +102,76 @@ def generatePSF(params):
     psf = fitTool.gauss(*params)(coords)
     return psf,coords
 
+def generateBornWolfPSF():
+    bw = BornWolfPSF()
+    bw.nx = PSF_SIZE
+    bw.ny = PSF_SIZE
+    bw.nz = PSF_SIZE
+    bw.resLateral = 50.0
+    bw.resAxial = 25.0
+    bw.NA = 1.4
+    bw.lmbda = 500.0 * 1e-9
+    bw.setParameters(ni=1.5, accuracy=0)
+    bw.data = Data3D(bw.nx, bw.ny, bw.nz)
+    
+    bw.generate()
+    bw.data.determineMaximumAndEnergy()
+    bw.data.estimateFWHM()
+    
+    fwhm = [bw.data.fwhm.x, bw.data.fwhm.y, bw.data.fwhm.z]
+    
+    zz = np.arange(PSF_SIZE)
+    yy = np.arange(PSF_SIZE)
+    xx = np.arange(PSF_SIZE)
+    x, y, z = np.meshgrid(xx, yy, zz, indexing="ij")
+    coords = np.stack([x.ravel(), y.ravel(), z.ravel()], -1)
+    
+    psf = bw.data.data.flatten()
+    for i in range(3):
+        fwhm[i] = pxToUm(fwhm[i], bw.resLateral / 1000.0 if i < 2 else bw.resAxial / 1000.0)
+
+    return psf, coords, fwhm
+
+def generateRandomBornoWolfPSF(seed=None):
+    if seed is not None:
+        np.random.seed(seed)
+    bw = BornWolfPSF()
+    bw.nx = PSF_SIZE
+    bw.ny = PSF_SIZE
+    bw.nz = PSF_SIZE
+    bw.resLateral = 50.0
+    bw.resAxial = 50.0
+    bw.NA = 1.4
+    bw.lmbda = np.random.uniform(400.0, 700.0) * 1e-9
+    ni = np.random.uniform(1.4, 1.6)
+    accuracy = np.random.randint(0, 3)
+    bw.setParameters(ni=ni, accuracy=accuracy)
+    bw.data = Data3D(bw.nx, bw.ny, bw.nz)
+    
+    bw.generate()
+    bw.data.determineMaximumAndEnergy()
+    bw.data.estimateFWHM()
+    
+    fwhm = [bw.data.fwhm.x, bw.data.fwhm.y, bw.data.fwhm.z]
+    fwhm.reverse()
+    
+    zz = np.arange(PSF_SIZE)
+    yy = np.arange(PSF_SIZE)
+    xx = np.arange(PSF_SIZE)
+    x, y, z = np.meshgrid(xx, yy, zz, indexing="ij")
+    coords = np.stack([x.ravel(), y.ravel(), z.ravel()], -1)
+    
+    psf = bw.data.data.flatten()
+    
+    return psf, coords, fwhm
+
 def fitPSF(fitName, image):
     fitTool = FittingTool.getInstance(fitName)
     fitTool._image = image
     fitTool._show = False
     fitTool._centroid = [int(PSF_SIZE / 2), int(PSF_SIZE / 2), int(PSF_SIZE / 2)]
     fitTool._roi = [np.array([0, 0, 0])]
+    fitTool._pixelSize = [0.1,0.1,0.1]
     fitTool._outputDir = Path(__file__).parent / "EvalFitResult" / fitName
     start = time.time()
     result = fitTool.processSingleFit(0)
@@ -119,7 +187,7 @@ def getBhattacharyyaFit(params, mu, sigma):
     DistBat /= 3.0
     return DistBat
 
-def evaluate1DPsf(psf,psfReshape,FWHM,coords,params):
+def evaluate1DPsf(psf,psfReshape,FWHM,coords,params=None):
     result,elapsed1D = fitPSF("1D", psfReshape)
     corr1D = computeMape(result[1], FWHM)
     amp = (result[4][0][0] + result[4][1][0] + result[4][2][0]) / 3.0
@@ -129,29 +197,39 @@ def evaluate1DPsf(psf,psfReshape,FWHM,coords,params):
     params1D = [amp, bg, *mu, *sigma]
     fit = Fitting3D().gauss(*params1D)(coords)
     psnr1D = computePSNR(fit, psf)
-    DistBat1D = getBhattacharyyaFit(params, mu, sigma)
+    if params is not None:
+        DistBat1D = getBhattacharyyaFit(params, mu, sigma)
+    else:
+        DistBat1D = 0
     determination1D = (result[3][0] + result[3][1] + result[3][2]) / 3.0
     return corr1D,psnr1D,DistBat1D,determination1D,elapsed1D
 
-def evaluateXDPsf(psf,psfReshape,FWHM,coords,params,fitMethod = "2D"):
+def evaluateXDPsf(psf,psfReshape,FWHM,coords,params = None,fitMethod = "2D"):
     result, elapsed = fitPSF(fitMethod, psfReshape)
     corr = computeMape(result[1], FWHM)
     fit = Fitting3D().gauss(*result[4])(coords)
     psnr = computePSNR(fit, psf)
     mu = [result[4][2], result[4][3], result[4][4]]
     sigma = [result[4][5], result[4][6], result[4][7]]
-    DistBat = getBhattacharyyaFit(params, mu, sigma)
+    if params is not None:
+        DistBat = getBhattacharyyaFit(params, mu, sigma)
+    else:
+        DistBat = 0
     determination = (result[3][0] + result[3][1] + result[3][2]) / 3.0
     return corr,psnr,DistBat,determination,elapsed
 
 
-def evaluatePsf():
-    params = generateRandomPSFParams(PSF_SIZE)
-    psf,coords = generatePSF(params)
+def evaluatePsf(seed=None):
+    if BORNOWOLF_PSF:
+        psf, coords, FWHM = generateRandomBornoWolfPSF(seed=seed)
+        params = None
+    else:
+        params = generateRandomPSFParams(PSF_SIZE)
+        psf,coords = generatePSF(params)
+        FWHM = [FittingTool().fwhm(params[5]), FittingTool().fwhm(params[6]), FittingTool().fwhm(params[7])]
     psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
     if NOISE :
         psfReshape = addMicroscopyNoise(psfReshape,maxPhotons=TRUE_AMP)
-    FWHM = [FittingTool().fwhm(params[5]), FittingTool().fwhm(params[6]), FittingTool().fwhm(params[7])]
     
     corr1D,psnr1D,DistBat1D,determination1D,elapsed1D = evaluate1DPsf(psf,psfReshape,FWHM,coords,params)
     corr2D,psnr2D,DistBat2D,determination2D,elapsed2D = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"2D")
@@ -193,21 +271,24 @@ def printResults(metricStr,metric,unitStr,comparison=superior):
     print("=" * 20,metricStr.upper(), "="*20)
     best_fit = FIT_METHODS[0]
     best_value = metric[0]
-    print(f"Mean {metricStr} {FIT_METHODS[0]}: {metric[0]:.8f}{unitStr}")
+    print(f"Mean {metricStr} {FIT_METHODS[0]}: {metric[0]:.8f} {unitStr}")
     for i in range(1,len(metric)):
         if comparison(metric[i],best_value) :
             best_fit = FIT_METHODS[i]
             best_value = metric[i]
         elif metric[i] == best_value:
             best_fit += f" and {FIT_METHODS[i]}"
-        print(f"Mean {metricStr} {FIT_METHODS[i]}: {metric[i]:.8f}{unitStr}")
+        print(f"Mean {metricStr} {FIT_METHODS[i]}: {metric[i]:.8f} {unitStr}")
     print("-" * 50)
-    print(f"The best fitting method is: {best_fit} | with a {metricStr} of {best_value:.8f}{unitStr}", "\n")
+    print(f"The best fitting method is: {best_fit} | with a {metricStr} of {best_value:.8f} {unitStr}", "\n")
     
         
 if __name__ == "__main__":
     params = generateRandomPSFParams(PSF_SIZE)
-    psf,coords = generatePSF(params)
+    if BORNOWOLF_PSF:
+        psf, coords, FWHM = generateBornWolfPSF()
+    else:
+        psf,coords = generatePSF(params)
     psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
     if NOISE : 
         psfReshape = addMicroscopyNoise(psfReshape)
@@ -219,12 +300,14 @@ if __name__ == "__main__":
     meanDetermination = [0, 0, 0, 0, 0, 0]
     meanDuration = [0 for _ in range(len(FIT_METHODS))]
 
-    n_tests = 100
+    n_tests = 30
 
     pbar = tqdm(total=n_tests, desc="Evaluating PSF Fitting", unit="test")
     workers = int(os.cpu_count() * 0.75)
-    with ThreadPoolExecutor(max_workers=workers) as executor:
-        futures = {executor.submit(evaluatePsf) for _ in range(n_tests)}
+
+    randomSeeds = np.random.randint(0, 2**32, size=n_tests)
+    with ProcessPoolExecutor(max_workers=workers) as executor:
+        futures = {executor.submit(evaluatePsf, seed=seed) for seed in randomSeeds}
         for future in as_completed(futures):
             (corr,psnr,bat,determination,duration) = future.result()
             meanCorr = addTab(meanCorr, corr)
