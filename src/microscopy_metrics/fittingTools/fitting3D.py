@@ -69,11 +69,10 @@ class Fitting3D(FittingTool):
             p0=params,
             maxfev=5000,
             bounds=bounds,
-            #loss = 'soft_l1'
         )
         return popt, pcov
 
-    def show2dFit(self, psf, center, outputPath,params,coords):
+    def show2dFit(self, psf, center, outputPath,coords):
         fitShapeZ = max(psf.shape[0]*5,512)
         fitShapeY = max(psf.shape[1]*5,256)
         fitShapeX = max(psf.shape[2]*5,256)
@@ -82,7 +81,7 @@ class Fitting3D(FittingTool):
         xx_fine = np.linspace(0, psf.shape[2], fitShapeX)
         z_fine, y_fine, x_fine = np.meshgrid(zz_fine, yy_fine, xx_fine, indexing="ij")
         fine_coords_zyx = np.stack([z_fine.ravel(), y_fine.ravel(), x_fine.ravel()], -1)
-        fit = self.gauss(*params)(fine_coords_zyx)
+        fit = self.gauss(*self.parameters)(fine_coords_zyx)
         fit = fit.reshape((fitShapeZ,fitShapeY,fitShapeX))
         fig = plt.figure(figsize=(10, 5))
         ax1 = fig.add_subplot(1, 2, 1)
@@ -118,7 +117,7 @@ class Fitting3D(FittingTool):
         fig3.savefig(os.path.join(outputPath,"2D_Gaussian_Image_ZY.png"), dpi=300, bbox_inches="tight")
         plt.close(fig3)
 
-    def plotSingleFit(self,coords,psf,fineCoords,fit1D,fit3D,axeStr,outputPath,params):
+    def plotSingleFit(self,coords,psf,fineCoords,fit1D,fit3D,axeStr,outputPath,index):
         yLim = [0.0, psf.max() * 1.1]
         fig1,ax1 = plt.subplots(figsize=(7, 5))
         ax1.plot(coords, psf, '-', label="PSF", color="k")
@@ -129,16 +128,16 @@ class Fitting3D(FittingTool):
         ax1.plot(fineCoords, fit3D, label="3D Curve Fit")
         halfMax = (fit3D.max() + fit3D.min()) / 2.0
         ax1.axhline(y=halfMax, color='r', linestyle='--', alpha=0.7, label='FWHM 3D fit')
-        ax1.axhline(y=params[0], color='orange', linestyle='dotted', alpha=0.5, label=f"Amplitude: {params[0]:.2f}")
-        ax1.axvline(x=params[2], color='purple', linestyle='dotted',alpha=0.5, label=f"Mu: {params[2]:.2f}")
-        ax1.plot(params[2],params[0],'go', color='black')
+        ax1.axhline(y=self.parameters[0], color='orange', linestyle='dotted', alpha=0.5, label=f"Amplitude: {self.parameters[0]:.2f}")
+        ax1.axvline(x=self.parameters[2+index], color='purple', linestyle='dotted',alpha=0.5, label=f"Mu: {self.parameters[2+index]:.2f}")
+        ax1.plot(self.parameters[2+index],self.parameters[0],'go', color='black')
         ax1.set_ylim(yLim)
         ax1.set_title(f'{axeStr} Profile')
         ax1.legend()
         fig1.savefig(os.path.join(outputPath,f"fit_curve_1D_{axeStr}.png"), dpi=300, bbox_inches="tight")
         plt.close(fig1)
     
-    def plotFit3d(self, psf, center, params, popt, outputPath, coords):
+    def plotFit3d(self, psf, center, params1D, outputPath, coords):
         psfs = [psf[:, center[1], center[2]],psf[center[0], :, center[2]],psf[center[0], center[1], :]]
         fine = [
             np.linspace(0, psf.shape[0] - 1, 500),
@@ -152,8 +151,9 @@ class Fitting3D(FittingTool):
         ]
         Axes = ["Z","Y","X"]
         for i in range(3):
+            params = [params1D[0], params1D[1], params1D[2+i], params1D[5+i]]
         
-            self.plotSingleFit(coords[i],psfs[i],fine[i],Fitting1D().gauss(*params[i])(fine[i]),self.gauss(*popt)(fineCoords[i]),Axes[i],outputPath,[popt[0],popt[1],popt[2+i]])
+            self.plotSingleFit(coords[i],psfs[i],fine[i],Fitting1D().gauss(*params)(fine[i]),self.gauss(*self.parameters)(fineCoords[i]),Axes[i],outputPath,i)
 
     def getCoords(self, psf):
         """Function to get a 1D list of 2D coordinates for the Gaussian fitting
@@ -180,11 +180,6 @@ class Fitting3D(FittingTool):
         Returns:
             List(parameters): A list containing metrics, fwhm, parameters and covariance matrix of the fit.
         """
-        result = [index]
-        for _ in range(4):
-            result.append([])
-        for _ in range(3):
-            result[1].append(0.0)
         physic = self.getLocalCentroid()
         psf = self.setNormalizedImage()
         coords = self.getCoords(psf)
@@ -196,29 +191,27 @@ class Fitting3D(FittingTool):
         fitTool1D._spacing = self._spacing
         fitTool1D._outputDir = self._outputDir
         fitTool1D._centroid = self._centroid
-        results1D = fitTool1D.processSingleFit(index)
-        params1D = results1D[4]
-        bg = (params1D[0][1])
-        amp = (params1D[0][0])
-        mu = [params1D[0][2], params1D[1][2], params1D[2][2]]
-        sigma = [params1D[0][3], params1D[1][3], params1D[2][3]]
+        fitTool1D.processSingleFit(index)
+        params1D = fitTool1D.parameters
+        bg = params1D[1]
+        amp = params1D[0]
+        mu = [params1D[2], params1D[3], params1D[4]]
+        sigma = [params1D[5], params1D[6], params1D[7]]
         params, pcov = self.fitCurve(amp, bg, mu, sigma, coords, psf)
+        self.parameters = params
+        self.fwhms = [pxToUm(self.fwhm(params[5]), self._spacing[0]), pxToUm(self.fwhm(params[6]), self._spacing[1]), pxToUm(self.fwhm(params[7]), self._spacing[2])]
+        self.uncertainties = [self.uncertainty(pcov)] * 3
+        self.determinations = [self.determination(params, coords, psf.flatten())] * 3
+        self.pcovs = [pcov] * 3
         x, y, z = np.arange(psf.shape[0]), np.arange(psf.shape[1]), np.arange(psf.shape[2])
         coordsTmp = [x, y, z]
         if self._show : 
-            self.plotFit3d(psf,physic,params1D,params,activePath,coordsTmp)
-            self.show2dFit(psf,physic,activePath,params,coords)
-        result[1] = [
-            pxToUm(self.fwhm(params[5]), self._spacing[0]),
-            pxToUm(self.fwhm(params[6]), self._spacing[1]),
-            pxToUm(self.fwhm(params[7]), self._spacing[2]),
-        ]
-        tmp = self.uncertainty(pcov)
-        result[2] = [tmp,tmp,tmp]
-        tmp = self.determination(params, coords, psf.flatten())
-        result[3] = [tmp,tmp,tmp]
-        result[4] = params
-        return result
+            self.plotFit3d(psf,physic,params1D,activePath,coordsTmp)
+            self.show2dFit(psf,physic,activePath,coords)
+        self.fwhms = [pxToUm(self.fwhm(params[5]), self._spacing[0]), pxToUm(self.fwhm(params[6]), self._spacing[1]), pxToUm(self.fwhm(params[7]), self._spacing[2])]
+        self.uncertainties = [self.uncertainty(pcov)] * 3
+        self.determinations = [self.determination(self.parameters, coords, psf.flatten())] * 3
+        self.pcovs = [pcov] * 3
 
     def determination(self, params, coords, psf):
         """Measure determination coefficient of parameters returned by 2D Gaussian fit.

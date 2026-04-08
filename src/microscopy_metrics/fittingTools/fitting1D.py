@@ -53,7 +53,6 @@ class Fitting1D(FittingTool):
             p0=params,
             maxfev=5000,
             bounds=([0, -np.inf, 0, 1e-6], [np.inf, np.inf, len(coords), np.inf]),
-            #loss = 'soft_l1'
         )
         return popt, pcov
 
@@ -75,13 +74,14 @@ class Fitting1D(FittingTool):
         fig1.savefig(os.path.join(outputPath,f"fit_curve_1D_{axeStr}.png"), dpi=300, bbox_inches="tight")
         plt.close(fig1)
 
-    def plotFit1d(self, center, params, outputPath, coords):
+    def plotFit1d(self, center, outputPath, coords):
         psf = self.setNormalizedImage()
         axes = ["Z","Y","X"]
         psfs = [psf[:, center[1], center[2]], psf[center[0], :, center[2]], psf[center[0], center[1], :]]
         for i in range(3):
+            params = [self.parameters[0], self.parameters[1], self.parameters[2+i], self.parameters[5+i]]
             fine = np.linspace(0, psf.shape[i] - 1, 500)
-            self.plotSingleFit(coords[i],psfs[i],fine,self.gauss(*params[i])(fine),axes[i],outputPath,params[i])
+            self.plotSingleFit(coords[i],psfs[i],fine,self.gauss(*params)(fine),axes[i],outputPath,params)
 
     def getCoords(self,psf):
         return np.arange(psf.shape[0])
@@ -95,9 +95,6 @@ class Fitting1D(FittingTool):
         Returns:
             List(parameters): A list containing metrics, fwhm, parameters and covariance matrix of the fit.
         """
-        result = [index]
-        for _ in range(5):
-            result.append([])
         imageFloat = self.setNormalizedImage()
         activePath = self.getActivePath(index)
         physic = self.getLocalCentroid()
@@ -111,20 +108,24 @@ class Fitting1D(FittingTool):
             self.getCoords(psf[1]),
             self.getCoords(psf[2]),
         ]
+        self.parameters[0] = 0.0
+        self.parameters[1] = 0.0
         for u in range(3):
             bg = np.median(psf[u])
             amp = psf[u].max() - bg
             sigma = self.getCovMatrix(psf[u],physic)
             mu = np.argmax(psf[u])
             params, pcov = self.fitCurve(amp, bg, mu, sigma, coords[u], psf[u])
-            result[1].append(pxToUm(self.fwhm(params[3]), self._spacing[u]))
-            result[2].append(self.uncertainty(pcov))
-            result[3].append(self.determination(params, coords[u], psf[u]))
-            result[4].append(params)
-            result[5].append(pcov)
+            self.fwhms[u] = pxToUm(self.fwhm(params[3]), self._spacing[u])
+            self.uncertainties[u] = self.uncertainty(pcov)
+            self.determinations[u] = self.determination(params, coords[u], psf[u])
+            self.parameters[0] += params[0] / 3.0
+            self.parameters[1] += params[1] / 3.0
+            self.parameters[2+u] = params[2]
+            self.parameters[5+u] = params[3]
+            self.pcovs[u] = pcov
         if self._show == True: 
-            self.plotFit1d(physic,result[4],activePath,coords)
-        return result
+            self.plotFit1d(physic,activePath,coords)
 
     
     def determination(self, params, coords, psf):

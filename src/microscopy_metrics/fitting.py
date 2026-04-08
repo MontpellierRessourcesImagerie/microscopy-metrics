@@ -78,17 +78,14 @@ class Fitting(object):
         fitTool._outputDir = self._outputDir
         if hasattr(fitTool,"_prominenceRel") and self._prominenceRel is not None:
             fitTool._prominenceRel = self._prominenceRel
-        return fitTool.processSingleFit(index)
+        fitTool.processSingleFit(index)
+        return [index, fitTool.fwhms, fitTool.uncertainties, fitTool.determinations, fitTool.parameters, fitTool.pcovs]
 
     def computeFitting(self):
         self.results = []
         workers = int(os.cpu_count() * 0.75)
         with ThreadPoolExecutor(max_workers=workers) as executor:
-            futures = {
-                executor.submit(self.runFitting, i): i
-                for i, roi in enumerate(self._rois)
-            }
-
+            futures = {executor.submit(self.runFitting, i): i for i, roi in enumerate(self._rois)}
             for future in as_completed(futures):
                 result = future.result()
                 self.results.append(result)

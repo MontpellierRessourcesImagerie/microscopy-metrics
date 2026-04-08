@@ -5,6 +5,9 @@ from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.fittingTools.fitting1D import Fitting1D
 from microscopy_metrics.fittingTools.fitting2D import Fitting2D
 from microscopy_metrics.fittingTools.fitting3D import Fitting3D
+from microscopy_metrics.fittingTools.fitting2DEllips import Fitting2DEllips
+from microscopy_metrics.fittingTools.fitting2DRotation import Fitting2DRotation
+from microscopy_metrics.fittingTools.fitting3DRotation import Fitting3DRotation
 PSF_SIZE = 100
 
 @pytest.fixture
@@ -87,4 +90,45 @@ def test_3D_Fitting(psf):
     sigma = [result[4][5], result[4][6], result[4][7]]
     assert np.isclose(sigma[0],PSF_SIZE/10,rtol=10) and np.isclose(sigma[1],PSF_SIZE/10,rtol=10) and np.isclose(sigma[2],PSF_SIZE/10,rtol=10)
     fwhms = [fitTool3D.fwhm(sigma[0]), fitTool3D.fwhm(sigma[1]), fitTool3D.fwhm(sigma[2])]
+    assert np.isclose(FWHM[0],fwhms[0],rtol=1) and np.isclose(FWHM[1],fwhms[1],rtol=1) and np.isclose(FWHM[2],fwhms[2],rtol=1)
+
+def test_2D_Rotation_Fitting(psf):
+    psf,FWHM = psf
+    psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    fitTool2DRotation = Fitting2DRotation()
+    fitTool2DRotation._image = psfReshape
+    fitTool2DRotation._show = False
+    fitTool2DRotation._centroid = [int(PSF_SIZE / 2), int(PSF_SIZE / 2), int(PSF_SIZE / 2)]
+    fitTool2DRotation._roi = [np.array([0, 0, 0])]
+    result = fitTool2DRotation.processSingleFit(0)
+    amp = result[4][0]
+    assert np.isclose(amp, 255, rtol=20)
+    bg = result[4][1]
+    assert np.isclose(bg,0, rtol=20)
+    mu = [result[4][2], result[4][3], result[4][4]]
+    assert np.isclose(mu[0],PSF_SIZE/2,rtol=10) and np.isclose(mu[1],PSF_SIZE/2,rtol=10) and np.isclose(mu[2],PSF_SIZE/2,rtol=10)
+    sigma = [result[4][5], result[4][6], result[4][7]]
+    assert np.isclose(sigma[0],PSF_SIZE/10,rtol=10) and np.isclose(sigma[1],PSF_SIZE/10,rtol=10) and np.isclose(sigma[2],PSF_SIZE/10,rtol=10)
+    fwhms = [fitTool2DRotation.fwhm(sigma[0]), fitTool2DRotation.fwhm(sigma[1]), fitTool2DRotation.fwhm(sigma[2])]
+    assert np.isclose(FWHM[0],fwhms[0],rtol=1) and np.isclose(FWHM[1],fwhms[1],rtol=1) and np.isclose(FWHM[2],fwhms[2],rtol=1)
+
+
+def test_3D_Rotation_Fitting(psf):
+    psf,FWHM = psf
+    psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    fitTool3DRotation = Fitting3DRotation()
+    fitTool3DRotation._image = psfReshape
+    fitTool3DRotation._show = False
+    fitTool3DRotation._centroid = [int(PSF_SIZE / 2), int(PSF_SIZE / 2), int(PSF_SIZE / 2)]
+    fitTool3DRotation._roi = [np.array([0, 0, 0])]
+    result = fitTool3DRotation.processSingleFit(0)
+    amp = result[4][0]
+    assert np.isclose(amp, 255, rtol=20)
+    bg = result[4][1]
+    assert np.isclose(bg,0, rtol=20)
+    mu = [result[4][2], result[4][3], result[4][4]]
+    assert np.isclose(mu[0],PSF_SIZE/2,rtol=10) and np.isclose(mu[1],PSF_SIZE/2,rtol=10) and np.isclose(mu[2],PSF_SIZE/2,rtol=10)
+    sigma = [result[4][5], result[4][6], result[4][7]]
+    assert np.isclose(sigma[0],PSF_SIZE/10,rtol=10) and np.isclose(sigma[1],PSF_SIZE/10,rtol=10) and np.isclose(sigma[2],PSF_SIZE/10,rtol=10)
+    fwhms = [fitTool3DRotation.fwhm(sigma[0]), fitTool3DRotation.fwhm(sigma[1]), fitTool3DRotation.fwhm(sigma[2])]
     assert np.isclose(FWHM[0],fwhms[0],rtol=1) and np.isclose(FWHM[1],fwhms[1],rtol=1) and np.isclose(FWHM[2],fwhms[2],rtol=1)

@@ -2,7 +2,7 @@ import os
 import numpy as np
 from scipy.signal import find_peaks
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
-from microscopy_metrics.utils import pxToUm
+from microscopy_metrics.utils import pxToUm, umToPx
 
 
 class Prominence(FittingTool):
@@ -28,8 +28,7 @@ class Prominence(FittingTool):
             self._image[physic[0],:,physic[2]],
             self._image[physic[0],physic[1],:],
         ]
-        fwhms = []
-        for i,profile in enumerate(profiles) :
+        for idx,profile in enumerate(profiles) :
             amp = float(np.max(profile) - np.min(profile))
             prominenceMin = amp * float(self._prominenceRel)
             peaks,props = find_peaks(profile, prominence=prominenceMin)
@@ -48,6 +47,10 @@ class Prominence(FittingTool):
             
             leftCrossing = cross(lIdx - 1, lIdx)
             rightCrossing = cross(rIdx, rIdx + 1)
-            fwhms.append(pxToUm(rightCrossing - leftCrossing,self._spacing[i]))
-        return [index,fwhms, [[0.0000,0.0000,0.0000,0.0000],[0.0000,0.0000,0.0000,0.0000],[0.0000,0.0000,0.0000,0.0000]], [0.0000,0.0000,0.0000], [0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000]]
+            self.fwhms[idx] = pxToUm(rightCrossing - leftCrossing,self._spacing[idx])
+            self.parameters[0] += amp / 3.0
+            self.parameters[1] += float(np.min(profile)) / 3.0
+            self.parameters[2 + idx] = float(pk)
+            self.parameters[5 + idx] = umToPx(self.fwhms[idx],self._spacing[idx]) / (2 * np.sqrt(2 * np.log(2)))
+        return [index,self.fwhms, [[0.0000,0.0000,0.0000,0.0000],[0.0000,0.0000,0.0000,0.0000],[0.0000,0.0000,0.0000,0.0000]], self.determinations, self.parameters ]
 

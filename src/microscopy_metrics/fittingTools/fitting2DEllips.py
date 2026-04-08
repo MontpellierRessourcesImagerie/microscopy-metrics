@@ -144,7 +144,7 @@ class Fitting2DEllips(FittingTool):
         fig1.savefig(os.path.join(outputPath,f"fit_curve_1D_{axeStr}.png"), dpi=300, bbox_inches="tight")
         plt.close(fig1)
 
-    def plotFit3d(self, center, params, popt, outputPath, coords):
+    def plotFit3d(self, center, params1D, popt, outputPath, coords):
         psf = self.setNormalizedImage()
         axes = ["Z","Y","X"]
         psfs = [
@@ -153,6 +153,7 @@ class Fitting2DEllips(FittingTool):
             psf[center[0], center[1], :]
         ]
         for i in range (3):
+            params = [params1D[0], params1D[1], params1D[2+i], params1D[5+i]]
             fine = np.linspace(0, psf.shape[i]-1, 500)
             if i < 2 :
                 index = i+1
@@ -162,7 +163,7 @@ class Fitting2DEllips(FittingTool):
                 index = 0
                 fineCoords = np.column_stack((np.full_like(fine, center[index]),fine))
                 mu = popt[i][3]
-            self.plotSingleFit(coords[i],psfs[i],fine,Fitting1D().gauss(*params[i])(fine),self.gauss(*popt[i])(fineCoords),axes[i],outputPath,[popt[i][0],popt[i][1],mu])
+            self.plotSingleFit(coords[i],psfs[i],fine,Fitting1D().gauss(*params)(fine),self.gauss(*popt[i])(fineCoords),axes[i],outputPath,[popt[i][0],popt[i][1],mu])
 
     def getCoords(self, psf):
         """Function to get a 1D list of 2D coordinates for the Gaussian fitting
@@ -188,11 +189,6 @@ class Fitting2DEllips(FittingTool):
         Returns:
             List(parameters): A list containing metrics, fwhm, parameters and covariance matrix of the fit.
         """
-        result = [index]
-        for _ in range(4):
-            result.append([])
-        for _ in range(3):
-            result[1].append(0.0)
         imageFloat = self.setNormalizedImage()
         physic = self.getLocalCentroid()
         """ MIP
@@ -221,44 +217,51 @@ class Fitting2DEllips(FittingTool):
         fitTool1D._spacing = self._spacing
         fitTool1D._outputDir = self._outputDir
         fitTool1D._centroid = self._centroid
-        results1D = fitTool1D.processSingleFit(index)
-        params1D = results1D[4]
+        fitTool1D.processSingleFit(index)
+        params1D = fitTool1D.parameters
         params2D = []
+        amp = params1D[0]
+        bg = params1D[1]
         for u in range(3):
-            bg = params1D[u][1]
-            amp = params1D[u][0]
             if u + 1 < 3:
                 u2 = u + 1
-                mu = [params1D[u][2], params1D[u2][2]]
+                mu = [params1D[2+u], params1D[2+u2]]
             else:
                 u2 = 0
-                mu = [params1D[u2][2], params1D[u][2]]
+                mu = [params1D[u2+2], params1D[u+2]]
             sigma = [1,0,1]
             params, pcov = self.fitCurve(amp, bg, mu, sigma, coords[u], psf[u])
             params2D.append(params)
             theta,s1,s2 = self.ellipseParmConversion(params[4],params[5],params[6])
             self.thetas[u] = math.degrees(theta)
+            self.parameters[0] += params[0] / 3.0
+            self.parameters[1] += params[1] / 3.0
             if u + 1 < 3:
-                result[1][u] += pxToUm(self.fwhm(s1), self._spacing[u])
-                result[1][u2] += pxToUm(self.fwhm(s2), self._spacing[u2])
+                self.parameters[2+u] += params[2] / 2.0
+                self.parameters[2+u2] += params[3] / 2.0
+                self.parameters[5+u] += params[4] / 2.0
+                self.parameters[5+u2] += params[5] / 2.0
+                self.fwhms[u] += pxToUm(self.fwhm(s1), self._spacing[u]) / 2.0
+                self.fwhms[u2] += pxToUm(self.fwhm(s2), self._spacing[u2]) / 2.0
             else:
-                result[1][u] += pxToUm(self.fwhm(s1), self._spacing[u])
-                result[1][u2] += pxToUm(self.fwhm(s2), self._spacing[u2])
-            result[2].append(self.uncertainty(pcov))
-            result[3].append(self.determination(params, coords[u], psf[u].flatten()))
+                self.parameters[2+u] += params[3] / 2.0
+                self.parameters[2+u2] += params[2] / 2.0
+                self.parameters[5+u] += params[5] / 2.0
+                self.parameters[5+u2] += params[4] / 2.0
+                self.fwhms[u] += pxToUm(self.fwhm(s1), self._spacing[u]) / 2.0
+                self.fwhms[u2] += pxToUm(self.fwhm(s2), self._spacing[u2]) / 2.0
+            self.uncertainties[u] = self.uncertainty(pcov)
+            self.determinations[u] = self.determination(params, coords[u], psf[u].flatten())
+            self.pcovs[u] = pcov
             outputPath = os.path.join(activePath, f"2D_Gaussian_Image_{axe[u]}.png")
             if self._show : self.show2dFit(psf[u], outputPath,params,theta)
-        for i in range(len(result[1])):
-            result[1][i] /= 2
         x, y, z = np.arange(imageFloat.shape[0]), np.arange(imageFloat.shape[1]), np.arange(imageFloat.shape[2])
         coordsTmp = [x, y, z]
         if self._show :     
             self.plotFit3d(physic,params1D,params2D,activePath,coordsTmp)
             for i in range(3):
                 print(f"mean angle {axe[i]}: {self.thetas[i]}")
-        result[4] = params2D
-        return result
-
+                
     def determination(self, params, coords, psf):
         """Measure determination coefficient of parameters returned by 2D Gaussian fit.
 

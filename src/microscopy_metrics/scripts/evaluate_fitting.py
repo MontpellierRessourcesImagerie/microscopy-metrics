@@ -18,6 +18,7 @@ from pathlib import Path
 from tqdm import tqdm
 import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
+import multiprocessing as mp
 import time 
 
 BORNOWOLF_PSF = True
@@ -174,9 +175,10 @@ def fitPSF(fitName, image):
     fitTool._pixelSize = [0.1,0.1,0.1]
     fitTool._outputDir = Path(__file__).parent / "EvalFitResult" / fitName
     start = time.time()
-    result = fitTool.processSingleFit(0)
+    fitTool.processSingleFit(0)
     end = time.time()
     elapsed = end - start
+    result = [0, fitTool.fwhms, fitTool.uncertainties, fitTool.determinations, fitTool.parameters, fitTool.pcovs]
     return result,elapsed
 
 def getBhattacharyyaFit(params, mu, sigma):
@@ -186,23 +188,6 @@ def getBhattacharyyaFit(params, mu, sigma):
     DistBat += computeBhattacharyyaDistance(params[4],mu[2],params[7],sigma[2])
     DistBat /= 3.0
     return DistBat
-
-def evaluate1DPsf(psf,psfReshape,FWHM,coords,params=None):
-    result,elapsed1D = fitPSF("1D", psfReshape)
-    corr1D = computeMape(result[1], FWHM)
-    amp = (result[4][0][0] + result[4][1][0] + result[4][2][0]) / 3.0
-    bg = (result[4][0][1] + result[4][1][1] + result[4][2][1]) / 3.0
-    mu = [result[4][0][2], result[4][1][2], result[4][2][2]]
-    sigma = [result[4][0][3], result[4][1][3], result[4][2][3]]
-    params1D = [amp, bg, *mu, *sigma]
-    fit = Fitting3D().gauss(*params1D)(coords)
-    psnr1D = computePSNR(fit, psf)
-    if params is not None:
-        DistBat1D = getBhattacharyyaFit(params, mu, sigma)
-    else:
-        DistBat1D = 0
-    determination1D = (result[3][0] + result[3][1] + result[3][2]) / 3.0
-    return corr1D,psnr1D,DistBat1D,determination1D,elapsed1D
 
 def evaluateXDPsf(psf,psfReshape,FWHM,coords,params = None,fitMethod = "2D"):
     result, elapsed = fitPSF(fitMethod, psfReshape)
@@ -231,7 +216,7 @@ def evaluatePsf(seed=None):
     if NOISE :
         psfReshape = addMicroscopyNoise(psfReshape,maxPhotons=TRUE_AMP)
     
-    corr1D,psnr1D,DistBat1D,determination1D,elapsed1D = evaluate1DPsf(psf,psfReshape,FWHM,coords,params)
+    corr1D,psnr1D,DistBat1D,determination1D,elapsed1D = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"1D")
     corr2D,psnr2D,DistBat2D,determination2D,elapsed2D = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"2D")
     corr3D,psnr3D,DistBat3D,determination3D,elapsed3D = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"3D")
 
@@ -306,7 +291,7 @@ if __name__ == "__main__":
     workers = int(os.cpu_count() * 0.75)
 
     randomSeeds = np.random.randint(0, 2**32, size=n_tests)
-    with ProcessPoolExecutor(max_workers=workers) as executor:
+    with ProcessPoolExecutor(max_workers=workers, mp_context=mp.get_context("spawn")) as executor:
         futures = {executor.submit(evaluatePsf, seed=seed) for seed in randomSeeds}
         for future in as_completed(futures):
             (corr,psnr,bat,determination,duration) = future.result()

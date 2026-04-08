@@ -14,6 +14,12 @@ class FittingTool(object):
         self._results = []
         self._show = True
         self._amp = 1.0
+        self.thetas = [0,0,0]
+        self.fwhms = [0,0,0]
+        self.uncertainties = [[0.0000,0.0000,0.0000,0.0000],[0.0000,0.0000,0.0000,0.0000],[0.0000,0.0000,0.0000,0.0000]]
+        self.determinations = [0,0,0]
+        self.parameters = [0,0,0,0,0,0,0,0]
+        self.pcovs = [[],[],[]]
 
     def __init_subclass__(cls):
         name = cls.name

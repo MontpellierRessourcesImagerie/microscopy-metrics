@@ -68,7 +68,6 @@ class Fitting2D(FittingTool):
             p0=params,
             maxfev=5000,
             bounds=([0, -np.inf, 0, 0, 1e-6, 1e-6],[np.inf, np.inf, psf.shape[0], psf.shape[1], psf.shape[0], psf.shape[1]],),
-            #loss = 'soft_l1'
         )
         return popt, pcov
 
@@ -90,7 +89,7 @@ class Fitting2D(FittingTool):
         fig.savefig(outputPath, dpi=300, bbox_inches="tight")
         plt.close(fig)
 
-    def plotSingleFit(self,coords,psf,fineCoords,fit1D,fit2D,axeStr,outputPath,params):
+    def plotSingleFit(self,coords,psf,fineCoords,fit1D,fit2D,axeStr,outputPath,index):
         yLim = [0.0, psf.max() * 1.1]
         fig1,ax1 = plt.subplots(figsize=(7, 5))
         ax1.plot(coords, psf, '-', label="PSF", color="k")
@@ -101,22 +100,22 @@ class Fitting2D(FittingTool):
         ax1.plot(fineCoords, fit2D, label="2D Curve Fit")
         halfMax = (fit2D.max() + fit2D.min()) / 2.0
         ax1.axhline(y=halfMax, color='r', linestyle='--', alpha=0.7, label='FWHM 2D fit')
-        ax1.axhline(y=params[0], color='orange', linestyle='dotted', alpha=0.5, label=f"Amplitude: {params[0]:.2f}")
-        ax1.axvline(x=params[2], color='purple', linestyle='dotted',alpha=0.5, label=f"Mu: {params[2]:.2f}")
-        ax1.plot(params[2],params[0],'go', color='black')
+        ax1.axhline(y=self.parameters[0], color='orange', linestyle='dotted', alpha=0.5, label=f"Amplitude: {self.parameters[0]:.2f}")
+        ax1.axvline(x=self.parameters[2+index], color='purple', linestyle='dotted',alpha=0.5, label=f"Mu: {self.parameters[2+index]:.2f}")
+        ax1.plot(self.parameters[2+index],self.parameters[0],'go', color='black')
         ax1.set_ylim(yLim)
         ax1.set_title(f'{axeStr} Profile')
         ax1.legend()
         fig1.savefig(os.path.join(outputPath,f"fit_curve_1D_{axeStr}.png"), dpi=300, bbox_inches="tight")
         plt.close(fig1)
 
-    def plotFit3d(self, center, params, popt, outputPath, coords):
+    def plotFit3d(self, center, params1D, outputPath, coords):
         psf = self.setNormalizedImage()
         axes = ["Z","Y","X"]
         params2D = [
-            [popt[0],popt[1],popt[2],popt[3],popt[5],popt[6]],
-            [popt[0],popt[1],popt[3],popt[4],popt[6],popt[7]],
-            [popt[0],popt[1],popt[2],popt[4],popt[5],popt[7]]
+            [self.parameters[0],self.parameters[1],self.parameters[2],self.parameters[3],self.parameters[5],self.parameters[6]],
+            [self.parameters[0],self.parameters[1],self.parameters[3],self.parameters[4],self.parameters[6],self.parameters[7]],
+            [self.parameters[0],self.parameters[1],self.parameters[2],self.parameters[4],self.parameters[5],self.parameters[7]]
         ]
         psfs = [
             psf[:, center[1], center[2]],
@@ -124,6 +123,7 @@ class Fitting2D(FittingTool):
             psf[center[0], center[1], :]
         ]
         for i in range (3):
+            params = [params1D[0], params1D[1], params1D[2+i], params1D[5+i]]
             fine = np.linspace(0, psf.shape[i]-1, 500)
             if i < 2 :
                 index = i+1
@@ -131,7 +131,7 @@ class Fitting2D(FittingTool):
             else :
                 index = 0
                 fineCoords = np.column_stack((np.full_like(fine, center[index]),fine))
-            self.plotSingleFit(coords[i],psfs[i],fine,Fitting1D().gauss(*params[i])(fine),self.gauss(*params2D[i])(fineCoords),axes[i],outputPath,[popt[0],popt[1],popt[2+i]])
+            self.plotSingleFit(coords[i],psfs[i],fine,Fitting1D().gauss(*params)(fine),self.gauss(*params2D[i])(fineCoords),axes[i],outputPath,i)
 
     def getCoords(self, psf):
         """Function to get a 1D list of 2D coordinates for the Gaussian fitting
@@ -157,11 +157,6 @@ class Fitting2D(FittingTool):
         Returns:
             List(parameters): A list containing metrics, fwhm, parameters and covariance matrix of the fit.
         """
-        result = [index]
-        for _ in range(4):
-            result.append([])
-        for _ in range(3):
-            result[1].append(0.0)
         imageFloat = self.setNormalizedImage()
         physic = self.getLocalCentroid()
         """ MIP
@@ -190,50 +185,45 @@ class Fitting2D(FittingTool):
         fitTool1D._spacing = self._spacing
         fitTool1D._outputDir = self._outputDir
         fitTool1D._centroid = self._centroid
-        results1D = fitTool1D.processSingleFit(index)
-        params1D = results1D[4]
-        params2DMean = [0,0,0,0,0,0,0,0]
+        fitTool1D.processSingleFit(index)
+        params1D = fitTool1D.parameters
+        
+        amp = params1D[0]
+        bg = params1D[1]
         for u in range(3):
-            bg = params1D[u][1]
-            amp = params1D[u][0]
             if u + 1 < 3:
                 u2 = u + 1
-                sigma = [params1D[u][3], params1D[u2][3]]
-                mu = [params1D[u][2], params1D[u2][2]]
+                sigma = [params1D[5+u], params1D[5+u2]]
+                mu = [params1D[2+u], params1D[2+u2]]
             else:
                 u2 = 0
-                sigma = [params1D[u2][3], params1D[u][3]]
-                mu = [params1D[u2][2], params1D[u][2]]
+                sigma = [params1D[5+u2], params1D[5+u]]
+                mu = [params1D[2+u2], params1D[2+u]]
             params, pcov = self.fitCurve(amp, bg, mu, sigma, coords[u], psf[u])
-            params2DMean[0] += params[0]/3.0
-            params2DMean[1] += params[1]/3.0
+            self.parameters[0] += params[0] / 3.0
+            self.parameters[1] += params[1] / 3.0
             if u+1 <3 : 
-                params2DMean[2+u] += params[2]/2.0
-                params2DMean[2+u2] += params[3]/2.0
-                params2DMean[5+u] += params[4]/2.0
-                params2DMean[5+u2] += params[5]/2.0
+                self.parameters[2+u] += params[2] / 2.0
+                self.parameters[2+u2] += params[3] / 2.0
+                self.parameters[5+u] += params[4] / 2.0
+                self.parameters[5+u2] += params[5] / 2.0
+                self.fwhms[u] += pxToUm(self.fwhm(params[4]), self._spacing[u]) / 2.0
+                self.fwhms[u2] += pxToUm(self.fwhm(params[5]), self._spacing[u2]) / 2.0
             else :
-                params2DMean[2+u] += params[3]/2.0
-                params2DMean[2+u2] += params[2]/2.0
-                params2DMean[5+u] += params[5]/2.0
-                params2DMean[5+u2] += params[4]/2.0
-            if u + 1 < 3:
-                result[1][u] += pxToUm(self.fwhm(params[4]), self._spacing[u])
-                result[1][u2] += pxToUm(self.fwhm(params[5]), self._spacing[u2])
-            else:
-                result[1][u] += pxToUm(self.fwhm(params[5]), self._spacing[u])
-                result[1][u2] += pxToUm(self.fwhm(params[4]), self._spacing[u2])
-            result[2].append(self.uncertainty(pcov))
-            result[3].append(self.determination(params, coords[u], psf[u].flatten()))
+                self.parameters[2+u] += params[3] / 2.0
+                self.parameters[2+u2] += params[2] / 2.0
+                self.parameters[5+u] += params[5] / 2.0
+                self.parameters[5+u2] += params[4] / 2.0
+                self.fwhms[u] += pxToUm(self.fwhm(params[5]), self._spacing[u]) / 2.0
+                self.fwhms[u2] += pxToUm(self.fwhm(params[4]), self._spacing[u2]) / 2.0
+            self.uncertainties[u] = self.uncertainty(pcov)
+            self.determinations[u] = self.determination(params, coords[u], psf[u].flatten())
+            self.pcovs[u] = pcov
             outputPath = os.path.join(activePath, f"2D_Gaussian_Image_{axe[u]}.png")
             if self._show : self.show2dFit(psf[u], outputPath,params)
-        for i in range(len(result[1])):
-            result[1][i] /= 2
         x, y, z = np.arange(imageFloat.shape[0]), np.arange(imageFloat.shape[1]), np.arange(imageFloat.shape[2])
         coordsTmp = [x, y, z]
-        if self._show : self.plotFit3d(physic,params1D,params2DMean,activePath,coordsTmp)
-        result[4] = params2DMean
-        return result
+        if self._show : self.plotFit3d(physic,params1D,activePath,coordsTmp)
 
     def determination(self, params, coords, psf):
         """Measure determination coefficient of parameters returned by 2D Gaussian fit.
