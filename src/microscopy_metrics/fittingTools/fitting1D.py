@@ -1,23 +1,42 @@
 import os
 import numpy as np
-from scipy.optimize import curve_fit
-
-from microscopy_metrics.fittingTools.fittingTool import FittingTool
-from microscopy_metrics.utils import pxToUm
-from sklearn.metrics import r2_score
 import matplotlib
 
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 
+from scipy.optimize import curve_fit
+
+from microscopy_metrics.fittingTools.fittingTool import FittingTool
+from microscopy_metrics.utils import pxToUm
+from sklearn.metrics import r2_score
+
+
 class Fitting1D(FittingTool):
+    """Class for fitting a 1D Gaussian curve to the PSF profile of a microscopy image.
+    This class inherits from the FittingTool base class and implements methods specific to 1D Gaussian fitting.
+    It includes methods for evaluating the Gaussian function, fitting the curve to the data, plotting the results, and calculating the coefficient of determination (R²) for the fit.
+    """
+
     name = "1D"
+    axes = ["Z", "Y", "X"]
+
     def __init__(self):
         super().__init__()
 
-
-    def gauss(self, amp, bg, mu, sigma):
+    def getCovMatrix(self, image: np.ndarray, centroid: list):
+        """Calculates the covariance matrix for a 1D image based on the provided centroid.
+        Args:
+            image (np.ndarray): The 1D image data for which to calculate the covariance matrix.
+            centroid (List(float)): The centroid of the image, used as a reference point for the covariance calculation.
         """
+        if image.ndim != 1:
+            raise NotImplementedError("getCovMatrix is only implemented for 1D images")
+        x = np.arange(image.shape[0]) - centroid[0]
+        return np.sqrt(np.sum(x * x * image) / np.sum(image))
+
+    def gauss(self, amp: float, bg: float, mu: float, sigma: float):
+        """Generates a 1D Gaussian function based on the provided parameters.
         Args:
             amp (float): amplitude of the curve
             bg (float): background intensity
@@ -27,12 +46,12 @@ class Fitting1D(FittingTool):
         Returns:
             float: Intensity value at x following the curve
         """
-        return lambda x: bg + (amp-bg) * np.exp(-(x - mu) ** 2 / (2 * sigma ** 2))
+        return lambda x: bg + (amp - bg) * np.exp(-((x - mu) ** 2) / (2 * sigma**2))
 
-
-    def evalFun(self, x, amp, bg, mu, sigma):
-        """
+    def evalFun(self, x: np.ndarray, amp: float, bg: float, mu: float, sigma: float):
+        """Evaluates the 1D Gaussian function at the given x values.
         Args:
+            x (array): x values at which to evaluate the function
             amp (float): amplitude of the curve
             bg (float): background intensity
             mu (float): center of the curve
@@ -43,8 +62,27 @@ class Fitting1D(FittingTool):
         """
         return self.gauss(amp=amp, bg=bg, mu=mu, sigma=sigma)(x)
 
-
-    def fitCurve(self, amp, bg, mu, sigma, coords, psf):
+    def fitCurve(
+        self,
+        amp: float,
+        bg: float,
+        mu: float,
+        sigma: float,
+        coords: np.ndarray,
+        psf: np.ndarray,
+    ):
+        """
+        Fits a 1D Gaussian curve to the given data.
+        Args:
+            amp (float): Initial guess for the amplitude.
+            bg (float): Initial guess for the background.
+            mu (float): Initial guess for the center.
+            sigma (float): Initial guess for the standard deviation.
+            coords (array): Coordinates of the data points.
+            psf (array): Intensity values at the data points.
+        Returns:
+            tuple: Optimal parameters and covariance matrix.
+        """
         params = [amp, bg, mu, sigma]
         popt, pcov = curve_fit(
             self.evalFun,
@@ -56,46 +94,97 @@ class Fitting1D(FittingTool):
         )
         return popt, pcov
 
-    def plotSingleFit(self,coords,psf,fineCoords,fit,axeStr,outputPath,params):
-        yLim = [0.0,psf.max() * 1.1]
-        fig1,ax1 = plt.subplots(figsize=(7, 5))
-        ax1.plot(coords, psf, '-', label="PSF", color="k")
-        ax1.scatter(coords, psf, color="k", alpha=0.5, label="measurement points")
+    def plotSingleFit(
+        self, psf: np.ndarray, fineCoords: np.ndarray, outputPath: str, index: int
+    ):
+        """Plots the original data points, the fitted curve, and key parameters.
+        Args:
+            coords (array): Coordinates of the data points.
+            psf (array): Intensity values at the data points.
+            fineCoords (array): Coordinates for plotting the fitted curve.
+            outputPath (str): Directory where the plot will be saved.
+            index (int): Index of the axis being plotted (0 for Z, 1 for Y, 2 for X).
+        """
+        fit = self.gauss(
+            self.parameters[0],
+            self.parameters[1],
+            self.parameters[2 + index],
+            self.parameters[5 + index],
+        )(fineCoords)
+        yLim = [0.0, psf.max() * 1.1]
+        fig1, ax1 = plt.subplots(figsize=(7, 5))
+        ax1.plot(self.coords[index], psf, "-", label="PSF", color="k")
+        ax1.scatter(
+            self.coords[index], psf, color="k", alpha=0.5, label="measurement points"
+        )
         ax1.plot(fineCoords, fit, label="1D Curve Fit")
         halfMax = (fit.max() + fit.min()) / 2.0
-        ax1.axhline(y=halfMax, color='r', linestyle='--', alpha=0.7, label='FWHM')
-        ax1.axhline(y=params[0], color='orange', linestyle='dotted', alpha=0.5, label=f"Amplitude: {params[0]:.2f}")
-        ax1.axvline(x=params[2], color='purple', linestyle='dotted',alpha=0.5, label=f"Mu: {params[2]:.2f}")
-        ax1.axhline(y=params[1], color='black', linestyle='--',alpha=0.5, label=f"BG: {params[1]:.2f}")
-        ax1.plot(params[2],params[0],'go', color='black')
+        ax1.axhline(y=halfMax, color="r", linestyle="--", alpha=0.7, label="FWHM")
+        ax1.axhline(
+            y=self.parameters[0],
+            color="orange",
+            linestyle="dotted",
+            alpha=0.5,
+            label=f"Amplitude: {self.parameters[0]:.2f}",
+        )
+        ax1.axvline(
+            x=self.parameters[2 + index],
+            color="purple",
+            linestyle="dotted",
+            alpha=0.5,
+            label=f"Mu: {self.parameters[2 + index]:.2f}",
+        )
+        ax1.axhline(
+            y=self.parameters[1],
+            color="black",
+            linestyle="--",
+            alpha=0.5,
+            label=f"BG: {self.parameters[1]:.2f}",
+        )
+        ax1.plot(self.parameters[2 + index], self.parameters[0], "ko")
         ax1.set_ylim(yLim)
-        ax1.set_title(f'{axeStr} Profile')
+        ax1.set_title(f"{self.axes[index]} Profile")
         ax1.legend()
-        fig1.savefig(os.path.join(outputPath,f"fit_curve_1D_{axeStr}.png"), dpi=300, bbox_inches="tight")
+        fig1.savefig(
+            os.path.join(outputPath, f"fit_curve_1D_{self.axes[index]}.png"),
+            dpi=300,
+            bbox_inches="tight",
+        )
         plt.close(fig1)
 
-    def plotFit1d(self, center, outputPath, coords):
-        psf = self.setNormalizedImage()
-        axes = ["Z","Y","X"]
-        psfs = [psf[:, center[1], center[2]], psf[center[0], :, center[2]], psf[center[0], center[1], :]]
+    def plotFit1d(self, outputPath: str):
+        """Plots the fitted curves for all three axes.
+        Args:
+            outputPath (str): Directory where the plots will be saved.
+        """
+        psf = self._image
+        center = self.getLocalCentroid()
+        psfs = [
+            psf[:, center[1], center[2]],
+            psf[center[0], :, center[2]],
+            psf[center[0], center[1], :],
+        ]
         for i in range(3):
-            params = [self.parameters[0], self.parameters[1], self.parameters[2+i], self.parameters[5+i]]
             fine = np.linspace(0, psf.shape[i] - 1, 500)
-            self.plotSingleFit(coords[i],psfs[i],fine,self.gauss(*params)(fine),axes[i],outputPath,params)
+            self.plotSingleFit(psfs[i], fine, outputPath, i)
 
-    def getCoords(self,psf):
+    def getCoords(self, psf: np.ndarray):
+        """Generates an array of coordinates corresponding to the length of the PSF profile.
+        Args:
+            psf (array): Intensity values of the PSF profile.
+        Returns:
+            array: Coordinates corresponding to the PSF profile.
+        """
         return np.arange(psf.shape[0])
 
-
-    def processSingleFit(self, index):
-        """
+    def processSingleFit(self, index: int):
+        """Processes a single fit for the given index, performing fitting, and plotting.
         Args:
             index (int): ID of the psf also position in lists
-
         Returns:
             List(parameters): A list containing metrics, fwhm, parameters and covariance matrix of the fit.
         """
-        imageFloat = self.setNormalizedImage()
+        imageFloat = self._image.astype(np.float64)
         activePath = self.getActivePath(index)
         physic = self.getLocalCentroid()
         psf = [
@@ -103,7 +192,7 @@ class Fitting1D(FittingTool):
             imageFloat[physic[0], :, physic[2]],
             imageFloat[physic[0], physic[1], :],
         ]
-        coords = [
+        self.coords = [
             self.getCoords(psf[0]),
             self.getCoords(psf[1]),
             self.getCoords(psf[2]),
@@ -113,36 +202,28 @@ class Fitting1D(FittingTool):
         for u in range(3):
             bg = np.median(psf[u])
             amp = psf[u].max() - bg
-            sigma = self.getCovMatrix(psf[u],physic)
+            sigma = self.getCovMatrix(psf[u], physic)
             mu = np.argmax(psf[u])
-            params, pcov = self.fitCurve(amp, bg, mu, sigma, coords[u], psf[u])
+            params, pcov = self.fitCurve(amp, bg, mu, sigma, self.coords[u], psf[u])
             self.fwhms[u] = pxToUm(self.fwhm(params[3]), self._spacing[u])
             self.uncertainties[u] = self.uncertainty(pcov)
-            self.determinations[u] = self.determination(params, coords[u], psf[u])
+            self.determinations[u] = self.determination(params, self.coords[u], psf[u])
             self.parameters[0] += params[0] / 3.0
             self.parameters[1] += params[1] / 3.0
-            self.parameters[2+u] = params[2]
-            self.parameters[5+u] = params[3]
+            self.parameters[2 + u] = params[2]
+            self.parameters[5 + u] = params[3]
             self.pcovs[u] = pcov
-        if self._show == True: 
-            self.plotFit1d(physic,activePath,coords)
+        if self._show:
+            self.plotFit1d(activePath)
 
-    
-    def determination(self, params, coords, psf):
-        """Measure determination coefficient of parameters returned by Gaussian fit.
-
-        Parameters
-        ----------
-        params : list
-            The covariance matrix between parameters
-        coords : np.array
-            The list of coordinates x in the profile
-        psf : np.array
-            The initial profile
-        Returns
-        -------
-        r_square : float
-            The coefficient representing the quality of the fit
+    def determination(self, params: list, coords: np.ndarray, psf: np.ndarray):
+        """Calculates the coefficient of determination (R²) for the fitted curve against the original PSF data.
+        Args:
+            params (list): The fitted parameters
+            coords (array): The coordinates of the PSF profile
+            psf (array): The original PSF data
+        Returns:
+            float: The coefficient of determination (R²)
         """
         psfFit = self.evalFun(coords, *params)
         rSquared = r2_score(psf, psfFit)

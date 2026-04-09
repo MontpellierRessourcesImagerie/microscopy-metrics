@@ -4,16 +4,28 @@ import numpy as np
 from microscopy_metrics.thresholdTools.threshold_tool import Threshold
 from microscopy_metrics.detectionTools.detection_tool import DetectionTool
 
+
 class PeakLocalMaxDetector(DetectionTool):
+    """Class for detecting local maxima in microscopy images using the peak_local_max function from scikit-image.
+    This class inherits from the DetectionTool base class and implements the detect method to identify local maxima in the input image. The method applies a Gaussian filter to smooth the image, performs a high-pass filtering, and then uses the peak_local_max function to find local maxima based on the specified parameters (e.g., min_distance, threshold_abs).
+    The detected local maxima are stored as centroids for further processing.
+    """
+
     name = "peak local maxima"
-    
+
     def __init__(self):
-        super(PeakLocalMaxDetector, self).__init__()
+        super().__init__()
         self._minDistance = 1
-    
+
     def detect(self):
+        """Detects local maxima in the input image using the peak_local_max function from scikit-image.
+        The method applies a Gaussian filter to smooth the image, performs a high-pass filtering, and then uses the peak_local_max function to find local maxima based on the specified parameters (e.g., min_distance, threshold_abs).
+        The detected local maxima are stored in the _centroids attribute for further processing.
+        """
         self.setNormalizedImage()
-        self._normalizedImage = ndi.gaussian_filter(self._normalizedImage, sigma=2.0)
+        ndi.gaussian_filter(
+            self._normalizedImage, sigma=2.0, output=self._normalizedImage
+        )
         self.gaussianHighPass()
         self._centroids = peak_local_max(
             self._highPassedImage,

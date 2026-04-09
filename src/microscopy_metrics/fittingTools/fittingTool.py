@@ -1,25 +1,37 @@
-import numpy as np
-from scipy import ndimage as ndi
 import os
 from abc import abstractmethod
 
+import numpy as np
+
+
 class FittingTool(object):
-    _fittingClasses={}
+    """Base class for fitting tools used in microscopy metrics.
+    This class provides common functionalities and structure for different types of fitting methods (e.g., 1D, 2D, 3D Gaussian fitting).
+    It includes methods for setting the image, centroid, spacing, region of interest (ROI), output directory, and results.
+    It also defines abstract methods that must be implemented by subclasses for specific fitting techniques.
+    """
+
+    _fittingClasses = {}
+
     def __init__(self):
-        self._image = None
-        self._centroid = []
-        self._spacing = [1,1,1]
-        self._roi = []
-        self._outputDir = ""
-        self._results = []
-        self._show = True
-        self._amp = 1.0
-        self.thetas = [0,0,0]
-        self.fwhms = [0,0,0]
-        self.uncertainties = [[0.0000,0.0000,0.0000,0.0000],[0.0000,0.0000,0.0000,0.0000],[0.0000,0.0000,0.0000,0.0000]]
-        self.determinations = [0,0,0]
-        self.parameters = [0,0,0,0,0,0,0,0]
-        self.pcovs = [[],[],[]]
+        self._image: np.ndarray = None
+        self._centroid: list = []
+        self._spacing: list = [1, 1, 1]
+        self._roi: list = []
+        self._outputDir: str = ""
+        self._results: list = []
+        self._show: bool = True
+        self._amp: float = 1.0
+        self._coords: list = []
+
+        self.thetas = [0.0, 0.0, 0.0]
+        self.fwhms = [0.0, 0.0, 0.0]
+        self.uncertainties = [[0.0] * 4 for _ in range(3)]
+        self.determinations = [0.0, 0.0, 0.0]
+        self.parameters = [0.0] * 8
+        self.pcovs = [[], [], []]
+        self.params1D = [0.0] * 8
+        self.axes = ["Z", "Y", "X"]
 
     def __init_subclass__(cls):
         name = cls.name
@@ -28,135 +40,141 @@ class FittingTool(object):
         cls._fittingClasses[name] = cls
 
     @classmethod
-    def getInstance(cls, methodName):
+    def getInstance(cls, methodName: str):
+        """Factory method to create an instance of a fitting class based on the provided method name.
+        Args:
+            methodName (str): Name of the fitting method (e.g., "1D", "2D", "3D").
+        Returns:
+            FittingTool: An instance of the fitting class corresponding to the method name.
+        """
         fitClass = cls._fittingClasses[methodName]
         return fitClass()
 
-    def getCovMatrix(self, image, centroid):
-        """Function to get covariance matrix of a 1D,2D or 3D image
-
+    def fwhm(self, sigma: float) -> float:
+        """Calculates the full width at half maximum (FWHM) for a Gaussian function based on the provided sigma value.
         Args:
-            image (np.ndarray): Input image
-            centroid (List(float)): coordinates of the centroid
-        """
-
-        def cov(x, y, i):
-            return np.sum(x * y * i) / np.sum(i)
-
-        extends = [np.arange(l) for l in image.shape]
-        grids = np.meshgrid(*extends, indexing="ij")
-
-        if image.ndim == 1:
-            x = grids[0].ravel() - centroid[0]
-            return np.sqrt(cov(x, x, image.ravel()))
-        elif image.ndim == 2:
-            y = grids[0].ravel() - centroid[0]
-            x = grids[1].ravel() - centroid[1]
-            cxx = cov(x, x, image.ravel())
-            cyy = cov(y, y, image.ravel())
-            cxy = cov(x, y, image.ravel())
-            return np.array([[cxx, cxy], [cxy, cyy]])
-        elif image.ndim == 3:
-            z = grids[0].ravel() - centroid[0]
-            y = grids[1].ravel() - centroid[1]
-            x = grids[2].ravel() - centroid[2]
-            cxx = cov(x, x, image.ravel())
-            cyy = cov(y, y, image.ravel())
-            czz = cov(z, z, image.ravel())
-            cxy = cov(x, y, image.ravel())
-            cxz = cov(x, z, image.ravel())
-            cyz = cov(y, z, image.ravel())
-            return np.array([[cxx, cxy, cxz], [cxy, cyy, cyz], [cxz, cyz, czz]])
-        else:
-            NotImplementedError()
-
-    def fwhm(self, sigma):
-        """
-        Args:
-            sigma (float): Gaussian width parameter
+            sigma (float): The standard deviation of the Gaussian function.
 
         Returns:
-            float: Full width half maximum
+            float: The calculated FWHM value.
         """
         return 2 * np.sqrt(2 * np.log(2)) * sigma
 
     @abstractmethod
-    def gauss(self, amp, bg, mu, sigma):
+    def gauss(self, amp: float, bg: float, mu: list, sigma: list):
         pass
 
     @abstractmethod
-    def evalFun(self, x, amp, bg, mu, sigma):
+    def evalFun(
+        self, x: np.ndarray, amp: float, bg: float, mu: list, sigma: list
+    ) -> float:
         pass
 
     @abstractmethod
-    def fitCurve(self, amp, bg, mu, sigma, coords, psf):
+    def fitCurve(
+        self,
+        amp: float,
+        bg: float,
+        mu: list,
+        sigma: list,
+        coords: np.ndarray,
+        psf: np.ndarray,
+    ) -> tuple:
         pass
 
     @abstractmethod
-    def processSingleFit(self, index):
+    def processSingleFit(self, index: int):
         pass
 
-    def setNormalizedImage(self):
-        """Method to normalize a 2D or 3D image and erase negative values
+    def setNormalizedImage(self) -> np.ndarray:
+        """Normalizes the input image to a range of [0, 1] and ensures that all values are non-negative.
 
         Raises:
-            ValueError: This function only operate on 2D or 3D images
+            ValueError: If the input image is not 2D or 3D.
 
         Returns:
-            np.ndarray: Image normalized
+            np.ndarray: The normalized image with values in the range [0, 1].
         """
         if self._image.ndim not in (2, 3):
-            raise ValueError("Image have to be in 2D or 3D.")
-        imageFloat = self._image.astype(np.float64)
-        imageFloat = (imageFloat - np.min(imageFloat)) / (
-                np.max(imageFloat) - np.min(imageFloat) + 1e-6
-        )
-        imageFloat[imageFloat < 0] = 0
-        return self._image
+            raise ValueError("Image has to be in 2D or 3D.")
 
-    def getActivePath(self, index):
-        """
+        imageFloat = self._image.astype(np.float64)
+        img_min = np.min(imageFloat)
+        img_max = np.max(imageFloat)
+
+        imageFloat = (imageFloat - img_min) / (img_max - img_min + 1e-6)
+        imageFloat[imageFloat < 0.0] = 0.0
+        return imageFloat
+
+    def getActivePath(self, index: int):
+        """Provides the path to the folder corresponding to the selected bead, creating it if it does not exist.
         Args:
-            index (int): Bead ID corresping to it's position in the list
+            index (int): The index of the bead for which to get the active path.
 
         Returns:
-            Path: Folder's path found (or created) for the selected bead
+            Path: The path to the folder corresponding to the selected bead.
         """
         activePath = os.path.join(self._outputDir, f"bead_{index}")
         if not os.path.exists(activePath):
             os.makedirs(activePath)
         return activePath
 
-    def uncertainty(self, pcov):
-        """Measure uncertainty of parameters returned by Gaussian fit.
+    def uncertainty(self, pcov: np.ndarray) -> np.ndarray:
+        """Calculates the uncertainties of the fitted parameters based on the provided covariance matrix.
 
-        Parameters
-        ----------
-        pcov : list
-            The covariance matrix between parameters
-        Returns
-        -------
-        perr : np.array
-            The list of uncertainty factor for each parameter
+        Args:
+            pcov (np.ndarray): The covariance matrix between parameters obtained from the fitting process.
+
+        Returns:
+            np.ndarray: The uncertainties of the fitted parameters.
         """
         perr = np.sqrt(np.diag(pcov))
         return perr
 
     @abstractmethod
-    def determination(self, params, coords, psf):
+    def determination(self, params: list, coords: np.ndarray, psf: np.ndarray) -> float:
         pass
 
     def getLocalCentroid(self):
+        """Calculates the local centroid of the PSF within the region of interest (ROI) based on the provided image and ROI.
+        Returns:
+            List(int): The coordinates of the local centroid within the ROI.
+        """
         return [
             int(self._centroid[0]),
             int(self._centroid[1] - self._roi[0][1]),
             int(self._centroid[2] - self._roi[0][2]),
         ]
 
-    def mip3d(self,image, axis=0):
+    @staticmethod
+    def mip3d(image: np.ndarray, axis: int = 0) -> np.ndarray:
+        """Calculates the maximum intensity projection (MIP) of a 3D image along a specified axis.
+        Args:
+            image (np.ndarray): The input 3D image.
+            axis (int): The axis along which to compute the MIP (0 for z, 1 for y, 2 for x).
+        Returns:
+            np.ndarray: The maximum intensity projection of the input image along the specified axis.
+        Raises:
+            ValueError: If the input image is not 3D or if the specified axis is not valid.
+        """
         if image.ndim != 3:
-            raise ValueError("Image have to be in 3 dimensions")
+            raise ValueError("Image has to be in 3 dimensions")
         if axis not in {0, 1, 2}:
             raise ValueError("Axis must be 0 (z), 1 (y) or 2 (x).")
 
         return np.max(image, axis=axis)
+
+    def compute1DParams(self):
+        """Computes the initial parameters for the 1D Gaussian fit based on the PSF data and the center coordinates.
+        Returns:
+            List(float): Initial parameters from the 1D Gaussian fit
+        """
+        fitTool1D = FittingTool.getInstance("1D")
+        fitTool1D._show = self._show
+        fitTool1D._image = self._image
+        fitTool1D._roi = self._roi
+        fitTool1D._spacing = self._spacing
+        fitTool1D._outputDir = self._outputDir
+        fitTool1D._centroid = self._centroid
+        fitTool1D.processSingleFit(0)
+        self.params1D = fitTool1D.parameters

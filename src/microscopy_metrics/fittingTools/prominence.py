@@ -7,50 +7,61 @@ from microscopy_metrics.utils import pxToUm, umToPx
 
 class Prominence(FittingTool):
     name = "Prominence"
+
     def __init__(self):
         super().__init__()
         self._prominenceRel = 0.1
 
-    def processSingleFit(self,index):
+    def processSingleFit(self, index):
         def cross(a, b):
             if a < 0 or b < 0 or a >= len(profile) or b >= len(profile):
                 return float(a) if 0 <= a < len(profile) else float(b)
             v0, v1 = profile[a], profile[b]
             return a + (h - v0) * (b - a) / (v1 - v0) if v0 != v1 else float(a)
-        
-        if self._image is None : 
+
+        if self._image is None:
             return None
-        if self._centroid is None :
+        if self._centroid is None:
             return None
         physic = self.getLocalCentroid()
         profiles = [
-            self._image[:,physic[1],physic[2]],
-            self._image[physic[0],:,physic[2]],
-            self._image[physic[0],physic[1],:],
+            self._image[:, physic[1], physic[2]],
+            self._image[physic[0], :, physic[2]],
+            self._image[physic[0], physic[1], :],
         ]
-        for idx,profile in enumerate(profiles) :
+        for idx, profile in enumerate(profiles):
             amp = float(np.max(profile) - np.min(profile))
             prominenceMin = amp * float(self._prominenceRel)
-            peaks,props = find_peaks(profile, prominence=prominenceMin)
+            peaks, props = find_peaks(profile, prominence=prominenceMin)
             if not peaks.size:
                 return None
-            i = np.argmax(props['prominences'])
+            i = np.argmax(props["prominences"])
             pk = peaks[i]
-            h = profile[pk] - props['prominences'][i] / 2.0
+            h = profile[pk] - props["prominences"][i] / 2.0
             above = np.where(profile > h)[0]
-            if len(above) < 2 :
+            if len(above) < 2:
                 return None
-            lIdx,rIdx = above[0], above[-1]
-            if lIdx == 0 or rIdx >= len(profile) - 1 :
+            lIdx, rIdx = above[0], above[-1]
+            if lIdx == 0 or rIdx >= len(profile) - 1:
                 return None
 
-            
             leftCrossing = cross(lIdx - 1, lIdx)
             rightCrossing = cross(rIdx, rIdx + 1)
-            self.fwhms[idx] = pxToUm(rightCrossing - leftCrossing,self._spacing[idx])
+            self.fwhms[idx] = pxToUm(rightCrossing - leftCrossing, self._spacing[idx])
             self.parameters[0] += amp / 3.0
             self.parameters[1] += float(np.min(profile)) / 3.0
             self.parameters[2 + idx] = float(pk)
-            self.parameters[5 + idx] = umToPx(self.fwhms[idx],self._spacing[idx]) / (2 * np.sqrt(2 * np.log(2)))
-        return [index,self.fwhms, [[0.0000,0.0000,0.0000,0.0000],[0.0000,0.0000,0.0000,0.0000],[0.0000,0.0000,0.0000,0.0000]], self.determinations, self.parameters ]
-
+            self.parameters[5 + idx] = umToPx(self.fwhms[idx], self._spacing[idx]) / (
+                2 * np.sqrt(2 * np.log(2))
+            )
+        return [
+            index,
+            self.fwhms,
+            [
+                [0.0000, 0.0000, 0.0000, 0.0000],
+                [0.0000, 0.0000, 0.0000, 0.0000],
+                [0.0000, 0.0000, 0.0000, 0.0000],
+            ],
+            self.determinations,
+            self.parameters,
+        ]
