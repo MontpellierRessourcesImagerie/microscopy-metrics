@@ -7,7 +7,6 @@ matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 
 from scipy.optimize import curve_fit
-from sklearn.metrics import r2_score
 
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.fittingTools.fitting1D import Fitting1D
@@ -17,7 +16,7 @@ from microscopy_metrics.utils import pxToUm
 class Fitting2DRotation(FittingTool):
     """Class for fitting a 2D Gaussian curve with rotation to the PSF profile of a microscopy image.
     This class inherits from the FittingTool base class and implements methods specific to 2D Gaussian fitting with rotation.
-    It includes methods for evaluating the Gaussian function, fitting the curve to the data, plotting the results, and calculating the coefficient of determination (R²) for the fit.
+    It includes methods for evaluating the Gaussian function, fitting the curve to the data, and plotting the results.
     """
 
     name = "2D rotation"
@@ -34,7 +33,6 @@ class Fitting2DRotation(FittingTool):
             muX,muY (float): center coordinates of the Gaussian
             sigmaX,sigmaY (float): standard deviation of the Gaussian
             theta (float): rotation angle in radians
-
         Returns:
             float: Intensity value at (x,y) following the curve
         """
@@ -57,7 +55,6 @@ class Fitting2DRotation(FittingTool):
             muX,muY (float): center coordinates of the Gaussian
             sigmaX,sigmaY (float): standard deviation of the Gaussian
             theta (float): rotation angle in radians
-
         Returns:
             float: Intensity value at (x,y) following the curve
         """
@@ -72,9 +69,9 @@ class Fitting2DRotation(FittingTool):
             bg (float): background intensity
             mu (List(float)): center of the Gaussian
             sigma (List(float)): standard deviation of the Gaussian
+            theta (float): rotation angle in radians
             coords (np.array(float)): List of X,Y coordinates
             psf (np.ndarray): 1D image of the flatten 2D psf
-
         Returns:
             List(float),Matrix(float): List of fitted parameters and covariance matrix
         """
@@ -102,7 +99,6 @@ class Fitting2DRotation(FittingTool):
 
     def show2dFit(self, psf, params, outputPath):
         """Generates a visual representation of the fitted 2D Gaussian curve with rotation compared to the original PSF data.
-
         Args:
             psf (np.ndarray): The original PSF data to compare against the fitted curve.
             params (List(float)): The parameters of the fitted 2D Gaussian curve, including amplitude, background, center coordinates, standard deviations, and rotation angle.
@@ -122,9 +118,7 @@ class Fitting2DRotation(FittingTool):
         else:
             dy = L * np.sin(theta)
             dx = L * np.cos(theta)
-
         display_angle = np.degrees(np.arctan2(dy, dx))
-
         x1 = x0 + dx
         y1 = y0 + dy
         fit = self.gauss(*params)(fine_coords_yx)
@@ -161,7 +155,6 @@ class Fitting2DRotation(FittingTool):
             self.params1D[5 + index],
         ]
         fit1D = Fitting1D().gauss(*params)(fineCoords)
-
         yLim = [0.0, psf.max() * 1.1]
         fig1, ax1 = plt.subplots(figsize=(7, 5))
         ax1.plot(coords, psf, "-", label="PSF", color="k")
@@ -250,7 +243,7 @@ class Fitting2DRotation(FittingTool):
     def processSingleFit(self, index):
         """Processes a single fit for the given index, performing fitting, and plotting.
         Args:
-            index (int): ID of the PSF and position in lists
+            index (int): ID of the PSF and position in lists where results are stored.
         """
         imageFloat = self._image.astype(np.float64)
         physic = self.getLocalCentroid()
@@ -320,15 +313,3 @@ class Fitting2DRotation(FittingTool):
                 print(
                     f"Plane {axe[i]} | Local Angle: {math.degrees(self.thetas[i]):.2f}° => Major axis: {visual_angles[i]:.2f}°"
                 )
-
-    def determination(self, params: list, coords: np.ndarray, psf: np.ndarray):
-        """Calculates the coefficient of determination (R²) for the fitted 2D Gaussian curve compared to the original PSF data.
-        Args:
-            params (list): The fitted parameters of the 2D Gaussian curve.
-            coords (array): The coordinates of the PSF data points.
-            psf (array): The original PSF data values.
-        Returns:
-            float: The coefficient of determination (R²) indicating the goodness of fit.
-        """
-        psfFit = self.evalFun(coords, *params)
-        return r2_score(psf, psfFit)

@@ -1,30 +1,29 @@
-from microscopy_metrics.fittingTools.fittingTool import FittingTool
-from microscopy_metrics.fittingTools.fitting1D import Fitting1D
-from microscopy_metrics.fittingTools.fitting2D import Fitting2D
-from microscopy_metrics.fittingTools.fitting2DEllips import Fitting2DEllips
-from microscopy_metrics.fittingTools.fitting2DRotation import Fitting2DRotation
-from microscopy_metrics.fittingTools.fitting3D import Fitting3D
-from microscopy_metrics.fittingTools.fitting3DRotation import Fitting3DRotation
-from microscopy_metrics.fittingTools.prominence import Prominence
-from microscopy_metrics.scripts.PSFGenerator.BornWolfPSF import BornWolfPSF
-from microscopy_metrics.scripts.PSFGenerator.Data3D import Data3D
-from microscopy_metrics.utils import pxToUm
+import os
+import time 
+import random
 import numpy as np
 import matplotlib
 
 matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
-from pathlib import Path
-from tqdm import tqdm
-import os
-from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing as mp
-import time 
+
+from tqdm import tqdm
+from pathlib import Path
+from concurrent.futures import ProcessPoolExecutor, as_completed
+
+from microscopy_metrics.utils import pxToUm
+from microscopy_metrics.fittingTools.fitting3D import Fitting3D
+from microscopy_metrics.scripts.PSFGenerator.Data3D import Data3D
+from microscopy_metrics.fittingTools.fittingTool import FittingTool
+from microscopy_metrics.scripts.PSFGenerator.BornWolfPSF import BornWolfPSF
+from microscopy_metrics.fittingTools.fitting3DRotation import Fitting3DRotation
 
 BORNOWOLF_PSF = True
+ORIENTED = False
 PSF_SIZE = 80
-NOISE = False
-FIT_METHODS = ["1D","2D","3D","2DRotation","3DRotation","Prominence","2DEllips"]
+NOISE = True
+FIT_METHODS = ["1D","2D","3D","2DRotation","3DRotation","2DEllips","Prominence"]
 
 TRUE_AMP = 255.0
 TRUE_BG = 0.0
@@ -55,6 +54,42 @@ def computeMape(estimations, truths):
     return (sum(errors) / len(errors)) * 100 if errors else float("inf")
 
 
+def get_rotation_matrix(thetaX, thetaY, thetaZ):
+    """Calcule la matrice de rotation 3D à partir des angles d'Euler"""
+    cx, sx = np.cos(thetaX), np.sin(thetaX)
+    cy, sy = np.cos(thetaY), np.sin(thetaY)
+    cz, sz = np.cos(thetaZ), np.sin(thetaZ)
+
+    R = np.array(
+        [
+            [cy * cz, cz * sx * sy - cx * sz, cx * cz * sy + sx * sz],
+            [cy * sz, cx * cz + sx * sy * sz, -cz * sx + cx * sy * sz],
+            [-sy, cy * sx, cy * cx],
+        ]
+    )
+    return R
+
+def computeAngularError(estimations, truths, fitMethod="2D"):
+    if fitMethod == "3D Rotation":
+        R_est = get_rotation_matrix(estimations[0], estimations[1], estimations[2])
+        R_true = get_rotation_matrix(truths[0], truths[1], truths[2])
+        dot_x = abs(np.dot(R_est[:, 0], R_true[:, 0]))
+        dot_y = abs(np.dot(R_est[:, 1], R_true[:, 1]))
+        dot_z = abs(np.dot(R_est[:, 2], R_true[:, 2]))        
+        err_x = np.rad2deg(np.arccos(min(dot_x, 1.0)))
+        err_y = np.rad2deg(np.arccos(min(dot_y, 1.0)))
+        err_z = np.rad2deg(np.arccos(min(dot_z, 1.0)))        
+        return np.mean([err_x, err_y, err_z])
+    errors = []
+    for est, truth in zip(estimations, truths):
+        truth_deg = np.rad2deg(truth) if abs(truth) <= 2 * np.pi else truth
+        diff = abs(est - truth_deg)
+        diff = diff % 180.0
+        error = min(diff, 180.0 - diff)
+        errors.append(error)
+    return np.mean(errors) if errors else 0.0
+
+
 def computeMSE(estimations, truths):
     return np.mean((np.array(estimations) - np.array(truths)) ** 2)
 
@@ -76,7 +111,7 @@ def generateRandomPSFParams(psf_size=10):
     mu_y = psf_size * 0.5
     mu_z = psf_size * 0.5
     sigmaDefault = psf_size / 10.0
-    sigma_x = np.random.uniform(0.95 * sigmaDefault, 1.05 * sigmaDefault)
+    sigma_x = np.random.uniform(0.95 * psf_size/7.0, 1.05 * sigmaDefault)
     sigma_y = np.random.uniform(0.95 * sigmaDefault, 1.05 * sigmaDefault)
     sigma_z = np.random.uniform(0.95 * sigmaDefault, 1.05 * sigmaDefault)
     amp = TRUE_AMP
@@ -101,7 +136,8 @@ def generatePSF(params):
     x, y, z = np.meshgrid(xx, yy, zz, indexing="ij")
     coords = np.stack([x.ravel(), y.ravel(), z.ravel()], -1)
     psf = fitTool.gauss(*params)(coords)
-    return psf,coords
+    fwhm = [fitTool.fwhm(params[5]), fitTool.fwhm(params[6]), fitTool.fwhm(params[7])]
+    return psf,coords,fwhm
 
 def generateBornWolfPSF():
     bw = BornWolfPSF()
@@ -166,6 +202,22 @@ def generateRandomBornoWolfPSF(seed=None):
     
     return psf, coords, fwhm
 
+def generateOrientedPSF(params,seed=None):
+    if seed is not None:
+        np.random.seed(seed)
+    zz = np.arange(PSF_SIZE)
+    yy = np.arange(PSF_SIZE)
+    xx = np.arange(PSF_SIZE)
+    x, y, z = np.meshgrid(xx, yy, zz, indexing="ij")
+    coords = np.stack([x.ravel(), y.ravel(), z.ravel()], -1)
+    index = random.randint(0, 2)
+    thetas = [0.0, 0.0, 0.0]
+    thetas[index] = np.deg2rad(45)
+    fitTool = Fitting3DRotation()
+    psf = fitTool.gauss(*params,*thetas)(coords)
+    fwhm = [fitTool.fwhm(params[7]), fitTool.fwhm(params[6]), fitTool.fwhm(params[5])]
+    return psf, coords, fwhm, thetas
+
 def fitPSF(fitName, image):
     fitTool = FittingTool.getInstance(fitName)
     fitTool._image = image
@@ -178,7 +230,7 @@ def fitPSF(fitName, image):
     fitTool.processSingleFit(0)
     end = time.time()
     elapsed = end - start
-    result = [0, fitTool.fwhms, fitTool.uncertainties, fitTool.determinations, fitTool.parameters, fitTool.pcovs]
+    result = [0, fitTool.fwhms, fitTool.uncertainties, fitTool.determinations, fitTool.parameters, fitTool.pcovs, fitTool.thetas]
     return result,elapsed
 
 def getBhattacharyyaFit(params, mu, sigma):
@@ -189,7 +241,7 @@ def getBhattacharyyaFit(params, mu, sigma):
     DistBat /= 3.0
     return DistBat
 
-def evaluateXDPsf(psf,psfReshape,FWHM,coords,params = None,fitMethod = "2D"):
+def evaluateXDPsf(psf,psfReshape,FWHM,coords,params = None,fitMethod = "2D",thetas = None):
     result, elapsed = fitPSF(fitMethod, psfReshape)
     corr = computeMape(result[1], FWHM)
     fit = Fitting3D().gauss(*result[4])(coords)
@@ -201,39 +253,45 @@ def evaluateXDPsf(psf,psfReshape,FWHM,coords,params = None,fitMethod = "2D"):
     else:
         DistBat = 0
     determination = (result[3][0] + result[3][1] + result[3][2]) / 3.0
-    return corr,psnr,DistBat,determination,elapsed
+    if thetas is not None :
+        corrOrientation = computeAngularError(result[6], thetas, fitMethod)
+    else : 
+        corrOrientation = np.inf
+    return corr,psnr,DistBat,determination,elapsed,corrOrientation
 
 
 def evaluatePsf(seed=None):
-    if BORNOWOLF_PSF:
+    thetas = None
+    params = generateRandomPSFParams(PSF_SIZE)
+    if BORNOWOLF_PSF and not ORIENTED:
         psf, coords, FWHM = generateRandomBornoWolfPSF(seed=seed)
         params = None
+    elif ORIENTED:
+        psf, coords, FWHM, thetas = generateOrientedPSF(params,seed=seed)
+        params = None
     else:
-        params = generateRandomPSFParams(PSF_SIZE)
-        psf,coords = generatePSF(params)
-        FWHM = [FittingTool().fwhm(params[5]), FittingTool().fwhm(params[6]), FittingTool().fwhm(params[7])]
+        psf,coords,FWHM = generatePSF(params)
     psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
     if NOISE :
         psfReshape = addMicroscopyNoise(psfReshape,maxPhotons=TRUE_AMP)
-    
-    corr1D,psnr1D,DistBat1D,determination1D,elapsed1D = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"1D")
-    corr2D,psnr2D,DistBat2D,determination2D,elapsed2D = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"2D")
-    corr3D,psnr3D,DistBat3D,determination3D,elapsed3D = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"3D")
+    corr1D,psnr1D,DistBat1D,determination1D,elapsed1D,corrOrientation1D = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"1D")
+    corr2D,psnr2D,DistBat2D,determination2D,elapsed2D,corrOrientation2D = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"2D")
+    corr3D,psnr3D,DistBat3D,determination3D,elapsed3D,corrOrientation3D = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"3D")
 
     result, elapsedProminence = fitPSF("Prominence", psfReshape)
     corrProminence = computeMape(result[1],FWHM)
+    corrOrientationProminence = np.inf
 
-    result, elapsed2DEllips = fitPSF("2D Ellipse",psfReshape)
-    corr2DEllips = computeMape(result[1],FWHM)
-
-    corr2DRotation,psnr2DRotation,DistBat2DRotation,determination2DRotation,elapsed2DRotation = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"2D rotation")
-    corr3DRotation,psnr3DRotation,DistBat3DRotation,determination3DRotation,elapsed3DRotation = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"3D Rotation")
+    corr2DEllips,psnr2DEllips,DistBat2DEllips,determination2DEllips,elapsed2DEllips,corrOrientation2DEllips = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"2D Ellipse",thetas)
+    corr2DRotation,psnr2DRotation,DistBat2DRotation,determination2DRotation,elapsed2DRotation,corrOrientation2DRotation = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"2D rotation",thetas)
+    corr3DRotation,psnr3DRotation,DistBat3DRotation,determination3DRotation,elapsed3DRotation,corrOrientation3DRotation = evaluateXDPsf(psf,psfReshape,FWHM,coords,params,"3D Rotation",thetas)
     return (
-        [corr1D,corr2D,corr3D,corr2DRotation,corr3DRotation,corrProminence,corr2DEllips],
-        [psnr1D,psnr2D,psnr3D,psnr2DRotation,psnr3DRotation],
-        [DistBat1D,DistBat2D,DistBat3D,DistBat2DRotation,DistBat3DRotation],
-        [determination1D,determination2D,determination3D,determination2DRotation,determination3DRotation],
-        [elapsed1D,elapsed2D,elapsed3D,elapsed2DRotation,elapsed3DRotation,elapsedProminence,elapsed2DEllips],
+        [corr1D,corr2D,corr3D,corr2DRotation,corr3DRotation,corr2DEllips,corrProminence],
+        [psnr1D,psnr2D,psnr3D,psnr2DRotation,psnr3DRotation,psnr2DEllips],
+        [DistBat1D,DistBat2D,DistBat3D,DistBat2DRotation,DistBat3DRotation,DistBat2DEllips],
+        [determination1D,determination2D,determination3D,determination2DRotation,determination3DRotation,determination2DEllips],
+        [elapsed1D,elapsed2D,elapsed3D,elapsed2DRotation,elapsed3DRotation,elapsed2DEllips,elapsedProminence],
+        [corrOrientation1D,corrOrientation2D,corrOrientation3D,corrOrientation2DRotation,corrOrientation3DRotation,corrOrientation2DEllips,corrOrientationProminence]
     )
 
 def addTab(tabA, tabB) :
@@ -270,20 +328,23 @@ def printResults(metricStr,metric,unitStr,comparison=superior):
         
 if __name__ == "__main__":
     params = generateRandomPSFParams(PSF_SIZE)
-    if BORNOWOLF_PSF:
+    if BORNOWOLF_PSF and not ORIENTED:
         psf, coords, FWHM = generateBornWolfPSF()
+    elif ORIENTED:
+        psf, coords, FWHM, _ = generateOrientedPSF(params)
     else:
-        psf,coords = generatePSF(params)
+        psf,coords,FWHM = generatePSF(params)
     psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
     if NOISE : 
         psfReshape = addMicroscopyNoise(psfReshape)
     show2DPsf(psfReshape, int(PSF_SIZE / 2))
 
     meanCorr = [0 for _ in range(len(FIT_METHODS))]
-    meanPSNR = [0, 0, 0, 0, 0, 0]
-    meanBat = [0, 0, 0, 0, 0, 0]
-    meanDetermination = [0, 0, 0, 0, 0, 0]
+    meanPSNR = [0, 0, 0, 0, 0, 0, 0]
+    meanBat = [0, 0, 0, 0, 0, 0, 0]
+    meanDetermination = [0, 0, 0, 0, 0, 0, 0]
     meanDuration = [0 for _ in range(len(FIT_METHODS))]
+    meanCorrOrientation = [0.0 for _ in range(len(FIT_METHODS))]
 
     n_tests = 30
 
@@ -294,12 +355,13 @@ if __name__ == "__main__":
     with ProcessPoolExecutor(max_workers=workers, mp_context=mp.get_context("spawn")) as executor:
         futures = {executor.submit(evaluatePsf, seed=seed) for seed in randomSeeds}
         for future in as_completed(futures):
-            (corr,psnr,bat,determination,duration) = future.result()
+            (corr,psnr,bat,determination,duration,corrOrientation) = future.result()
             meanCorr = addTab(meanCorr, corr)
             meanPSNR = addTab(meanPSNR,psnr)
             meanBat = addTab(meanBat,bat)
             meanDetermination = addTab(meanDetermination, determination)
             meanDuration = addTab(meanDuration, duration)
+            meanCorrOrientation = addTab(meanCorrOrientation, corrOrientation)
             pbar.update(1)
             pbar.set_postfix(
                 {
@@ -316,6 +378,7 @@ if __name__ == "__main__":
     meanBat = divTab(meanBat,n_tests)
     meanDetermination = divTab(meanDetermination,n_tests)
     meanDuration = divTab(meanDuration,n_tests)
+    meanCorrOrientation = divTab(meanCorrOrientation,n_tests)
 
     print("\n\n" + "=" * 50)
     print("RESULTS SUMMARY")
@@ -326,6 +389,7 @@ if __name__ == "__main__":
     printResults("distance",meanBat,"",inferior)
     printResults("R2 score", meanDetermination,"",superior)
     printResults("duration",meanDuration,"seconds",inferior)
+    printResults("orientation",meanCorrOrientation,"°",inferior)
 
     print("=" * 50)
     print("END SUMMARY")

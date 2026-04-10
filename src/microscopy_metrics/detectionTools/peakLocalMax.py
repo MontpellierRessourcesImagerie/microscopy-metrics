@@ -1,14 +1,13 @@
-from skimage.feature import peak_local_max
 from scipy import ndimage as ndi
-import numpy as np
-from microscopy_metrics.thresholdTools.threshold_tool import Threshold
+from skimage.feature import peak_local_max
+
 from microscopy_metrics.detectionTools.detection_tool import DetectionTool
 
 
 class PeakLocalMaxDetector(DetectionTool):
-    """Class for detecting local maxima in microscopy images using the peak_local_max function from scikit-image.
-    This class inherits from the DetectionTool base class and implements the detect method to identify local maxima in the input image. The method applies a Gaussian filter to smooth the image, performs a high-pass filtering, and then uses the peak_local_max function to find local maxima based on the specified parameters (e.g., min_distance, threshold_abs).
-    The detected local maxima are stored as centroids for further processing.
+    """Class for detecting local maxima using the peak_local_max function from scikit-image.
+    This class inherits from the DetectionTool base class and implements the detect method to identify local maxima in the input image.
+
     """
 
     name = "peak local maxima"

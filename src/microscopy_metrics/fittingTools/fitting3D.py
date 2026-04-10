@@ -6,7 +6,6 @@ matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 
 from scipy.optimize import curve_fit
-from sklearn.metrics import r2_score
 
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.fittingTools.fitting1D import Fitting1D
@@ -16,7 +15,7 @@ from microscopy_metrics.utils import pxToUm
 class Fitting3D(FittingTool):
     """Class for fitting a 3D Gaussian curve to the PSF profile of a microscopy image.
     This class inherits from the FittingTool base class and implements methods specific to 3D Gaussian fitting.
-    It includes methods for evaluating the Gaussian function, fitting the curve to the data, plotting the results, and calculating the coefficient of determination (R²) for the fit.
+    It includes methods for evaluating the Gaussian function, fitting the curve to the data, and plotting the results.
     """
 
     name = "3D"
@@ -41,7 +40,6 @@ class Fitting3D(FittingTool):
             bg (float): background intensity
             muX,muY,muZ (float): center coordinates of the Gaussian
             sigmaX,sigmaY,sigmaZ (float): standard deviation of the Gaussian
-
         Returns:
             float: Intensity value at (x,y,z) following the curve
         """
@@ -70,11 +68,11 @@ class Fitting3D(FittingTool):
     ):
         """Evaluates the 3D Gaussian function at the given x values.
         Args:
+            x (array): x values at which to evaluate the function
             amp (float): amplitude of the curve
             bg (float): background intensity
             muX,muY,muZ (float): center coordinates of the Gaussian
             sigmaX,sigmaY,sigmaZ (float): standard deviation of the Gaussian
-
         Returns:
             float: Intensity value at (x,y,z) following the curve
         """
@@ -106,7 +104,6 @@ class Fitting3D(FittingTool):
             sigma (List(float)): standard deviation of the Gaussian
             coords (np.array(float)): List of X,Y,Z coordinates
             psf (np.ndarray): 1D image of the flatten 2D psf
-
         Returns:
             List(float),Matrix(float): List of fitted parameters and covariance matrix
         """
@@ -152,17 +149,14 @@ class Fitting3D(FittingTool):
         fit = self.gauss(*self.parameters)(fine_coords_zyx).reshape(
             (fitShapeZ, fitShapeY, fitShapeX)
         )
-
         centerFitZ = int(fitShapeZ * (center[0] / psf.shape[0]))
         centerFitY = int(fitShapeY * (center[1] / psf.shape[1]))
         centerFitX = int(fitShapeX * (center[2] / psf.shape[2]))
-
         slices = [
             ("YX", psf[center[0], :, :], fit[centerFitZ, :, :]),
             ("XZ", psf[:, center[1], :], fit[:, centerFitY, :]),
             ("ZY", psf[:, :, center[2]], fit[:, :, centerFitX]),
         ]
-
         for name, psf_slice, fit_slice in slices:
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
             ax1.imshow(psf_slice, cmap="viridis")
@@ -285,7 +279,6 @@ class Fitting3D(FittingTool):
         """Processes a single fit for the given index, performing fitting, plotting, and calculating metrics.
         Args:
             index (int): ID of the PSF and position in lists for which to perform the fit.
-
         Returns:
             List(parameters): A list containing metrics, fwhm, parameters and covariance matrix of the fit.
         """
@@ -313,15 +306,3 @@ class Fitting3D(FittingTool):
         if self._show:
             self.plotFit3d(activePath)
             self.show2dFit(psf, activePath)
-
-    def determination(self, params: list, coords: np.ndarray, psf: np.ndarray) -> float:
-        """Calculates the coefficient of determination (R²) for the fit.
-        Args:
-            params (list): List of fitted parameters for the 3D Gaussian curve.
-            coords (np.ndarray): Array of coordinates corresponding to the PSF data points.
-            psf (np.ndarray): Flattened array of intensity values from the PSF data.
-        Returns:
-            float: The coefficient of determination (R²).
-        """
-        psfFit = self.evalFun(coords, *params)
-        return r2_score(psf, psfFit)

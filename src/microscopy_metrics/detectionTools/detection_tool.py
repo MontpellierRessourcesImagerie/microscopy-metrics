@@ -1,10 +1,11 @@
-from scipy import ndimage as ndi
 import numpy as np
-from abc import ABC, abstractmethod
+
+from abc import abstractmethod
+from scipy import ndimage as ndi
 
 
 class DetectionTool(object):
-    """Abstract base class for detection tools in microscopy image analysis.
+    """Abstract base class for bead detection tools in microscopy images.
     This class provides a common interface and shared functionality for various detection algorithms.
     It includes methods for normalizing images, applying Gaussian high-pass filtering, and an abstract method for detecting features in the image.
     Subclasses must implement the detect method to specify the detection algorithm they use.
@@ -38,10 +39,15 @@ class DetectionTool(object):
         detectionClass = cls._detectionClasses[methodName]
         return detectionClass()
 
+    @property
+    @abstractmethod
+    def name(self):
+        pass
+
     def setNormalizedImage(self):
         """Normalizes the input image for processing by the detection algorithms.
-        This method checks if the input image is 2D or 3D, converts it to a float32 type, and normalizes its pixel values to the range [0, 1]. It also ensures that any negative pixel values are set to zero.
-
+        This method checks if the input image is 2D or 3D, converts it to a float32 type, and normalizes its pixel values to the range [0, 1].
+        It also ensures that any negative pixel values are set to zero.
         Raises:
             ValueError: This function only operate on 2D or 3D images
         """
@@ -63,9 +69,4 @@ class DetectionTool(object):
 
     @abstractmethod
     def detect(self):
-        pass
-
-    @property
-    @abstractmethod
-    def name(self):
         pass

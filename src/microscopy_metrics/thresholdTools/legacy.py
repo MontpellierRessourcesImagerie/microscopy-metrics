@@ -1,7 +1,14 @@
 import numpy as np
+
 from microscopy_metrics.thresholdTools.threshold_tool import Threshold
 
+
 class ThresholdLegacy(Threshold):
+    """Class for computing the legacy thresholding method.
+    This class inherits from the Threshold base class and implements the getThreshold method to compute the legacy threshold value based on the provided image.
+    The legacy method iteratively computes the threshold value by separating the pixel intensities into background and signal classes and calculating their means until convergence.
+    """
+
     name = "legacy"
 
     def __init__(self, nb_iteration=100):
@@ -9,10 +16,11 @@ class ThresholdLegacy(Threshold):
         self.nbIteration = nb_iteration
 
     def getThreshold(self, image):
-        """Apply the Metroloj_Qc's 'legacy threshold'
-
+        """Computes the legacy threshold value based on the provided image.
+        Args:
+            image (np.ndarray): The input image for which the threshold value is to be computed.
         Returns:
-            float: Value of the threshold
+            float: The computed legacy threshold value.
         """
         imgMin = np.min(image)
         imgMax = np.max(image)

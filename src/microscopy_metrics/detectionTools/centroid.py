@@ -1,14 +1,14 @@
-from skimage.measure import regionprops, label
-from scipy import ndimage as ndi
 import numpy as np
-from microscopy_metrics.thresholdTools.threshold_tool import Threshold
+
+from scipy import ndimage as ndi
+from skimage.measure import regionprops, label
+
 from microscopy_metrics.detectionTools.detection_tool import DetectionTool
 
 
 class CentroidDetector(DetectionTool):
-    """Class for detecting centroids in microscopy images using a simple thresholding and region properties approach.
-    This class inherits from the DetectionTool base class and implements the detect method to identify centroids in the input image. The method applies a Gaussian filter to smooth the image, performs a high-pass filtering, and then uses a threshold to create a binary image.
-    The connected components in the binary image are labeled, and the centroids of these components are calculated and stored for further processing.
+    """Class for detecting blobs using a centroid method.
+    This class inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using a centroid algorithm.
     """
 
     name = "Centroids"
@@ -32,5 +32,4 @@ class CentroidDetector(DetectionTool):
         tmpCentroids = []
         for prop in regionProps:
             tmpCentroids.append(prop.centroid)
-
         self._centroids = np.array(tmpCentroids)

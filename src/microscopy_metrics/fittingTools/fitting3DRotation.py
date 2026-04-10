@@ -7,7 +7,6 @@ matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 
 from scipy.optimize import curve_fit
-from sklearn.metrics import r2_score
 
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.fittingTools.fitting1D import Fitting1D
@@ -17,7 +16,7 @@ from microscopy_metrics.utils import pxToUm
 class Fitting3DRotation(FittingTool):
     """Class for fitting a 3D Gaussian curve with rotation to the PSF profile of a microscopy image.
     This class inherits from the FittingTool base class and implements methods specific to 3D Gaussian fitting with rotation.
-    It includes methods for evaluating the Gaussian function, fitting the curve to the data, plotting the results, and calculating the coefficient of determination (R²) for the fit.
+    It includes methods for evaluating the Gaussian function, fitting the curve to the data, and plotting the results.
     """
 
     name = "3D Rotation"
@@ -27,7 +26,18 @@ class Fitting3DRotation(FittingTool):
         self.thetas = [0, 0, 0]
 
     def gauss(
-        self, amp: float, bg: float, muX: float, muY: float, muZ: float, sigmaX: float, sigmaY: float, sigmaZ: float, thetaX: float, thetaY: float, thetaZ: float
+        self,
+        amp: float,
+        bg: float,
+        muX: float,
+        muY: float,
+        muZ: float,
+        sigmaX: float,
+        sigmaY: float,
+        sigmaZ: float,
+        thetaX: float,
+        thetaY: float,
+        thetaZ: float,
     ):
         """Generates a 3D Gaussian function with rotation based on the provided parameters.
         Args:
@@ -36,7 +46,6 @@ class Fitting3DRotation(FittingTool):
             muX,muY,muZ (float): center coordinates of the Gaussian
             sigmaX,sigmaY,sigmaZ (float): standard deviation of the Gaussian
             thetaX,thetaY,thetaZ (float): rotation angles around each axis
-
         Returns:
             float: Intensity value at (x,y,z) following the curve
         """
@@ -48,7 +57,6 @@ class Fitting3DRotation(FittingTool):
             cx, sx = np.cos(thetaX), np.sin(thetaX)
             cy, sy = np.cos(thetaY), np.sin(thetaY)
             cz, sz = np.cos(thetaZ), np.sin(thetaZ)
-
             x_rot = (
                 (cy * cz) * x
                 + (cz * sx * sy - cx * sz) * y
@@ -60,7 +68,6 @@ class Fitting3DRotation(FittingTool):
                 + (-cz * sx + cx * sy * sz) * z
             )
             z_rot = (-sy) * x + (cy * sx) * y + (cy * cx) * z
-
             exponent = (
                 -(x_rot**2) / (2 * sigmaX**2)
                 - (y_rot**2) / (2 * sigmaY**2)
@@ -71,7 +78,19 @@ class Fitting3DRotation(FittingTool):
         return fun
 
     def evalFun(
-        self, x: np.ndarray, amp: float, bg: float, muX: float, muY: float, muZ: float, sigmaX: float, sigmaY: float, sigmaZ: float, thetaX: float, thetaY: float, thetaZ: float
+        self,
+        x: np.ndarray,
+        amp: float,
+        bg: float,
+        muX: float,
+        muY: float,
+        muZ: float,
+        sigmaX: float,
+        sigmaY: float,
+        sigmaZ: float,
+        thetaX: float,
+        thetaY: float,
+        thetaZ: float,
     ):
         """Evaluates the 3D Gaussian function with rotation at the given x values.
         Args:
@@ -80,7 +99,6 @@ class Fitting3DRotation(FittingTool):
             muX,muY,muZ (float): center coordinates of the Gaussian
             sigmaX,sigmaY,sigmaZ (float): standard deviation of the Gaussian
             thetaX,thetaY,thetaZ (float): rotation angles around each axis
-
         Returns:
             float: Intensity value at (x,y,z) following the curve
         """
@@ -98,7 +116,15 @@ class Fitting3DRotation(FittingTool):
             thetaZ=thetaZ,
         )(x)
 
-    def fitCurve(self, amp: float, bg: float, mu: list, sigma: list, coords: np.ndarray, psf: np.ndarray):
+    def fitCurve(
+        self,
+        amp: float,
+        bg: float,
+        mu: list,
+        sigma: list,
+        coords: np.ndarray,
+        psf: np.ndarray,
+    ):
         """Fits a 3D Gaussian curve with rotation to the provided PSF data.
         Args:
             amp (float): amplitude of the Gaussian
@@ -107,7 +133,6 @@ class Fitting3DRotation(FittingTool):
             sigma (list): standard deviation of the Gaussian
             coords (np.array(float)): List of X,Y,Z coordinates
             psf (np.ndarray): 1D image of the flatten 2D psf
-
         Returns:
             list,Matrix(float): List of fitted parameters and covariance matrix
         """
@@ -160,11 +185,9 @@ class Fitting3DRotation(FittingTool):
         thetaX = self.thetas[0]
         thetaY = self.thetas[1]
         thetaZ = self.thetas[2]
-
         cx, sx = np.cos(thetaX), np.sin(thetaX)
         cy, sy = np.cos(thetaY), np.sin(thetaY)
         cz, sz = np.cos(thetaZ), np.sin(thetaZ)
-
         R = np.array(
             [
                 [cy * cz, cz * sx * sy - cx * sz, cx * cz * sy + sx * sz],
@@ -172,25 +195,20 @@ class Fitting3DRotation(FittingTool):
                 [-sy, cy * sx, cy * cx],
             ]
         ).T
-
         idx_major = np.argmax(
             [self.parameters[5], self.parameters[6], self.parameters[7]]
         )
         v_major = R[:, idx_major]
-
         vz, vy, vx = v_major
-
         L = min(max(psf.shape) * 5 / 4, 30)
         params = [*self.parameters, *self.thetas]
         fit = self.gauss(*params)(fine_coords_zyx)
         fit = fit.reshape((fitShapeZ, fitShapeY, fitShapeX))
-
         angle_yx = np.degrees(np.arctan2(vy, vx))
         dx_yx = L * np.cos(np.arctan2(vy, vx))
         dy_yx = L * np.sin(np.arctan2(vy, vx))
         x1_yx = x0 + dx_yx
         y1_yx = y0 + dy_yx
-
         fig = plt.figure(figsize=(10, 5))
         ax1 = fig.add_subplot(1, 2, 1)
         ax1.imshow(psf[center[0]], cmap="viridis")
@@ -210,13 +228,11 @@ class Fitting3DRotation(FittingTool):
             bbox_inches="tight",
         )
         plt.close(fig)
-
         angle_xz = np.degrees(np.arctan2(vz, vx))
         dx_xz = L * np.cos(np.arctan2(vz, vx))
         dz_xz = L * np.sin(np.arctan2(vz, vx))
         z1_xz = z0 + dz_xz
         x1_xz = x0 + dx_xz
-
         fig2 = plt.figure(figsize=(10, 5))
         ax1 = fig2.add_subplot(1, 2, 1)
         ax1.imshow(psf[:, center[1], :], cmap="viridis")
@@ -236,13 +252,11 @@ class Fitting3DRotation(FittingTool):
             bbox_inches="tight",
         )
         plt.close(fig2)
-
         angle_zy = np.degrees(np.arctan2(vz, vy))
         dy_zy = L * np.cos(np.arctan2(vz, vy))
         dz_zy = L * np.sin(np.arctan2(vz, vy))
         z1_zy = z0 + dz_zy
         y1_zy = y0 + dy_zy
-
         fig3 = plt.figure(figsize=(10, 5))
         ax1 = fig3.add_subplot(1, 2, 1)
         ax1.imshow(psf[:, :, center[2]], cmap="viridis")
@@ -263,7 +277,15 @@ class Fitting3DRotation(FittingTool):
         )
         plt.close(fig3)
 
-    def plotSingleFit(self, coords: np.ndarray, psf: np.ndarray, fineCoords: np.ndarray, fit3D: np.ndarray, outputPath: str, index: int):
+    def plotSingleFit(
+        self,
+        coords: np.ndarray,
+        psf: np.ndarray,
+        fineCoords: np.ndarray,
+        fit3D: np.ndarray,
+        outputPath: str,
+        index: int,
+    ):
         """Plots the fitted 3D Gaussian curve with rotation against the original PSF data for a single axis.
         Args:
             coords (np.ndarray): Coordinates of the data points along the axis being plotted.
@@ -331,14 +353,13 @@ class Fitting3DRotation(FittingTool):
             psf[center[0], :, center[2]],
             psf[center[0], center[1], :],
         ]
-        
         for i in range(3):
             coords = np.arange(psf.shape[i])
             fine = np.linspace(0, psf.shape[i] - 1, 500)
-            
+
             fineCoords = np.full((500, 3), center, dtype=np.float64)
             fineCoords[:, i] = fine
-            
+
             params = [*self.parameters, *self.thetas]
             self.plotSingleFit(
                 coords,
@@ -351,10 +372,8 @@ class Fitting3DRotation(FittingTool):
 
     def getCoords(self, psf: np.ndarray):
         """Generates an array of coordinates corresponding to the length of the PSF profile for 3D fitting.
-
         Args:
             psf (np.ndarray): 3D image to process
-
         Returns:
             np.ndarray: Coordinates for the 3D fit
         """
@@ -365,7 +384,6 @@ class Fitting3DRotation(FittingTool):
         """Processes a single fit for the given index, performing fitting, plotting, and calculating metrics.
         Args:
             index (int): ID of the PSF and position in lists for which to perform the fit.
-
         Returns:
             List(parameters): A list containing metrics, fwhm, parameters and covariance matrix of the fit.
         """
@@ -377,16 +395,13 @@ class Fitting3DRotation(FittingTool):
         amp = self.params1D[0]
         mu = [self.params1D[2], self.params1D[3], self.params1D[4]]
         sigma = [self.params1D[5], self.params1D[6], self.params1D[7]]
-
         params, pcov = self.fitCurve(amp, bg, mu, sigma, self.coords, psf)
-
         self.thetas = params[8:11]
         self.parameters[0] = params[0]
         self.parameters[1] = params[1]
         self.parameters[2:5] = params[2:5]
         self.parameters[5:8] = params[5:8]
         self.pcovs = [pcov] * 3
-
         if self._show:
             self.plotFit3d(activePath)
             self.show2dFit(activePath)
@@ -422,7 +437,6 @@ class Fitting3DRotation(FittingTool):
                 f"Angles of major axis : YX={np.degrees(np.arctan2(vy, vx)):.2f}°, XZ={np.degrees(np.arctan2(vz, vx)):.2f}°, ZY={np.degrees(np.arctan2(vz, vy)):.2f}°"
             )
             print("---")
-
         self.fwhms = [
             pxToUm(self.fwhm(self.parameters[5]), self._spacing[0]),
             pxToUm(self.fwhm(self.parameters[6]), self._spacing[1]),
@@ -435,15 +449,3 @@ class Fitting3DRotation(FittingTool):
             )
         ] * 3
         self.pcovs = [pcov] * 3
-
-    def determination(self, params: list, coords: np.ndarray, psf: np.ndarray) -> float:
-        """Calculates the coefficient of determination (R²) for the fitted curve against the original PSF data.
-        Args:
-            params (list): Fitted parameters for the 3D Gaussian curve.
-            coords (np.ndarray): The coordinates of the PSF data.
-            psf (np.ndarray): The original PSF data.
-        Returns:
-            float: The coefficient of determination (R²) for the fit.
-        """
-        psfFit = self.evalFun(coords, *params)
-        return r2_score(psf, psfFit)

@@ -1,18 +1,19 @@
-import numpy as np
-from scipy import ndimage as ndi
-from skimage.feature import peak_local_max, blob_log, blob_dog
-from skimage.measure import regionprops, label
-from scipy.ndimage import median_filter
 import math
-from matplotlib import pyplot as plt
+import numpy as np
+
+from scipy.ndimage import median_filter
+from skimage.measure import regionprops, label
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from microscopy_metrics.utils import umToPx
-from microscopy_metrics.fitting import Fitting
-from microscopy_metrics.resolutionTools.theoretical_resolution import TheoreticalResolution
 from microscopy_metrics.thresholdTools.legacy import ThresholdLegacy
-        
+
 
 class Metrics(object):
+    """Class for calculating various metrics related to microscopy images, including signal-to-background ratio (SBR), lateral asymmetry ratio (LAR), sphericity, and theoretical resolution.
+    This class provides methods for processing microscopy images, calculating metrics based on the image data, and storing the results for further analysis and evaluation.
+    """
+
     def __init__(self, image=None):
         self._image = image
         self._images = []
@@ -107,39 +108,35 @@ class Metrics(object):
         self._TheoreticalResolutionTool = value
 
     def setNormalizedImage(self, image):
-        """Method to normalize a 2D or 3D image and erase negative values
-
+        """Normalizes the input image to a range of [0, 1] and ensures that all values are non-negative.
         Args:
-            image (np.ndarray): Image to be normalized
-
+            image (np.ndarray): The input image to be normalized, which should be a 2D or 3D array representing the microscopy image data.
         Raises:
-            ValueError: This function only operate on 2D or 3D images
-
+            ValueError: If the input image is not 2D or 3D.
         Returns:
-            np.ndarray: Image normalized
+            np.ndarray: The normalized image with values in the range [0, 1].
         """
         if image.ndim not in (2, 3):
             raise ValueError("Image have to be in 2D or 3D.")
         imageFloat = image.astype(np.float64)
         imageFloat = (imageFloat - np.min(imageFloat)) / (
-                np.max(imageFloat) - np.min(imageFloat) + 1e-6
+            np.max(imageFloat) - np.min(imageFloat) + 1e-6
         )
         imageFloat[imageFloat < 0] = 0
         return imageFloat
 
     def processSingleSBRRing(self, index, image):
-        """Function to calculate Signa to background ratio using a ring for a specific bead
-
+        """Calculates the signal-to-background ratio (SBR) for a single microscopy image using a ring-based method.
+        The method processes the input image to identify the signal and background regions based on a ring-shaped area around the detected bead.
+        It calculates the mean signal and background intensities and computes the SBR for the image.
+        The calculated SBR values are stored in the class attributes for further analysis and evaluation.
         Args:
-            index (int): Bead ID corresping to it's position in the list
-            image (np.ndarray): Image to use for the calculation
-
+            index (int): The index of the image being processed, used for storing results in the SBR attribute.
+            image (np.ndarray): The input microscopy image for which to calculate the SBR, which should be a 2D or 3D array representing the image data.
         Raises:
-            ValueError: There have to be at least one background pixel in the image
-            ValueError: There have to be at least one signal pixel in the image
-
+            ValueError: If the input image is not 2D or 3D, if there are no background pixels detected, or if there are no signal pixels detected in the image.
         Returns:
-            float: Signal to background ratio of the image
+            float: The calculated signal-to-background ratio (SBR) for the input image, or -1 if the image format is incorrect or if no signal/background pixels are detected.
         """
         if image.ndim not in (2, 3):
             print("Incorrect picture format")
@@ -160,11 +157,9 @@ class Metrics(object):
         diameterX = maxX - minX
         diameterBead = max(diameterZ, diameterY, diameterX)
         innerDistance = (
-                umToPx(self._ringInnerDistance, self._pixelSize[2]) + diameterBead / 2
+            umToPx(self._ringInnerDistance, self._pixelSize[2]) + diameterBead / 2
         )
-        outerDistance = (
-                umToPx(self._ringThickness, self._pixelSize[2]) + innerDistance
-        )
+        outerDistance = umToPx(self._ringThickness, self._pixelSize[2]) + innerDistance
         signal = 0.0
         nSignal = 0
         background = 0.0
@@ -195,6 +190,15 @@ class Metrics(object):
         return ratio
 
     def signalToBackgroundRatioRing(self):
+        """Calculates the signal-to-background ratio (SBR) for a set of microscopy images using a ring-based method.
+        The method iterates through the list of input images, applying the processSingleSBRRing method to each image to calculate the SBR.
+        It uses a ThreadPoolExecutor to parallelize the processing of multiple images for improved performance.
+        The calculated SBR values for each image are stored in the SBR attribute, and the mean SBR across all images is calculated and stored in the meanSBR attribute for further analysis and evaluation.
+        Raises:
+            ValueError: If there are no images in the input list or if any of the images have an incorrect format.
+        Returns:
+            None: The method does not return a value, but it updates the SBR and meanSBR attributes of the class with the calculated values for each image and the mean SBR across all images, respectively.
+        """
         meanSBR = 0.0
         SBR = []
 
@@ -208,7 +212,6 @@ class Metrics(object):
                 ): i
                 for i, image in enumerate(self._images)
             }
-
             for future in as_completed(futures):
                 result = future.result()
                 if result == -1:
@@ -220,6 +223,12 @@ class Metrics(object):
         self.SBR = SBR
 
     def runPrefittingMetrics(self):
+        """Runs the pre-fitting metrics calculations, including signal-to-background ratio (SBR) calculation and theoretical resolution estimation.
+        The method first calculates the SBR for the input images using the signalToBackgroundRatioRing method, and then estimates the theoretical resolution using the theoreticalResolutionTool.
+        The calculated SBR values and theoretical resolution are stored in the class attributes for further analysis and evaluation.
+        Raises:
+            ValueError: If there are no images in the input list or if the theoreticalResolutionTool is not set.
+        """
         self.SBR = []
         self.meanSBR = 0.0
         yield {"desc": "SBR calculation..."}
@@ -230,14 +239,26 @@ class Metrics(object):
         )
 
     def lateralAsymmetryRatio(self):
+        """Calculates the lateral asymmetry ratio (LAR) for the detected point spread function (PSF) based on the calculated full width at half maximum (FWHM) values.
+        Raises:
+           ValueError: If the FWHM values are not available or if there are not enough FWHM values to calculate the LAR.
+        """
         if self._FWHM == []:
-            return
+            raise ValueError(
+                "FWHM values are not available or insufficient to calculate LAR."
+            )
         tmp = np.array([self._FWHM[1], self._FWHM[2]])
         self.LAR = tmp.min() / tmp.max()
 
     def sphericityRatio(self):
+        """Calculates the sphericity ratio for the detected point spread function (PSF) based on the calculated full width at half maximum (FWHM) values.
+        Raises:
+            ValueError: If the FWHM values are not available or if there are not enough FWHM values to calculate the sphericity ratio.
+        """
         if self._FWHM == []:
-            return
+            raise ValueError(
+                "FWHM values are not available or insufficient to calculate sphericity."
+            )
         FWHMxy = math.sqrt(self._FWHM[2] * self._FWHM[1])
         sphericity = FWHMxy / self._FWHM[0]
         self._sphericity = sphericity

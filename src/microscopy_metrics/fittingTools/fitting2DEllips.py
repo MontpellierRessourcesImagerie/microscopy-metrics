@@ -7,7 +7,6 @@ matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 
 from scipy.optimize import curve_fit
-from sklearn.metrics import r2_score
 
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.fittingTools.fitting1D import Fitting1D
@@ -17,7 +16,7 @@ from microscopy_metrics.utils import pxToUm
 class Fitting2DEllips(FittingTool):
     """Class for fitting a 2D Ellipse Gaussian curve to the PSF profile of a microscopy image.
     This class inherits from the FittingTool base class and implements methods specific to 2D Ellipse Gaussian fitting.
-    It includes methods for evaluating the 2D Ellipse Gaussian function, fitting the curve to the data, plotting the results, and calculating the coefficient of determination (R²) for the fit.
+    It includes methods for evaluating the 2D Ellipse Gaussian function, fitting the curve to the data, and plotting the results.
     """
 
     name = "2D Ellipse"
@@ -26,14 +25,22 @@ class Fitting2DEllips(FittingTool):
         super().__init__()
         self.thetas = [0, 0, 0]
 
-    def gauss(self, amp: float, bg: float, muX: float, muY: float, a: float, b: float, c: float):
+    def gauss(
+        self,
+        amp: float,
+        bg: float,
+        muX: float,
+        muY: float,
+        a: float,
+        b: float,
+        c: float,
+    ):
         """Generates a 2D Ellipse Gaussian function based on the provided parameters.
         Args:
             amp (float): amplitude of the curve
             bg (float): background intensity
             muX,muY (float): center coordinates of the Gaussian
             a,b,c (float): coefficients for the ellipse
-
         Returns:
             float: Intensity value at (x,y) following the curve
         """
@@ -48,20 +55,37 @@ class Fitting2DEllips(FittingTool):
 
         return fun
 
-    def evalFun(self, x: np.ndarray, amp: float, bg: float, muX: float, muY: float, a: float, b: float, c: float):
+    def evalFun(
+        self,
+        x: np.ndarray,
+        amp: float,
+        bg: float,
+        muX: float,
+        muY: float,
+        a: float,
+        b: float,
+        c: float,
+    ):
         """calculates the 2D Ellipse Gaussian function at the given x values.
         Args:
             amp (float): amplitude of the curve
             bg (float): background intensity
             muX,muY (float): center coordinates of the Gaussian
             a,b,c (float): coefficients for the ellipse
-
         Returns:
             float: Intensity value at (x,y) following the curve
         """
         return self.gauss(amp=amp, bg=bg, muX=muX, muY=muY, a=a, b=b, c=c)(x)
 
-    def fitCurve(self, amp: float, bg: float, mu: list, sigma: list, coords: np.ndarray, psf: np.ndarray):
+    def fitCurve(
+        self,
+        amp: float,
+        bg: float,
+        mu: list,
+        sigma: list,
+        coords: np.ndarray,
+        psf: np.ndarray,
+    ):
         """Fits a 2D Ellipse Gaussian curve to the provided PSF data using the given initial parameters and coordinates.
         Args:
             amp (float): amplitude of the Gaussian
@@ -70,7 +94,6 @@ class Fitting2DEllips(FittingTool):
             sigma (List(float)): standard deviation of the Gaussian
             coords (np.array(float)): List of X,Y coordinates
             psf (np.ndarray): 1D image of the flatten 2D psf
-
         Returns:
             List(float),Matrix(float): List of fitted parameters and covariance matrix
         """
@@ -91,10 +114,9 @@ class Fitting2DEllips(FittingTool):
     def ellipseParmConversion(self, a: float, b: float, c: float):
         """Converts the parameters of a 2D Ellipse Gaussian fit (a, b, c) into the angle of rotation (theta) and the standard deviations along the major and minor axes (sx, sy).
         Args:
-            a (float): coefficient for the ellipse
-            b (float): coefficient for the ellipse
-            c (float): coefficient for the ellipse
-
+            a (float): coefficient for the ellipse linked to the x-axis
+            b (float): coefficient for the ellipse linked to the interaction between x and y
+            c (float): coefficient for the ellipse linked to the y-axis
         Returns:
             tuple: The angle of rotation (theta) and the standard deviations along the major and minor axes (sx, sy)
         """
@@ -150,7 +172,15 @@ class Fitting2DEllips(FittingTool):
         fig.savefig(outputPath, dpi=300, bbox_inches="tight")
         plt.close(fig)
 
-    def plotSingleFit(self, psf: np.ndarray, fineCoords: np.ndarray, fit2D: np.ndarray, outputPath: str, mu: float, index: int):
+    def plotSingleFit(
+        self,
+        psf: np.ndarray,
+        fineCoords: np.ndarray,
+        fit2D: np.ndarray,
+        outputPath: str,
+        mu: float,
+        index: int,
+    ):
         """Generates and saves a plot comparing the original PSF data with the fitted 1D Gaussian curve and the 2D Ellipse Gaussian curve, including the center of the Gaussian (mu) and the FWHM for both fits.
         Args:
             psf (np.ndarray): The original PSF data.
@@ -281,22 +311,22 @@ class Fitting2DEllips(FittingTool):
 
             params2D.append(params)
             theta, s1, s2 = self.ellipseParmConversion(params[4], params[5], params[6])
-            self.thetas[u] = math.degrees(theta)
+            self.thetas[u] = theta
             self.parameters[0] += params[0] / 3.0
             self.parameters[1] += params[1] / 3.0
 
             if u < 2:
                 self.parameters[2 + u] += params[2] / 2.0
                 self.parameters[2 + u2] += params[3] / 2.0
-                self.parameters[5 + u] += params[4] / 2.0
-                self.parameters[5 + u2] += params[5] / 2.0
+                self.parameters[5 + u] += s1 / 2.0
+                self.parameters[5 + u2] += s2 / 2.0
                 self.fwhms[u] += pxToUm(self.fwhm(s1), self._spacing[u]) / 2.0
                 self.fwhms[u2] += pxToUm(self.fwhm(s2), self._spacing[u2]) / 2.0
             else:
                 self.parameters[2 + u] += params[3] / 2.0
                 self.parameters[2 + u2] += params[2] / 2.0
-                self.parameters[5 + u] += params[5] / 2.0
-                self.parameters[5 + u2] += params[4] / 2.0
+                self.parameters[5 + u] += s2 / 2.0
+                self.parameters[5 + u2] += s1 / 2.0
                 self.fwhms[u] += pxToUm(self.fwhm(s1), self._spacing[u]) / 2.0
                 self.fwhms[u2] += pxToUm(self.fwhm(s2), self._spacing[u2]) / 2.0
 
@@ -311,16 +341,4 @@ class Fitting2DEllips(FittingTool):
         if self._show:
             self.plotFit3d(params2D, activePath)
             for i in range(3):
-                print(f"mean angle {axe[i]}: {self.thetas[i]}")
-
-    def determination(self, params: list, coords: np.ndarray, psf: np.ndarray):
-        """Calculates the coefficient of determination (R²) for the fit of the 2D Ellipse Gaussian curve to the PSF data.
-        Args:
-            params (List(float)): The fitted parameters for the 2D Ellipse Gaussian.
-            coords (np.ndarray): The coordinates used for the fitting process.
-            psf (np.ndarray): The original PSF data.
-        Returns:
-            float: The coefficient of determination (R²) for the fit, indicating how well the fitted curve matches the original PSF data.
-        """
-        psfFit = self.evalFun(coords, *params)
-        return r2_score(psf, psfFit)
+                print(f"mean angle {axe[i]}: {math.degrees(self.thetas[i])}")

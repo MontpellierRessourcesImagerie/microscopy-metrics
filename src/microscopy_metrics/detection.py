@@ -1,15 +1,22 @@
-import numpy as np
-from microscopy_metrics.utils import umToPx
-import math
 import os
+import math
+import numpy as np
+
 from PIL import Image
+from scipy.signal import find_peaks
 from skimage.draw import polygon_perimeter
+
+from microscopy_metrics.utils import umToPx
 from microscopy_metrics.detectionTools.detection_tool import DetectionTool
 from microscopy_metrics.thresholdTools.threshold_tool import Threshold
-from scipy.signal import find_peaks
+
 
 class Detection(object):
-    """Standard class for operations relative to detection and extraction of PSFs"""
+    """Class for detecting and extracting regions of interest (ROIs) from microscopy images based on detected centroids.
+    This class provides methods for detecting centroids using a specified detection tool, extracting ROIs around the detected centroids, and saving the cropped PSF images for further analysis.
+    It includes properties for configuring the detection parameters, such as crop factor, sigma, minimum distance, bead size, rejection distance, pixel size, and threshold intensity.
+    The class also includes methods for checking ROI overlap, validating ROI positions within the image, and running the complete detection workflow.
+    """
 
     def __init__(self, image=None):
         self._image = image
@@ -112,21 +119,29 @@ class Detection(object):
         self._thresholdTool = value
 
     def getMeanIntensity(self, centroids):
-        if len(centroids) > 0 :
+        """Calculates the mean intensity of the detected centroids in the image.
+        Args:
+            centroids (List): List of detected centroids for which to calculate the mean intensity.
+        Returns:
+            float: The calculated mean intensity of the detected centroids.
+        """
+        if len(centroids) > 0:
             result = 0.0
-            for i in centroids :
-                z,y,x = i
-                result += self._image[int(z),int(y),int(x)]
-            return result/len(centroids) 
+            for i in centroids:
+                z, y, x = i
+                result += self._image[int(z), int(y), int(x)]
+            return result / len(centroids)
         return 0
 
     def extractRegionOfInterest(self):
-        """Uses found _centroids to extract region of interest
-        Automatically rejects the ones overlapped or too near from the edges.
+        """Extracts regions of interest (ROIs) around the detected centroids in the image.
+        The method retrieves the detected centroids from the detection tool, calculates the ROI coordinates based on the specified crop factor and bead size, and checks for overlapping ROIs and their positions within the image.
+        It also applies intensity-based filtering to retain only valid ROIs based on the mean intensity of the detected centroids and the specified threshold intensity. The valid ROIs are stored in the class attributes for further processing and analysis.
+        The method ensures that the extracted ROIs are non-overlapping, contained within the image boundaries, and not located within the rejection zone near the top or bottom of the image.
+        The final list of extracted ROIs and corresponding centroids are retained for subsequent cropping and analysis steps in the detection workflow.
+        The method also includes checks to ensure that the extracted ROIs contain only a single bead based on the intensity profiles along the three axes, and removes any ROIs that contain multiple peaks or do not meet the intensity criteria.
         """
-        roiSize = umToPx(
-            (self._cropFactor * self._beadSize) / 2, self._pixelSize[2]
-        )
+        roiSize = umToPx((self._cropFactor * self._beadSize) / 2, self._pixelSize[2])
         for i, centroid in enumerate(self._centroids):
             over = False
             for y, c2 in enumerate(self._centroids):
@@ -168,40 +183,56 @@ class Detection(object):
         meanIntensity = self.getMeanIntensity(retainedCentroids)
         tmpRoisExtracted = []
         tmpListIDCentroidsRetained = []
-        for i,centroid in enumerate(retainedCentroids) :
-            roi_image = self._image[..., self._roisExtracted[i][0][1] : self._roisExtracted[i][2][1], self._roisExtracted[i][0][2] : self._roisExtracted[i][1][2]]
+        for i, centroid in enumerate(retainedCentroids):
+            roi_image = self._image[
+                ...,
+                self._roisExtracted[i][0][1] : self._roisExtracted[i][2][1],
+                self._roisExtracted[i][0][2] : self._roisExtracted[i][1][2],
+            ]
             centroidIdx = self._listIdCentroidsRetained[i]
             physic = [
                 int(self._centroids[centroidIdx][0]),
                 int(self._centroids[centroidIdx][1] - self._roisExtracted[i][0][1]),
                 int(self._centroids[centroidIdx][2] - self._roisExtracted[i][0][2]),
             ]
-            z = roi_image[:,physic[1],physic[2]]
-            y = roi_image[physic[0],:,physic[2]]
-            x = roi_image[physic[0],physic[1],:]
+            z = roi_image[:, physic[1], physic[2]]
+            y = roi_image[physic[0], :, physic[2]]
+            x = roi_image[physic[0], physic[1], :]
             height = Threshold.getInstance("legacy").getThreshold(roi_image)
-            peaksX,_ = find_peaks(x,height=np.min(x)+(np.max(x)-np.min(x))*0.5, distance=3)
-            peaksY,_ = find_peaks(y,height=np.min(y)+(np.max(y)-np.min(y))*0.5, distance=3)
-            peaksZ,_ = find_peaks(z,height=np.min(z)+(np.max(z)-np.min(z))*0.5, distance=3)
-            if not(self._image[int(centroid[0]),int(centroid[1]),int(centroid[2])] < (self._thresholdIntensity * meanIntensity) or self._image[int(centroid[0]),int(centroid[1]),int(centroid[2])] > ((1+(1-self._thresholdIntensity)) * meanIntensity)) :
-                if not(len(peaksX) > 1 or len(peaksY) >1 or len(peaksZ) > 1) :
+            peaksX, _ = find_peaks(
+                x, height=np.min(x) + (np.max(x) - np.min(x)) * 0.5, distance=3
+            )
+            peaksY, _ = find_peaks(
+                y, height=np.min(y) + (np.max(y) - np.min(y)) * 0.5, distance=3
+            )
+            peaksZ, _ = find_peaks(
+                z, height=np.min(z) + (np.max(z) - np.min(z)) * 0.5, distance=3
+            )
+            if not (
+                self._image[int(centroid[0]), int(centroid[1]), int(centroid[2])]
+                < (self._thresholdIntensity * meanIntensity)
+                or self._image[int(centroid[0]), int(centroid[1]), int(centroid[2])]
+                > ((1 + (1 - self._thresholdIntensity)) * meanIntensity)
+            ):
+                if not (len(peaksX) > 1 or len(peaksY) > 1 or len(peaksZ) > 1):
                     tmpRoisExtracted.append(self._roisExtracted[i])
                     tmpListIDCentroidsRetained.append(self._listIdCentroidsRetained[i])
                 else:
                     print(f"ROI {i} removed because of two beads detected")
-            else :
+            else:
                 print(f"ROI {i} removed because of intensity")
-        if len(tmpListIDCentroidsRetained) > 0 :
+        if len(tmpListIDCentroidsRetained) > 0:
             self._roisExtracted = tmpRoisExtracted
             self._listIdCentroidsRetained = tmpListIDCentroidsRetained
 
     def isRoiOverlapped(self, roi):
-        """
+        """Checks if the given ROI overlaps with any of the already extracted ROIs.
+        The method compares the coordinates of the given ROI with the coordinates of the already extracted ROIs to determine if there is any overlap.
+        It checks for both horizontal and vertical overlaps by comparing the minimum and maximum coordinates of the ROIs.
         Args:
-            roi (np.array): Coordinates of vertices of the ROI
-
+            roi (np.array): Coordinates of the corners of the ROI to be checked for overlap with existing ROIs.
         Returns:
-            Boolean: False if the ROI is not overlapped
+            Boolean: True if the given ROI overlaps with any of the existing ROIs, False otherwise.
         """
         newYMin = min(roi[:, 1])
         newYMax = max(roi[:, 1])
@@ -218,54 +249,54 @@ class Detection(object):
                 return True
         return False
 
-    def isRoiNotInRejection(self,centroid):
-        """
+    def isRoiNotInRejection(self, centroid):
+        """Checks if the given centroid is located within the rejection zone near the top or bottom of the image.
+        The method calculates the rejection zone based on the specified rejection distance and pixel size, and checks if the centroid's z-coordinate is within the rejection zone.
+        It ensures that the detected centroids are not located too close to the edges of the image, which could lead to inaccurate ROI extraction and analysis.
         Args:
             centroid (List): Coordinates of the bead's centroid
             imageShape (List): Dimensions of the picture
             rejectionZone (float): Minimal distance between top/bottom and the centroid
-
         Returns:
-            Boolean: True if the bead is not in the rejection zone.
+            Boolean: True if the centroid is not located within the rejection zone, False otherwise.
         """
         rejectionZone = math.ceil(umToPx(self._rejectionDistance, self._pixelSize[0]))
         if ((centroid[0] - rejectionZone) < 0) or (
-                (centroid[0] + rejectionZone) > self._image.shape[0]
+            (centroid[0] + rejectionZone) > self._image.shape[0]
         ):
             return False
         return True
 
-
-    def isRoiInImage(self,roi):
-        """
+    def isRoiInImage(self, roi):
+        """Checks if the given ROI is contained within the boundaries of the image.
+        The method compares the coordinates of the given ROI with the dimensions of the image to determine if the ROI is fully contained within the image boundaries.
+        This ensures that the extracted ROIs are valid and can be properly analyzed without encountering issues related to out-of-bounds errors or incomplete data.
         Args:
-            roi (np.array): Coordinates of corners of the ROI
-
+            roi (np.array): Coordinates of corners of the ROI to be checked for containment within the image boundaries.
         Returns:
-            Boolean: True if the ROI is contained in the image shape
+            Boolean: True if the given ROI is contained within the image boundaries, False otherwise.
         """
         stack, height, width = self._image.shape
         for z, y, x in roi:
             if y < 0 or y >= height or x < 0 or x >= width:
                 return False
         return True
-            
 
     def run(self, outputDir=None, cropPsf=True):
-        """Function to operate complete detection workflow
-
+        """Runs the complete detection workflow, including detecting centroids, extracting ROIs, and saving cropped PSF images.
+        The method orchestrates the entire detection process by first invoking the detection tool to identify centroids in the image, then extracting ROIs around the detected centroids while ensuring non-overlapping and valid ROIs, and finally saving the cropped PSF images for each valid ROI in the specified output directory.
         Args:
-            outputDir (Path, optional): Directory of the output folder. Defaults to None.
-            cropPsf (bool, optional): Allow or not the generation of _cropped PSF images. Defaults to True.
-
+            outputDir (Path, optional): Directory of the output folder where cropped PSF images will be saved. Required if cropPsf is set to True. Defaults to None.
+            cropPsf (bool, optional): Flag indicating whether to crop PSF images and save them in the output directory. Defaults to True.
         Raises:
-            ValueError: To generate images of the _cropped PSFs, the outputDir have to exist
-
+            ValueError: If cropPsf is set to True and outputDir is not provided, indicating that the output directory is required for saving cropped PSF images.
         Yields:
-            String: Return the current step of the workflow
+            String: Description of the current step in the detection workflow, providing progress updates to the user.
         """
         if outputDir is None and cropPsf == True:
-            raise ValueError("Problem to find output folder")
+            raise ValueError(
+                "Output directory is required for saving cropped PSF images."
+            )
         self._centroids = []
         self._roisExtracted = []
         self._listIdCentroidsRetained = []
@@ -279,13 +310,14 @@ class Detection(object):
             self.cropPsf(outputDir)
 
     def getActivePath(self, index, outputDir):
-        """
+        """Provides the path to the folder corresponding to the selected bead, creating it if it does not exist.
+        The method constructs the path to the folder for the selected bead based on the provided index and output directory.
         Args:
-            index (int): Bead ID corresping to it's position in the list
-            outputDir (Path): Directory of the output folder
+            index (int): The index of the bead for which to get the active path
+            outputDir (Path): The directory of the output folder where the bead's folder will be created if it does not exist
 
         Returns:
-            Path: Folder's path found (or created) for the selected bead
+            Path: The path to the folder corresponding to the selected bead
         """
         activePath = os.path.join(outputDir, f"bead_{index}")
         if not os.path.exists(activePath):
@@ -293,18 +325,17 @@ class Detection(object):
         return activePath
 
     def addRoiOnImage(self, roi):
-        """Function to draw a square representating an ROI in a picture
-
+        """Adds a visual representation of the ROI on the image by drawing a polygon perimeter around the specified ROI coordinates.
         Args:
-            roi (np.array): List of the four corners coordinates of the ROI
+            roi (np.ndarray): Coordinates of the corners of the ROI to be highlighted on the image.
 
         Returns:
-            np.ndarray: Modified image with the ROI
+            np.ndarray: The image with the ROI highlighted by a polygon perimeter.
         """
         if self._image.ndim == 3:
             imageTmp = np.max(self._image, axis=0)
         imageTmp = (
-                (imageTmp - imageTmp.min()) / (imageTmp.max() - imageTmp.min()) * 255
+            (imageTmp - imageTmp.min()) / (imageTmp.max() - imageTmp.min()) * 255
         ).astype(np.uint8)
         imageRGB = np.stack([imageTmp, imageTmp, imageTmp], axis=-1)
         rr, cc = polygon_perimeter(
@@ -318,10 +349,11 @@ class Detection(object):
         return imageRGB
 
     def cropPsf(self, outputDir):
-        """Function to crop image for each ROI and save them
-
+        """Crops the PSF images for each valid ROI and saves them in the specified output directory.
+        The method iterates through the list of extracted ROIs and corresponding centroids, crops the PSF images based on the ROI coordinates, and saves the cropped images in the output directory with appropriate naming conventions.
+        It also adds a visual representation of the ROI on the cropped images for better visualization and understanding of the extracted regions.
         Args:
-            outputDir (Path): Directory of the output folder
+            outputDir (Path): The directory of the output folder where the cropped PSF images will be saved.
         """
         for i, roi in enumerate(self._roisExtracted):
             data = self._image[..., roi[0][1] : roi[2][1], roi[0][2] : roi[1][2]]
@@ -335,7 +367,7 @@ class Detection(object):
             ]
             imageFloat = data.astype(np.float32)
             imageFloat = (imageFloat - np.min(imageFloat)) / (
-                    np.max(imageFloat) - np.min(imageFloat) + 1e-6
+                np.max(imageFloat) - np.min(imageFloat) + 1e-6
             )
             imageFloat[imageFloat < 0] = 0
             imageUint16 = (imageFloat * 255).astype(np.uint8)

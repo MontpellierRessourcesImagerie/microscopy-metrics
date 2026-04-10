@@ -1,11 +1,11 @@
 import os
 import numpy as np
 import matplotlib
+
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 
 from scipy.optimize import curve_fit
-from sklearn.metrics import r2_score
 
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.fittingTools.fitting1D import Fitting1D
@@ -15,7 +15,7 @@ from microscopy_metrics.utils import pxToUm
 class Fitting2D(FittingTool):
     """Class for fitting a 2D Gaussian curve to the PSF profile of a microscopy image.
     This class inherits from the FittingTool base class and implements methods specific to 2D Gaussian fitting.
-    It includes methods for evaluating the Gaussian function, fitting the curve to the data, plotting the results, and calculating the coefficient of determination (R²) for the fit.
+    It includes methods for evaluating the Gaussian function, fitting the curve to the data, and plotting the results.
     """
 
     name = "2D"
@@ -23,7 +23,15 @@ class Fitting2D(FittingTool):
     def __init__(self):
         super().__init__()
 
-    def gauss(self, amp: float, bg: float, muX: float, muY: float, sigmaX: float, sigmaY: float):
+    def gauss(
+        self,
+        amp: float,
+        bg: float,
+        muX: float,
+        muY: float,
+        sigmaX: float,
+        sigmaY: float,
+    ):
         """Generates a 2D Gaussian function based on the provided parameters.
         Args:
             amp (float): amplitude of the curve
@@ -43,7 +51,16 @@ class Fitting2D(FittingTool):
 
         return fun
 
-    def evalFun(self, x: np.ndarray, amp: float, bg: float, muX: float, muY: float, sigmaX: float, sigmaY: float):
+    def evalFun(
+        self,
+        x: np.ndarray,
+        amp: float,
+        bg: float,
+        muX: float,
+        muY: float,
+        sigmaX: float,
+        sigmaY: float,
+    ):
         """Evaluates the 2D Gaussian function at the given coordinates.
         Args:
             amp (float): amplitude of the curve
@@ -58,7 +75,15 @@ class Fitting2D(FittingTool):
             amp=amp, bg=bg, muX=muX, muY=muY, sigmaX=sigmaX, sigmaY=sigmaY
         )(x)
 
-    def fitCurve(self, amp: float, bg: float, mu: list, sigma: list, coords: np.ndarray, psf: np.ndarray):
+    def fitCurve(
+        self,
+        amp: float,
+        bg: float,
+        mu: list,
+        sigma: list,
+        coords: np.ndarray,
+        psf: np.ndarray,
+    ):
         """Fits a 2D Gaussian curve to the provided PSF data using the initial parameters and coordinates.
         Args:
             amp (float): amplitude of the Gaussian
@@ -94,7 +119,6 @@ class Fitting2D(FittingTool):
 
     def show2dFit(self, psf: np.ndarray, outputPath: str, params: list):
         """Generates and saves a visualization of the 2D Gaussian fit compared to the original PSF data.
-
         Args:
             psf (np.ndarray): The original PSF data.
             outputPath (str): The path where the visualization will be saved.
@@ -117,7 +141,14 @@ class Fitting2D(FittingTool):
         fig.savefig(outputPath, dpi=300, bbox_inches="tight")
         plt.close(fig)
 
-    def plotSingleFit(self, psf: np.ndarray, fineCoords: np.ndarray, fit2D: np.ndarray, outputPath: str, index: int):
+    def plotSingleFit(
+        self,
+        psf: np.ndarray,
+        fineCoords: np.ndarray,
+        fit2D: np.ndarray,
+        outputPath: str,
+        index: int,
+    ):
         """Generates and saves a visualization comparing the 1D profile of the original PSF data with the 1D profile of the 2D Gaussian fit along a specified axis.
         Args:
             psf (np.ndarray): The original PSF data.
@@ -207,7 +238,6 @@ class Fitting2D(FittingTool):
         """Generates an array of coordinates corresponding to the length of the PSF profile along two axes.
         Args:
             psf (np.ndarray): 2D image to process
-
         Returns:
             np.ndarray: Coordinates for the 2D fit
         """
@@ -272,16 +302,3 @@ class Fitting2D(FittingTool):
                 self.show2dFit(psf[u], outputPath, params)
         if self._show:
             self.plotFit3d(activePath)
-
-    def determination(self, params: list, coords: np.ndarray, psf: np.ndarray):
-        """Calculates the coefficient of determination (R²) for the fitted curve against the original PSF data.
-        Args:
-            params (List[float]): Fitted parameters for the 2D Gaussian curve.
-            coords (np.ndarray): Array of coordinates for the 2D fit.
-            psf (np.ndarray): Original PSF data.
-
-        Returns:
-            float: The coefficient of determination (R²) for the fit.
-        """
-        psfFit = self.evalFun(coords, *params)
-        return r2_score(psf, psfFit)

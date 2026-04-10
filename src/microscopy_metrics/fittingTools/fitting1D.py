@@ -4,18 +4,16 @@ import matplotlib
 
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
-
 from scipy.optimize import curve_fit
 
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.utils import pxToUm
-from sklearn.metrics import r2_score
 
 
 class Fitting1D(FittingTool):
     """Class for fitting a 1D Gaussian curve to the PSF profile of a microscopy image.
     This class inherits from the FittingTool base class and implements methods specific to 1D Gaussian fitting.
-    It includes methods for evaluating the Gaussian function, fitting the curve to the data, plotting the results, and calculating the coefficient of determination (R²) for the fit.
+    It includes methods for evaluating the Gaussian function, fitting the curve to the data, and plotting the results.
     """
 
     name = "1D"
@@ -42,7 +40,6 @@ class Fitting1D(FittingTool):
             bg (float): background intensity
             mu (float): center of the curve
             sigma (float): standard deviation of the curve
-
         Returns:
             float: Intensity value at x following the curve
         """
@@ -56,7 +53,6 @@ class Fitting1D(FittingTool):
             bg (float): background intensity
             mu (float): center of the curve
             sigma (float): standard deviation of the curve
-
         Returns:
             float: Intensity value at x following the curve
         """
@@ -180,9 +176,7 @@ class Fitting1D(FittingTool):
     def processSingleFit(self, index: int):
         """Processes a single fit for the given index, performing fitting, and plotting.
         Args:
-            index (int): ID of the psf also position in lists
-        Returns:
-            List(parameters): A list containing metrics, fwhm, parameters and covariance matrix of the fit.
+            index (int): ID of the psf also position in lists where results are stored.
         """
         imageFloat = self._image.astype(np.float64)
         activePath = self.getActivePath(index)
@@ -215,16 +209,3 @@ class Fitting1D(FittingTool):
             self.pcovs[u] = pcov
         if self._show:
             self.plotFit1d(activePath)
-
-    def determination(self, params: list, coords: np.ndarray, psf: np.ndarray):
-        """Calculates the coefficient of determination (R²) for the fitted curve against the original PSF data.
-        Args:
-            params (list): The fitted parameters
-            coords (array): The coordinates of the PSF profile
-            psf (array): The original PSF data
-        Returns:
-            float: The coefficient of determination (R²)
-        """
-        psfFit = self.evalFun(coords, *params)
-        rSquared = r2_score(psf, psfFit)
-        return rSquared

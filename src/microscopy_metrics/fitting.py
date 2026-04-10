@@ -1,11 +1,16 @@
-from os import sched_get_priority_max
-
-import math
 import os
+
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
 
+
 class Fitting(object):
+    """Class for performing fitting of microscopy images using various fitting tools.
+    This class manages the fitting process, including setting images, centroids, spacing, regions of interest (ROIs), and output directory.
+    It also handles the execution of fitting using the specified fitting tool and stores the results.
+    """
+
     def __init__(self):
         self._images = []
         self._centroids = []
@@ -68,40 +73,58 @@ class Fitting(object):
             raise ValueError("The outputDir is wrong")
         self._outputDir = value
 
-
     def runFitting(self, index):
+        """Runs the fitting process for a single index, using the specified fitting tool and storing the results.
+        The method retrieves the local centroid of the image, extracts the corresponding image, spacing, and ROI based on the provided index, and then initializes the fitting tool with these parameters.
+        The fitting process is executed, and the results are returned in a structured format for further analysis and evaluation.
+        Args:
+            index (int): The index of the fit being processed, used for retrieving the corresponding image, centroid, spacing, and ROI for the fitting process.
+        Returns:
+            list: A list containing the index, calculated FWHM values, uncertainties, coefficient of determination, parameters for the fit, and covariance matrix for the fit.
+        """
         fitTool = FittingTool.getInstance(self.fitType)
         fitTool._image = self._images[index]
         fitTool._centroid = self._centroids[index]
         fitTool._spacing = self.spacing
         fitTool._roi = self._rois[index]
         fitTool._outputDir = self._outputDir
-        if hasattr(fitTool,"_prominenceRel") and self._prominenceRel is not None:
+        if hasattr(fitTool, "_prominenceRel") and self._prominenceRel is not None:
             fitTool._prominenceRel = self._prominenceRel
         fitTool.processSingleFit(index)
-        return [index, fitTool.fwhms, fitTool.uncertainties, fitTool.determinations, fitTool.parameters, fitTool.pcovs]
+        return [
+            index,
+            fitTool.fwhms,
+            fitTool.uncertainties,
+            fitTool.determinations,
+            fitTool.parameters,
+            fitTool.pcovs,
+        ]
 
     def computeFitting(self):
+        """Computes the fitting for all provided images, centroids, spacing, and ROIs using the specified fitting tool.
+        The method initializes a thread pool executor to run the fitting process concurrently for each index, improving performance when processing multiple images.
+        The results of the fitting process are collected and stored in the class attributes for further analysis and evaluation.
+        The method also applies a threshold on the coefficient of determination (R²) to filter out fits that do not meet the specified quality criteria, retaining only those that exceed the threshold for further analysis.
+        """
         self.results = []
         workers = int(os.cpu_count() * 0.75)
         with ThreadPoolExecutor(max_workers=workers) as executor:
-            futures = {executor.submit(self.runFitting, i): i for i, roi in enumerate(self._rois)}
+            futures = {
+                executor.submit(self.runFitting, i): i
+                for i, roi in enumerate(self._rois)
+            }
             for future in as_completed(futures):
                 result = future.result()
                 self.results.append(result)
         tmp = []
         self.retainedId = []
-        for i,result in enumerate(self.results) :
-            if result is None : 
+        for i, result in enumerate(self.results):
+            if result is None:
                 print(f"Bead {i} is None")
                 continue
-            meanDetermination = (result[3][0] + result[3][1] + result[3][2])/3.0
-            if meanDetermination >= self._thresholdRSquared : 
+            meanDetermination = (result[3][0] + result[3][1] + result[3][2]) / 3.0
+            if meanDetermination >= self._thresholdRSquared:
                 tmp.append(result)
                 self.retainedId.append(result[0])
-        if len(tmp) > 0 :
+        if len(tmp) > 0:
             self.results = tmp
-
-            
-
-

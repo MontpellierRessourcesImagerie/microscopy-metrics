@@ -1,7 +1,8 @@
 import os
-from abc import abstractmethod
-
 import numpy as np
+
+from abc import abstractmethod
+from sklearn.metrics import r2_score
 
 
 class FittingTool(object):
@@ -54,7 +55,6 @@ class FittingTool(object):
         """Calculates the full width at half maximum (FWHM) for a Gaussian function based on the provided sigma value.
         Args:
             sigma (float): The standard deviation of the Gaussian function.
-
         Returns:
             float: The calculated FWHM value.
         """
@@ -88,20 +88,16 @@ class FittingTool(object):
 
     def setNormalizedImage(self) -> np.ndarray:
         """Normalizes the input image to a range of [0, 1] and ensures that all values are non-negative.
-
         Raises:
             ValueError: If the input image is not 2D or 3D.
-
         Returns:
             np.ndarray: The normalized image with values in the range [0, 1].
         """
         if self._image.ndim not in (2, 3):
             raise ValueError("Image has to be in 2D or 3D.")
-
         imageFloat = self._image.astype(np.float64)
         img_min = np.min(imageFloat)
         img_max = np.max(imageFloat)
-
         imageFloat = (imageFloat - img_min) / (img_max - img_min + 1e-6)
         imageFloat[imageFloat < 0.0] = 0.0
         return imageFloat
@@ -110,7 +106,6 @@ class FittingTool(object):
         """Provides the path to the folder corresponding to the selected bead, creating it if it does not exist.
         Args:
             index (int): The index of the bead for which to get the active path.
-
         Returns:
             Path: The path to the folder corresponding to the selected bead.
         """
@@ -121,19 +116,13 @@ class FittingTool(object):
 
     def uncertainty(self, pcov: np.ndarray) -> np.ndarray:
         """Calculates the uncertainties of the fitted parameters based on the provided covariance matrix.
-
         Args:
             pcov (np.ndarray): The covariance matrix between parameters obtained from the fitting process.
-
         Returns:
             np.ndarray: The uncertainties of the fitted parameters.
         """
         perr = np.sqrt(np.diag(pcov))
         return perr
-
-    @abstractmethod
-    def determination(self, params: list, coords: np.ndarray, psf: np.ndarray) -> float:
-        pass
 
     def getLocalCentroid(self):
         """Calculates the local centroid of the PSF within the region of interest (ROI) based on the provided image and ROI.
@@ -161,7 +150,6 @@ class FittingTool(object):
             raise ValueError("Image has to be in 3 dimensions")
         if axis not in {0, 1, 2}:
             raise ValueError("Axis must be 0 (z), 1 (y) or 2 (x).")
-
         return np.max(image, axis=axis)
 
     def compute1DParams(self):
@@ -178,3 +166,15 @@ class FittingTool(object):
         fitTool1D._centroid = self._centroid
         fitTool1D.processSingleFit(0)
         self.params1D = fitTool1D.parameters
+
+    def determination(self, params: list, coords: np.ndarray, psf: np.ndarray):
+        """Calculates the coefficient of determination (R²) for the fitted curve against the original PSF data.
+        Args:
+            params (list): The fitted parameters
+            coords (array): The coordinates of the PSF profile
+            psf (array): The original PSF data
+        Returns:
+            float: The coefficient of determination (R²)
+        """
+        psfFit = self.evalFun(coords, *params)
+        return r2_score(psf, psfFit)

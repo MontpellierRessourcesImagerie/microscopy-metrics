@@ -1,7 +1,13 @@
-from abc import ABC,abstractmethod
+from abc import abstractmethod
+
 
 class TheoreticalResolution(object):
-    """Standard class for theoretical microscope resolution calculation"""
+    """Abstract base class for calculating the theoretical resolution of a microscopy system based on its numerical aperture, emission wavelength, and refractive index.
+    This class provides a common interface and shared functionality for different types of microscopes (e.g., widefield, confocal).
+    It includes methods for setting the microscope parameters and an abstract method for calculating the theoretical resolution.
+    Subclasses must implement the getTheoreticalResolution method to specify the calculation based on the specific microscope type. The class also maintains a registry of microscope classes for easy instantiation based on method names.
+    """
+
     _microscopesClasses = {}
 
     def __init__(self):
@@ -17,6 +23,12 @@ class TheoreticalResolution(object):
 
     @classmethod
     def getInstance(cls, methodName):
+        """Factory method to create an instance of a microscope class based on the provided method name.
+        Args:
+            methodName (str): The name of the microscope class to instantiate.
+        Returns:
+            TheoreticalResolution: An instance of the specified microscope class.
+        """
         microscopeClass = cls._microscopesClasses[methodName]
         return microscopeClass()
 
@@ -24,7 +36,6 @@ class TheoreticalResolution(object):
     @abstractmethod
     def name(self):
         pass
-
 
     @property
     def numericalAperture(self):
@@ -57,5 +68,5 @@ class TheoreticalResolution(object):
         self._refractiveIndex = value
 
     def getTheoreticalResolution(self):
+        """Abstract method to calculate the theoretical resolution of the microscope based on its parameters."""
         return [0, 0, 0]
-
