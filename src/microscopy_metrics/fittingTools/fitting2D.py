@@ -269,8 +269,12 @@ class Fitting2D(FittingTool):
 
         for u in range(3):
             u2 = (u + 1) % 3
-            sigma = [self.params1D[5 + u], self.params1D[5 + u2]]
-            mu = [self.params1D[2 + u], self.params1D[2 + u2]]
+            if u < 2:
+                sigma = [self.params1D[5 + u], self.params1D[5 + u2]]
+                mu = [self.params1D[2 + u], self.params1D[2 + u2]]
+            else:
+                sigma = [self.params1D[5 + u2], self.params1D[5 + u]]
+                mu = [self.params1D[2 + u2], self.params1D[2 + u]]
 
             params, pcov = self.fitCurve(amp, bg, mu, sigma, self._coords[u], psf[u])
 

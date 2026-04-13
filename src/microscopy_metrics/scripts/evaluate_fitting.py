@@ -19,10 +19,10 @@ from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.scripts.PSFGenerator.BornWolfPSF import BornWolfPSF
 from microscopy_metrics.fittingTools.fitting3DRotation import Fitting3DRotation
 
-BORNOWOLF_PSF = True
+BORNOWOLF_PSF = False
 ORIENTED = False
 PSF_SIZE = 80
-NOISE = True
+NOISE = False
 FIT_METHODS = ["1D","2D","3D","2DRotation","3DRotation","2DEllips","Prominence"]
 
 TRUE_AMP = 255.0
