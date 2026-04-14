@@ -4,8 +4,6 @@ import random
 import numpy as np
 import matplotlib
 
-matplotlib.use("Qt5Agg")
-import matplotlib.pyplot as plt
 import multiprocessing as mp
 
 from tqdm import tqdm
@@ -18,6 +16,8 @@ from microscopy_metrics.scripts.PSFGenerator.Data3D import Data3D
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.scripts.PSFGenerator.BornWolfPSF import BornWolfPSF
 from microscopy_metrics.fittingTools.fitting3DRotation import Fitting3DRotation
+matplotlib.use("Qt5Agg")
+import matplotlib.pyplot as plt
 
 BORNOWOLF_PSF = False
 ORIENTED = False
@@ -55,7 +55,6 @@ def computeMape(estimations, truths):
 
 
 def get_rotation_matrix(thetaX, thetaY, thetaZ):
-    """Calcule la matrice de rotation 3D à partir des angles d'Euler"""
     cx, sx = np.cos(thetaX), np.sin(thetaX)
     cy, sy = np.cos(thetaY), np.sin(thetaY)
     cz, sz = np.cos(thetaZ), np.sin(thetaZ)

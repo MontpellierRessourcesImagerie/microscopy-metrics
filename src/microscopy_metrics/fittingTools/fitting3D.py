@@ -235,6 +235,7 @@ class Fitting3D(FittingTool):
         )
         plt.close(fig1)
 
+    #TODO : Change size of the image (too large)
     def plotFit3d(self, outputPath: str):
         """Plots the fitted 3D Gaussian curve along with the original PSF data, and saves the plot to the specified output path.
         Args:
