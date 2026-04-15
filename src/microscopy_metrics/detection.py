@@ -21,8 +21,6 @@ class Detection(object):
     def __init__(self, image=None):
         self._image = image
         self._cropFactor = 5
-        self._sigma = 3
-        self._minDistance = 1
         self._beadSize = 0.6
         self._rejectionDistance = 0.5
         self._pixelSize = [0.1, 0.06, 0.06]
@@ -301,6 +299,7 @@ class Detection(object):
         self._roisExtracted = []
         self._listIdCentroidsRetained = []
         self._cropped = []
+        self._detectionTool._image = self.image
         self._detectionTool.detect()
         self._centroids = self._detectionTool._centroids
         yield {"desc": "Extracting Rois..."}

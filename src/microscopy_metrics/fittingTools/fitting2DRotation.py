@@ -214,7 +214,7 @@ class Fitting2DRotation(FittingTool):
         ]
         for i in range(3):
             coords = np.arange(psf.shape[i])
-            fine = np.linspace(0, psf.shape[i] - 1, 500)
+            fine = np.linspace(0, psf.shape[i] - 1, 100)
             if i < 2:
                 index = i + 1
                 fineCoords = np.column_stack((fine, np.full_like(fine, center[index])))

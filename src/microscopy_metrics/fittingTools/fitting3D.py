@@ -138,9 +138,9 @@ class Fitting3D(FittingTool):
             outputPath (str): Path to the folder where the plots will be saved
         """
         center = self.getLocalCentroid()
-        fitShapeZ = max(psf.shape[0] * 5, 512)
-        fitShapeY = max(psf.shape[1] * 5, 256)
-        fitShapeX = max(psf.shape[2] * 5, 256)
+        fitShapeZ = max(psf.shape[0] * 5, 256)
+        fitShapeY = max(psf.shape[1] * 5, 128)
+        fitShapeX = max(psf.shape[2] * 5, 128)
         z, y, x = np.indices((fitShapeZ, fitShapeY, fitShapeX))
         z_fine = z * (psf.shape[0] / fitShapeZ)
         y_fine = y * (psf.shape[1] / fitShapeY)
@@ -252,9 +252,9 @@ class Fitting3D(FittingTool):
 
         for i in range(3):
             coords = np.arange(psf.shape[i])
-            fine = np.linspace(0, psf.shape[i] - 1, 500)
+            fine = np.linspace(0, psf.shape[i] - 1, 100)
 
-            fineCoords = np.full((500, 3), center, dtype=np.float64)
+            fineCoords = np.full((100, 3), center, dtype=np.float64)
             fineCoords[:, i] = fine
 
             self.plotSingleFit(

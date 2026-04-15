@@ -27,6 +27,7 @@ class CentroidDetector(DetectionTool):
         binaryImage = self._highPassedImage > self._thresholdTool.getThreshold(
             self._highPassedImage
         )
+
         labeledImage = label(binaryImage)
         regionProps = regionprops(labeledImage)
         tmpCentroids = []

@@ -170,9 +170,9 @@ class Fitting3DRotation(FittingTool):
         """
         center = self.getLocalCentroid()
         psf = self._image.astype(np.float64)
-        fitShapeZ = min(psf.shape[0] * 5, 512)
-        fitShapeY = min(psf.shape[1] * 5, 256)
-        fitShapeX = min(psf.shape[2] * 5, 256)
+        fitShapeZ = min(psf.shape[0] * 5, 256)
+        fitShapeY = min(psf.shape[1] * 5, 128)
+        fitShapeX = min(psf.shape[2] * 5, 128)
         zz_fine = np.linspace(0, psf.shape[0], fitShapeZ)
         yy_fine = np.linspace(0, psf.shape[1], fitShapeY)
         xx_fine = np.linspace(0, psf.shape[2], fitShapeX)
@@ -355,9 +355,9 @@ class Fitting3DRotation(FittingTool):
         ]
         for i in range(3):
             coords = np.arange(psf.shape[i])
-            fine = np.linspace(0, psf.shape[i] - 1, 500)
+            fine = np.linspace(0, psf.shape[i] - 1, 100)
 
-            fineCoords = np.full((500, 3), center, dtype=np.float64)
+            fineCoords = np.full((100, 3), center, dtype=np.float64)
             fineCoords[:, i] = fine
 
             params = [*self.parameters, *self.thetas]
