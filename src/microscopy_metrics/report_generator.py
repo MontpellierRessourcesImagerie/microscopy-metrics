@@ -79,7 +79,7 @@ class ReportGenerator(object):
 
     @filteredBeads.setter
     def filteredBeads(self, data):
-        if not isinstance(data, np.ndarray) or len(data) == 0:
+        if len(data) == 0:
             raise ValueError("filteredBeads must be a not empty list")
         self._filteredBeads = data
 

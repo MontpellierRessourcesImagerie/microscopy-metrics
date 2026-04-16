@@ -7,8 +7,8 @@ from scipy.signal import find_peaks
 from skimage.draw import polygon_perimeter
 
 from microscopy_metrics.utils import umToPx
-from microscopy_metrics.detectionTools.detection_tool import DetectionTool
-from microscopy_metrics.thresholdTools.threshold_tool import Threshold
+from microscopy_metrics.ImageAnalyze import ImageAnalyze
+from microscopy_metrics.BeadAnalyze import BeadAnalyze
 
 
 class Detection(object):
@@ -26,15 +26,9 @@ class Detection(object):
         self._pixelSize = [0.1, 0.06, 0.06]
         self._thresholdIntensity = 0.75
 
+        self._imageAnalyze = None
         self._thresholdTool = None
         self._detectionTool = None
-
-        self._normalizedImage = None
-        self._highPassedImage = None
-        self._centroids = []
-        self._roisExtracted = []
-        self._listIdCentroidsRetained = []
-        self._cropped = []
 
     @property
     def image(self):
@@ -116,135 +110,122 @@ class Detection(object):
     def thresholdTool(self, value):
         self._thresholdTool = value
 
-    def getMeanIntensity(self, centroids):
+    def getMeanIntensity(self):
         """Calculates the mean intensity of the detected centroids in the image.
-        Args:
-            centroids (List): List of detected centroids for which to calculate the mean intensity.
         Returns:
             float: The calculated mean intensity of the detected centroids.
         """
-        if len(centroids) > 0:
+        if len(self._imageAnalyze._beadAnalyze) > 0:
             result = 0.0
-            for i in centroids:
-                z, y, x = i
-                result += self._image[int(z), int(y), int(x)]
-            return result / len(centroids)
+            count = 0
+            for bead in self._imageAnalyze._beadAnalyze:
+                if bead._rejected == False:
+                    z, y, x = bead._centroid
+                    result += self._image[int(z), int(y), int(x)]
+                    count += 1
+            return (result / count) if count > 0 else 0.0
         return 0
-
+    
     def extractRegionOfInterest(self):
-        """Extracts regions of interest (ROIs) around the detected centroids in the image.
-        The method retrieves the detected centroids from the detection tool, calculates the ROI coordinates based on the specified crop factor and bead size, and checks for overlapping ROIs and their positions within the image.
-        It also applies intensity-based filtering to retain only valid ROIs based on the mean intensity of the detected centroids and the specified threshold intensity. The valid ROIs are stored in the class attributes for further processing and analysis.
-        The method ensures that the extracted ROIs are non-overlapping, contained within the image boundaries, and not located within the rejection zone near the top or bottom of the image.
-        The final list of extracted ROIs and corresponding centroids are retained for subsequent cropping and analysis steps in the detection workflow.
-        The method also includes checks to ensure that the extracted ROIs contain only a single bead based on the intensity profiles along the three axes, and removes any ROIs that contain multiple peaks or do not meet the intensity criteria.
+        """
         """
         roiSize = umToPx((self._cropFactor * self._beadSize) / 2, self._pixelSize[2])
-        for i, centroid in enumerate(self._centroids):
-            over = False
-            for y, c2 in enumerate(self._centroids):
-                if i != y:
-                    if math.dist(centroid, c2) < (math.sqrt(2) * roiSize):
-                        over = True
-                        break
-            if over == False:
-                tmp = np.array(
+        for bead in self._imageAnalyze._beadAnalyze:
+            bead._roi = np.array(
+                [
                     [
-                        [
-                            int(centroid[0]),
-                            math.ceil(centroid[1] - roiSize),
-                            math.ceil(centroid[2] - roiSize),
-                        ],
-                        [
-                            int(centroid[0]),
-                            math.ceil(centroid[1] - roiSize),
-                            math.ceil(centroid[2] + roiSize),
-                        ],
-                        [
-                            int(centroid[0]),
-                            math.ceil(centroid[1] + roiSize),
-                            math.ceil(centroid[2] + roiSize),
-                        ],
-                        [
-                            int(centroid[0]),
-                            math.ceil(centroid[1] + roiSize),
-                            math.ceil(centroid[2] - roiSize),
-                        ],
-                    ]
-                )
-                overlapped = self.isRoiOverlapped(tmp)
-                if not overlapped:
-                    if self.isRoiInImage(tmp) and self.isRoiNotInRejection(centroid):
-                        self._roisExtracted.append(tmp)
-                        self._listIdCentroidsRetained.append(i)
-        retainedCentroids = [self._centroids[i] for i in self._listIdCentroidsRetained]
-        meanIntensity = self.getMeanIntensity(retainedCentroids)
-        tmpRoisExtracted = []
-        tmpListIDCentroidsRetained = []
-        for i, centroid in enumerate(retainedCentroids):
-            roi_image = self._image[
+                        int(bead._centroid[0]),
+                        math.ceil(bead._centroid[1] - roiSize),
+                        math.ceil(bead._centroid[2] - roiSize),
+                    ],
+                    [
+                        int(bead._centroid[0]),
+                        math.ceil(bead._centroid[1] - roiSize),
+                        math.ceil(bead._centroid[2] + roiSize),
+                    ],
+                    [
+                        int(bead._centroid[0]),
+                        math.ceil(bead._centroid[1] + roiSize),
+                        math.ceil(bead._centroid[2] + roiSize),
+                    ],
+                    [
+                        int(bead._centroid[0]),
+                        math.ceil(bead._centroid[1] + roiSize),
+                        math.ceil(bead._centroid[2] - roiSize),
+                    ],
+                ]
+            )
+            for other_bead in self._imageAnalyze._beadAnalyze:
+                if bead._id != other_bead._id and other_bead._rejected == False:
+                    if math.dist(bead._centroid, other_bead._centroid) < (math.sqrt(2) * roiSize):
+                        other_bead._rejected = True
+                        other_bead._rejectionDesc = "Overlapped with bead " + str(other_bead._id)
+            if not bead._rejected and bead._centroid is not None:
+                if self.isRoiOverlapped(bead._id):
+                    bead._rejected = True
+                    bead._rejectionDesc = "Overlapped with another bead"
+                elif not self.isRoiInImage(bead._roi):
+                    bead._rejected = True
+                    bead._rejectionDesc = "ROI not in image"
+                elif not self.isRoiNotInRejection(bead._centroid):
+                    bead._rejected = True
+                    bead._rejectionDesc = "Centroid in rejection zone"
+        meanIntensity = self.getMeanIntensity()
+        for bead in self._imageAnalyze._beadAnalyze:
+            bead._image = self._image[
                 ...,
-                self._roisExtracted[i][0][1] : self._roisExtracted[i][2][1],
-                self._roisExtracted[i][0][2] : self._roisExtracted[i][1][2],
+                bead._roi[0][1] : bead._roi[2][1],
+                bead._roi[0][2] : bead._roi[1][2],
             ]
-            centroidIdx = self._listIdCentroidsRetained[i]
+            print(self._image.shape, bead._roi)
             physic = [
-                int(self._centroids[centroidIdx][0]),
-                int(self._centroids[centroidIdx][1] - self._roisExtracted[i][0][1]),
-                int(self._centroids[centroidIdx][2] - self._roisExtracted[i][0][2]),
+                int(bead._centroid[0]),
+                int(bead._centroid[1] - bead._roi[0][1]),
+                int(bead._centroid[2] - bead._roi[0][2]),
             ]
-            z = roi_image[:, physic[1], physic[2]]
-            y = roi_image[physic[0], :, physic[2]]
-            x = roi_image[physic[0], physic[1], :]
-            height = Threshold.getInstance("legacy").getThreshold(roi_image)
-            peaksX, _ = find_peaks(
-                x, height=np.min(x) + (np.max(x) - np.min(x)) * 0.5, distance=3
-            )
-            peaksY, _ = find_peaks(
-                y, height=np.min(y) + (np.max(y) - np.min(y)) * 0.5, distance=3
-            )
-            peaksZ, _ = find_peaks(
-                z, height=np.min(z) + (np.max(z) - np.min(z)) * 0.5, distance=3
-            )
-            if not (
-                self._image[int(centroid[0]), int(centroid[1]), int(centroid[2])]
-                < (self._thresholdIntensity * meanIntensity)
-                or self._image[int(centroid[0]), int(centroid[1]), int(centroid[2])]
-                > ((1 + (1 - self._thresholdIntensity)) * meanIntensity)
-            ):
-                if not (len(peaksX) > 1 or len(peaksY) > 1 or len(peaksZ) > 1):
-                    tmpRoisExtracted.append(self._roisExtracted[i])
-                    tmpListIDCentroidsRetained.append(self._listIdCentroidsRetained[i])
-                else:
-                    print(f"ROI {i} removed because of two beads detected")
-            else:
-                print(f"ROI {i} removed because of intensity")
-        if len(tmpListIDCentroidsRetained) > 0:
-            self._roisExtracted = tmpRoisExtracted
-            self._listIdCentroidsRetained = tmpListIDCentroidsRetained
+            if bead._rejected == False:
+                z = bead._image[:, physic[1], physic[2]]
+                y = bead._image[physic[0], :, physic[2]]
+                x = bead._image[physic[0], physic[1], :]
+                peaksX, _ = find_peaks(x, height=np.min(x) + (np.max(x) - np.min(x)) * 0.5, distance=3)
+                peaksY, _ = find_peaks(y, height=np.min(y) + (np.max(y) - np.min(y)) * 0.5, distance=3)
+                peaksZ, _ = find_peaks(z, height=np.min(z) + (np.max(z) - np.min(z)) * 0.5, distance=3)
+                if bead._image[int(physic[0]), int(physic[1]), int(physic[2])] < (self._thresholdIntensity * meanIntensity) or bead._image[int(physic[0]), int(physic[1]), int(physic[2])] > ((1 + (1 - self._thresholdIntensity)) * meanIntensity):
+                    bead._rejected = True
+                    bead._rejectionDesc = "Intensity criteria not met"
+                if len(peaksX) > 1 or len(peaksY) > 1 or len(peaksZ) > 1:
+                    bead._rejected = True
+                    bead._rejectionDesc = "Multiple peaks detected in ROI"
+        for bead in self._imageAnalyze._beadAnalyze:
+            if bead._rejected == True:
+                print(f"Bead {bead._id} rejected: {bead._rejectionDesc}")
 
-    def isRoiOverlapped(self, roi):
+
+    def isRoiOverlapped(self, index):
         """Checks if the given ROI overlaps with any of the already extracted ROIs.
         The method compares the coordinates of the given ROI with the coordinates of the already extracted ROIs to determine if there is any overlap.
         It checks for both horizontal and vertical overlaps by comparing the minimum and maximum coordinates of the ROIs.
         Args:
-            roi (np.array): Coordinates of the corners of the ROI to be checked for overlap with existing ROIs.
+            index (int): The index of the bead for which to check overlap with existing ROIs.
         Returns:
             Boolean: True if the given ROI overlaps with any of the existing ROIs, False otherwise.
         """
+        actualBead = self._imageAnalyze._beadAnalyze[index]
+        roi = actualBead._roi   
         newYMin = min(roi[:, 1])
         newYMax = max(roi[:, 1])
         newXMin = min(roi[:, 2])
         newXMax = max(roi[:, 2])
-        for i, R in enumerate(self._roisExtracted):
-            yMin = min(R[:, 1])
-            yMax = max(R[:, 1])
-            xMin = min(R[:, 2])
-            xMax = max(R[:, 2])
-            noOverlapX = (newXMax < xMin) or (xMax < newXMin)
-            noOverlapY = (newYMax < yMin) or (yMax < newYMin)
-            if not (noOverlapX or noOverlapY):
-                return True
+        for bead in self._imageAnalyze._beadAnalyze:
+            if bead._rejected == False and actualBead._id != bead._id and bead._roi is not None:
+                yMin = min(bead._roi[:, 1])
+                yMax = max(bead._roi[:, 1])
+                xMin = min(bead._roi[:, 2])
+                xMax = max(bead._roi[:, 2])
+                noOverlapX = (newXMax < xMin) or (xMax < newXMin)
+                noOverlapY = (newYMax < yMin) or (yMax < newYMin)
+                if not (noOverlapX or noOverlapY):
+                    return True
         return False
 
     def isRoiNotInRejection(self, centroid):
@@ -274,8 +255,8 @@ class Detection(object):
         Returns:
             Boolean: True if the given ROI is contained within the image boundaries, False otherwise.
         """
-        stack, height, width = self._image.shape
-        for z, y, x in roi:
+        _, height, width = self._image.shape
+        for _, y, x in roi:
             if y < 0 or y >= height or x < 0 or x >= width:
                 return False
         return True
@@ -295,13 +276,12 @@ class Detection(object):
             raise ValueError(
                 "Output directory is required for saving cropped PSF images."
             )
-        self._centroids = []
-        self._roisExtracted = []
-        self._listIdCentroidsRetained = []
-        self._cropped = []
         self._detectionTool._image = self.image
+        self._imageAnalyze = ImageAnalyze(image=self._image, beadSize=self._beadSize, pixelSize=self._pixelSize, BeadAnalyze=[])
         self._detectionTool.detect()
-        self._centroids = self._detectionTool._centroids
+        for i, centroid in enumerate(self._detectionTool._centroids):
+            bead = BeadAnalyze(id=i, centroid=centroid)
+            self._imageAnalyze._beadAnalyze.append(bead)
         yield {"desc": "Extracting Rois..."}
         self.extractRegionOfInterest()
         if cropPsf:
@@ -354,27 +334,27 @@ class Detection(object):
         Args:
             outputDir (Path): The directory of the output folder where the cropped PSF images will be saved.
         """
-        for i, roi in enumerate(self._roisExtracted):
-            data = self._image[..., roi[0][1] : roi[2][1], roi[0][2] : roi[1][2]]
-            self._cropped.append(data)
-            activePath = self.getActivePath(i, outputDir)
-            centroidIdx = self._listIdCentroidsRetained[i]
-            physic = [
-                int(self._centroids[centroidIdx][0]),
-                int(self._centroids[centroidIdx][1] - self._roisExtracted[i][0][1]),
-                int(self._centroids[centroidIdx][2] - self._roisExtracted[i][0][2]),
-            ]
-            imageFloat = data.astype(np.float32)
-            imageFloat = (imageFloat - np.min(imageFloat)) / (
-                np.max(imageFloat) - np.min(imageFloat) + 1e-6
-            )
-            imageFloat[imageFloat < 0] = 0
-            imageUint16 = (imageFloat * 255).astype(np.uint8)
-            XYData = Image.fromarray(imageUint16[physic[0], :, :])
-            YZData = Image.fromarray(imageUint16[:, :, physic[2]])
-            XZData = Image.fromarray(imageUint16[:, physic[1], :])
-            XYData.save(os.path.join(activePath, "XY_view.png"))
-            YZData.save(os.path.join(activePath, "YZ_view.png"))
-            XZData.save(os.path.join(activePath, "XZ_view.png"))
-            imageRoi = Image.fromarray(self.addRoiOnImage(roi))
-            imageRoi.save(os.path.join(activePath, "Localisation.png"))
+        for bead in self._imageAnalyze._beadAnalyze:
+            if bead._rejected == False and bead._roi is not None:
+                roi = bead._roi
+                data = bead._image
+                activePath = self.getActivePath(bead._id, outputDir)
+                physic = [
+                    int(bead._centroid[0]),
+                    int(bead._centroid[1] - bead._roi[0][1]),
+                    int(bead._centroid[2] - bead._roi[0][2]),
+                ]
+                imageFloat = data.astype(np.float32)
+                imageFloat = (imageFloat - np.min(imageFloat)) / (
+                    np.max(imageFloat) - np.min(imageFloat) + 1e-6
+                )
+                imageFloat[imageFloat < 0] = 0
+                imageUint16 = (imageFloat * 255).astype(np.uint8)
+                XYData = Image.fromarray(imageUint16[physic[0], :, :])
+                YZData = Image.fromarray(imageUint16[:, :, physic[2]])
+                XZData = Image.fromarray(imageUint16[:, physic[1], :])
+                XYData.save(os.path.join(activePath, "XY_view.png"))
+                YZData.save(os.path.join(activePath, "YZ_view.png"))
+                XZData.save(os.path.join(activePath, "XZ_view.png"))
+                imageRoi = Image.fromarray(self.addRoiOnImage(roi))
+                imageRoi.save(os.path.join(activePath, "Localisation.png"))
