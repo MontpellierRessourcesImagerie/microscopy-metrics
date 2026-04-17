@@ -4,8 +4,8 @@ from abc import abstractmethod
 class TheoreticalResolution(object):
     """Abstract base class for calculating the theoretical resolution of a microscopy system based on its numerical aperture, emission wavelength, and refractive index.
     This class provides a common interface and shared functionality for different types of microscopes (e.g., widefield, confocal).
-    It includes methods for setting the microscope parameters and an abstract method for calculating the theoretical resolution.
-    Subclasses must implement the getTheoreticalResolution method to specify the calculation based on the specific microscope type. The class also maintains a registry of microscope classes for easy instantiation based on method names.
+    Subclasses must implement the getTheoreticalResolution method to specify the calculation based on the specific microscope type.
+    The class also maintains a registry of microscope classes for easy instantiation based on method names.
     """
 
     _microscopesClasses = {}

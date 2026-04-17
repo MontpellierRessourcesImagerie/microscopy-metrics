@@ -13,9 +13,7 @@ from microscopy_metrics.BeadAnalyze import BeadAnalyze
 
 class Detection(object):
     """Class for detecting and extracting regions of interest (ROIs) from microscopy images based on detected centroids.
-    This class provides methods for detecting centroids using a specified detection tool, extracting ROIs around the detected centroids, and saving the cropped PSF images for further analysis.
-    It includes properties for configuring the detection parameters, such as crop factor, sigma, minimum distance, bead size, rejection distance, pixel size, and threshold intensity.
-    The class also includes methods for checking ROI overlap, validating ROI positions within the image, and running the complete detection workflow.
+    It initializes the imageAnalyze object to manage the analysis of the image and the detected beads, and provides methods for setting parameters related to bead detection and ROI extraction.
     """
 
     def __init__(self, image=None):
@@ -51,26 +49,6 @@ class Detection(object):
                 "Please, choose an integer smaller than image as a crop factor"
             )
         self._cropFactor = value
-
-    @property
-    def sigma(self):
-        return self._sigma
-
-    @sigma.setter
-    def sigma(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Please, choose an integer as a sigma")
-        self._sigma = value
-
-    @property
-    def minDistance(self):
-        return self._minDistance
-
-    @minDistance.setter
-    def minDistance(self, value):
-        if not isinstance(value, int):
-            raise ValueError("Please, choose an integer as a minimal distance")
-        self._minDistance = value
 
     @property
     def beadSize(self):
@@ -125,9 +103,10 @@ class Detection(object):
                     count += 1
             return (result / count) if count > 0 else 0.0
         return 0
-    
+
     def extractRegionOfInterest(self):
-        """
+        """Extracts regions of interest (ROIs) from the image based on the detected centroids and specified parameters for bead size, crop factor, and rejection distance.
+        The method calculates the ROI for each detected bead, checks for overlaps with other beads and the image boundaries, and applies rejection criteria based on intensity and peak detection within the ROI.
         """
         roiSize = umToPx((self._cropFactor * self._beadSize) / 2, self._pixelSize[2])
         for bead in self._imageAnalyze._beadAnalyze:
@@ -157,9 +136,13 @@ class Detection(object):
             )
             for other_bead in self._imageAnalyze._beadAnalyze:
                 if bead._id != other_bead._id and other_bead._rejected == False:
-                    if math.dist(bead._centroid, other_bead._centroid) < (math.sqrt(2) * roiSize):
+                    if math.dist(bead._centroid, other_bead._centroid) < (
+                        math.sqrt(2) * roiSize
+                    ):
                         other_bead._rejected = True
-                        other_bead._rejectionDesc = "Overlapped with bead " + str(other_bead._id)
+                        other_bead._rejectionDesc = "Overlapped with bead " + str(
+                            other_bead._id
+                        )
             if not bead._rejected and bead._centroid is not None:
                 if self.isRoiOverlapped(bead._id):
                     bead._rejected = True
@@ -177,7 +160,6 @@ class Detection(object):
                 bead._roi[0][1] : bead._roi[2][1],
                 bead._roi[0][2] : bead._roi[1][2],
             ]
-            print(self._image.shape, bead._roi)
             physic = [
                 int(bead._centroid[0]),
                 int(bead._centroid[1] - bead._roi[0][1]),
@@ -187,37 +169,45 @@ class Detection(object):
                 z = bead._image[:, physic[1], physic[2]]
                 y = bead._image[physic[0], :, physic[2]]
                 x = bead._image[physic[0], physic[1], :]
-                peaksX, _ = find_peaks(x, height=np.min(x) + (np.max(x) - np.min(x)) * 0.5, distance=3)
-                peaksY, _ = find_peaks(y, height=np.min(y) + (np.max(y) - np.min(y)) * 0.5, distance=3)
-                peaksZ, _ = find_peaks(z, height=np.min(z) + (np.max(z) - np.min(z)) * 0.5, distance=3)
-                if bead._image[int(physic[0]), int(physic[1]), int(physic[2])] < (self._thresholdIntensity * meanIntensity) or bead._image[int(physic[0]), int(physic[1]), int(physic[2])] > ((1 + (1 - self._thresholdIntensity)) * meanIntensity):
+                peaksX, _ = find_peaks(
+                    x, height=np.min(x) + (np.max(x) - np.min(x)) * 0.5, distance=3
+                )
+                peaksY, _ = find_peaks(
+                    y, height=np.min(y) + (np.max(y) - np.min(y)) * 0.5, distance=3
+                )
+                peaksZ, _ = find_peaks(
+                    z, height=np.min(z) + (np.max(z) - np.min(z)) * 0.5, distance=3
+                )
+                if bead._image[int(physic[0]), int(physic[1]), int(physic[2])] < (
+                    self._thresholdIntensity * meanIntensity
+                ) or bead._image[int(physic[0]), int(physic[1]), int(physic[2])] > (
+                    (1 + (1 - self._thresholdIntensity)) * meanIntensity
+                ):
                     bead._rejected = True
                     bead._rejectionDesc = "Intensity criteria not met"
                 if len(peaksX) > 1 or len(peaksY) > 1 or len(peaksZ) > 1:
                     bead._rejected = True
                     bead._rejectionDesc = "Multiple peaks detected in ROI"
-        for bead in self._imageAnalyze._beadAnalyze:
-            if bead._rejected == True:
-                print(f"Bead {bead._id} rejected: {bead._rejectionDesc}")
-
 
     def isRoiOverlapped(self, index):
         """Checks if the given ROI overlaps with any of the already extracted ROIs.
-        The method compares the coordinates of the given ROI with the coordinates of the already extracted ROIs to determine if there is any overlap.
-        It checks for both horizontal and vertical overlaps by comparing the minimum and maximum coordinates of the ROIs.
         Args:
             index (int): The index of the bead for which to check overlap with existing ROIs.
         Returns:
             Boolean: True if the given ROI overlaps with any of the existing ROIs, False otherwise.
         """
         actualBead = self._imageAnalyze._beadAnalyze[index]
-        roi = actualBead._roi   
+        roi = actualBead._roi
         newYMin = min(roi[:, 1])
         newYMax = max(roi[:, 1])
         newXMin = min(roi[:, 2])
         newXMax = max(roi[:, 2])
         for bead in self._imageAnalyze._beadAnalyze:
-            if bead._rejected == False and actualBead._id != bead._id and bead._roi is not None:
+            if (
+                bead._rejected == False
+                and actualBead._id != bead._id
+                and bead._roi is not None
+            ):
                 yMin = min(bead._roi[:, 1])
                 yMax = max(bead._roi[:, 1])
                 xMin = min(bead._roi[:, 2])
@@ -230,8 +220,6 @@ class Detection(object):
 
     def isRoiNotInRejection(self, centroid):
         """Checks if the given centroid is located within the rejection zone near the top or bottom of the image.
-        The method calculates the rejection zone based on the specified rejection distance and pixel size, and checks if the centroid's z-coordinate is within the rejection zone.
-        It ensures that the detected centroids are not located too close to the edges of the image, which could lead to inaccurate ROI extraction and analysis.
         Args:
             centroid (List): Coordinates of the bead's centroid
             imageShape (List): Dimensions of the picture
@@ -248,8 +236,6 @@ class Detection(object):
 
     def isRoiInImage(self, roi):
         """Checks if the given ROI is contained within the boundaries of the image.
-        The method compares the coordinates of the given ROI with the dimensions of the image to determine if the ROI is fully contained within the image boundaries.
-        This ensures that the extracted ROIs are valid and can be properly analyzed without encountering issues related to out-of-bounds errors or incomplete data.
         Args:
             roi (np.array): Coordinates of corners of the ROI to be checked for containment within the image boundaries.
         Returns:
@@ -263,7 +249,6 @@ class Detection(object):
 
     def run(self, outputDir=None, cropPsf=True):
         """Runs the complete detection workflow, including detecting centroids, extracting ROIs, and saving cropped PSF images.
-        The method orchestrates the entire detection process by first invoking the detection tool to identify centroids in the image, then extracting ROIs around the detected centroids while ensuring non-overlapping and valid ROIs, and finally saving the cropped PSF images for each valid ROI in the specified output directory.
         Args:
             outputDir (Path, optional): Directory of the output folder where cropped PSF images will be saved. Required if cropPsf is set to True. Defaults to None.
             cropPsf (bool, optional): Flag indicating whether to crop PSF images and save them in the output directory. Defaults to True.
@@ -277,7 +262,12 @@ class Detection(object):
                 "Output directory is required for saving cropped PSF images."
             )
         self._detectionTool._image = self.image
-        self._imageAnalyze = ImageAnalyze(image=self._image, beadSize=self._beadSize, pixelSize=self._pixelSize, BeadAnalyze=[])
+        self._imageAnalyze = ImageAnalyze(
+            image=self._image,
+            beadSize=self._beadSize,
+            pixelSize=self._pixelSize,
+            BeadAnalyze=[],
+        )
         self._detectionTool.detect()
         for i, centroid in enumerate(self._detectionTool._centroids):
             bead = BeadAnalyze(id=i, centroid=centroid)
@@ -290,7 +280,6 @@ class Detection(object):
 
     def getActivePath(self, index, outputDir):
         """Provides the path to the folder corresponding to the selected bead, creating it if it does not exist.
-        The method constructs the path to the folder for the selected bead based on the provided index and output directory.
         Args:
             index (int): The index of the bead for which to get the active path
             outputDir (Path): The directory of the output folder where the bead's folder will be created if it does not exist
@@ -329,8 +318,6 @@ class Detection(object):
 
     def cropPsf(self, outputDir):
         """Crops the PSF images for each valid ROI and saves them in the specified output directory.
-        The method iterates through the list of extracted ROIs and corresponding centroids, crops the PSF images based on the ROI coordinates, and saves the cropped images in the output directory with appropriate naming conventions.
-        It also adds a visual representation of the ROI on the cropped images for better visualization and understanding of the extracted regions.
         Args:
             outputDir (Path): The directory of the output folder where the cropped PSF images will be saved.
         """

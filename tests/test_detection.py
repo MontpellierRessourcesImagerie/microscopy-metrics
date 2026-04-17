@@ -1,8 +1,10 @@
 import pytest
 import numpy as np
 from skimage.draw import disk
-from microscopy_metrics.detectionTools.detection_tool import DetectionTool
 from microscopy_metrics.detection import Detection
+from microscopy_metrics.BeadAnalyze import BeadAnalyze
+from microscopy_metrics.ImageAnalyze import ImageAnalyze
+from microscopy_metrics.detectionTools.detection_tool import DetectionTool
 from microscopy_metrics.thresholdTools.threshold_tool import Threshold
 
 @pytest.fixture
@@ -102,11 +104,15 @@ def test_extract_ROI(image):
     detectionTool._image = image
     detectionTool._thresholdTool = Threshold.getInstance("legacy")
     detectionTool.detect()
-    detector._centroids = detectionTool._centroids
-    detector.crop_factor = 5
-    detector.bead_size = 3
-    detector._rejectionDistance = 15
+    
+    
+    detector._imageAnalyze = ImageAnalyze(image=image, beadSize=3, pixelSize=[1,1,1])
+    for i, centroid in enumerate(detectionTool._centroids):
+        detector._imageAnalyze._beadAnalyze.append(BeadAnalyze(id=i, centroid=centroid))
+    detector.cropFactor = 5
+    detector.beadSize = 3.0
+    detector.rejectionDistance = 15.0
     detector.pixelSize = np.array([1,1,1])
     detector.extractRegionOfInterest()
-    rois,centroid_ROI = detector._roisExtracted, detector._listIdCentroidsRetained
-    assert len(centroid_ROI) == 1 and centroid_ROI[0] == 1
+    
+    assert len(detector._imageAnalyze._beadAnalyze) == 3 and detector._imageAnalyze._beadAnalyze[0]._rejected == True

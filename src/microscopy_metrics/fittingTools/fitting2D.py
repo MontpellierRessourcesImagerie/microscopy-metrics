@@ -38,7 +38,6 @@ class Fitting2D(FittingTool):
             bg (float): background intensity
             muX,muY (float): center coordinates of the Gaussian
             sigmaX,sigmaY (float): standard deviation of the Gaussian
-
         Returns:
             float: Intensity value at (x,y) following the curve
         """
@@ -67,7 +66,6 @@ class Fitting2D(FittingTool):
             bg (float): background intensity
             muX,muY (float): center coordinates of the Gaussian
             sigmaX,sigmaY (float): standard deviation of the Gaussian
-
         Returns:
             float: Intensity value at (x,y) following the curve
         """
@@ -92,7 +90,6 @@ class Fitting2D(FittingTool):
             sigma (List(float)): standard deviation of the Gaussian
             coords (np.array(float)): List of X,Y coordinates
             psf (np.ndarray): 1D image of the flatten 2D psf
-
         Returns:
             List(float),Matrix(float): List of fitted parameters and covariance matrix
         """
@@ -266,7 +263,6 @@ class Fitting2D(FittingTool):
         self.compute1DParams()
         amp = self.params1D[0]
         bg = self.params1D[1]
-
         for u in range(3):
             u2 = (u + 1) % 3
             if u < 2:
@@ -275,12 +271,9 @@ class Fitting2D(FittingTool):
             else:
                 sigma = [self.params1D[5 + u2], self.params1D[5 + u]]
                 mu = [self.params1D[2 + u2], self.params1D[2 + u]]
-
             params, pcov = self.fitCurve(amp, bg, mu, sigma, self._coords[u], psf[u])
-
             self.parameters[0] += params[0] / 3.0
             self.parameters[1] += params[1] / 3.0
-
             if u < 2:
                 self.parameters[2 + u] += params[2] / 2.0
                 self.parameters[2 + u2] += params[3] / 2.0
@@ -295,7 +288,6 @@ class Fitting2D(FittingTool):
                 self.parameters[5 + u2] += params[4] / 2.0
                 self.fwhms[u] += pxToUm(self.fwhm(params[5]), self._spacing[u]) / 2.0
                 self.fwhms[u2] += pxToUm(self.fwhm(params[4]), self._spacing[u2]) / 2.0
-
             self.uncertainties[u] = self.uncertainty(pcov)
             self.determinations[u] = self.determination(
                 params, self._coords[u], psf[u].flatten()

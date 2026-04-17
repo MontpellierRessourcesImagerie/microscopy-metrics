@@ -7,7 +7,6 @@ from microscopy_metrics.detectionTools.detection_tool import DetectionTool
 class PeakLocalMaxDetector(DetectionTool):
     """Class for detecting local maxima using the peak_local_max function from scikit-image.
     This class inherits from the DetectionTool base class and implements the detect method to identify local maxima in the input image.
-
     """
 
     name = "peak local maxima"

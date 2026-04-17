@@ -11,7 +11,7 @@
         </div>
         <div class="corpus">
             <h2>Fitting results</h2>
-            <p>Bead centroid's coordinates: {{ bead }} <br><br></p>
+            <p>Bead centroid's coordinates: {{ bead._centroid if bead._centroid is not none else "N/A" }} <br><br></p>
             <h3>Localisation</h3>
             <img src="{{ path }}/Localisation.png" alt="Localisation.png" style="width:1000px;display: block; margin-left: auto; margin-right: auto;">
             <h3>X profile fit</h3>
@@ -28,33 +28,33 @@
             <img src="{{ path }}/YZ_view.png" alt="X_view.png" style="height:500px;display: block; margin-left: auto; margin-right: auto;">
             <h4>Theoretical resolution (µm):</h4>
             <ul>
-                <li> z: {{ "%.4f"|format(theoretical_resolution[0]) }}</li>
-                <li> y: {{ "%.4f"|format(theoretical_resolution[1]) }}</li>
-                <li> x: {{ "%.4f"|format(theoretical_resolution[2]) }}</li>
+                <li> z: {{ "%.4f"|format(theoretical_resolution[0] if theoretical_resolution[0] is not none else 0) }}</li>
+                <li> y: {{ "%.4f"|format(theoretical_resolution[1] if theoretical_resolution[1] is not none else 0) }}</li>
+                <li> x: {{ "%.4f"|format(theoretical_resolution[2] if theoretical_resolution[2] is not none else 0) }}</li>
             </ul> <br>
             <h4>Full width at half maximum (µm): </h4>
             <ul>
-                <li> z: {{ "%.4f"|format(results["FWHM"][0]) }}</li>
-                <li> y: {{ "%.4f"|format(results["FWHM"][1]) }}</li>
-                <li> x: {{ "%.4f"|format(results["FWHM"][2]) }}</li>
+                <li> z: {{ "%.4f"|format(bead._fitTool.fwhms[0] if bead._fitTool.fwhms[0] is not none else 0) }}</li>
+                <li> y: {{ "%.4f"|format(bead._fitTool.fwhms[1] if bead._fitTool.fwhms[1] is not none else 0) }}</li>
+                <li> x: {{ "%.4f"|format(bead._fitTool.fwhms[2] if bead._fitTool.fwhms[2] is not none else 0) }}</li>
             </ul> <br>
             <h4>Uncertainty : </h4>
             <ul>
-                <li> z: {{ "%.4f"|format(results["uncertainty"][0][3]) }}</li>
-                <li> y: {{ "%.4f"|format(results["uncertainty"][1][3]) }}</li>
-                <li> x: {{ "%.4f"|format(results["uncertainty"][2][3]) }}</li>
+                <li> z: {{ "%.4f"|format(bead._fitTool.uncertainties[0][3] if bead._fitTool.uncertainties[0] is not none else 0) }}</li>
+                <li> y: {{ "%.4f"|format(bead._fitTool.uncertainties[1][3] if bead._fitTool.uncertainties[1] is not none else 0) }}</li>
+                <li> x: {{ "%.4f"|format(bead._fitTool.uncertainties[2][3] if bead._fitTool.uncertainties[2] is not none else 0) }}</li>
             </ul><br>
             <h4>Determination coefficient : </h4>
             <ul>
-                <li> z: {{ "%.4f"|format(results["determination"][0]) }}</li>
-                <li> y: {{ "%.4f"|format(results["determination"][1]) }}</li>
-                <li> x: {{ "%.4f"|format(results["determination"][2]) }}</li>
+                <li> z: {{ "%.4f"|format(bead._fitTool.determinations[0] if bead._fitTool.determinations[0] is not none else 0) }}</li>
+                <li> y: {{ "%.4f"|format(bead._fitTool.determinations[1] if bead._fitTool.determinations[1] is not none else 0) }}</li>
+                <li> x: {{ "%.4f"|format(bead._fitTool.determinations[2] if bead._fitTool.determinations[2] is not none else 0) }}</li>
             </ul><br>
             <h2>Metrics</h2>
              <p>
-            Signal to background ratio (SBR): {{ "%.4f"|format(results["SBR"]) }} <br>
-            Lateral asymmetry ratio (LAR): {{ "%.4f"|format(results["LAR"]) }} <br>
-            Sphericity: {{ "%.4f"|format(results["sphericity"]) }}
+            Signal to background ratio (SBR): {{ "%.4f"|format(bead._metricTool._SBR if bead._metricTool._SBR is not none else 0) }} <br>
+            Lateral asymmetry ratio (LAR): {{ "%.4f"|format(bead._metricTool._LAR if bead._metricTool._LAR is not none else 0) }} <br>
+            Sphericity: {{ "%.4f"|format(bead._metricTool._sphericity if bead._metricTool._sphericity is not none else 0) }}
             </p>
         </div>
     </body>

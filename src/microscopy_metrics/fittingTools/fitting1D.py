@@ -176,7 +176,7 @@ class Fitting1D(FittingTool):
     def processSingleFit(self, index: int):
         """Processes a single fit for the given index, performing fitting, and plotting.
         Args:
-            index (int): ID of the psf also position in lists where results are stored.
+            index (int): ID of the psf.
         """
         imageFloat = self._image.astype(np.float64)
         activePath = self.getActivePath(index)

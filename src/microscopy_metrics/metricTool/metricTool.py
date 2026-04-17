@@ -10,6 +10,8 @@ from microscopy_metrics.thresholdTools.legacy import ThresholdLegacy
 
 
 class MetricTool(object):
+    """Class for calculating various metrics related to microscopy images, such as signal-to-background ratio (SBR), lateral asymmetry ratio (LAR), and sphericity ratio."""
+
     def __init__(self):
         self._image = None
         self._ringInnerDistance = 1.0
@@ -20,7 +22,7 @@ class MetricTool(object):
         self._LAR = 0
         self._sphericity = 0
 
-    def setNormalizedImage(self, image):
+    def setNormalizedImage(self, image: np.ndarray) -> np.ndarray:
         """Normalizes the input image to a range of [0, 1] and ensures that all values are non-negative.
         Args:
             image (np.ndarray): The input image to be normalized, which should be a 2D or 3D array representing the microscopy image data.
@@ -37,18 +39,12 @@ class MetricTool(object):
         )
         imageFloat[imageFloat < 0] = 0
         return imageFloat
-    
+
     def processSingleSBRRing(self):
         """Calculates the signal-to-background ratio (SBR) for a single microscopy image using a ring-based method.
-        The method processes the input image to identify the signal and background regions based on a ring-shaped area around the detected bead.
-        It calculates the mean signal and background intensities and computes the SBR for the image.
         The calculated SBR values are stored in the class attributes for further analysis and evaluation.
-        Args:
-            image (np.ndarray): The input microscopy image for which to calculate the SBR, which should be a 2D or 3D array representing the image data.
         Raises:
             ValueError: If the input image is not 2D or 3D, if there are no background pixels detected, or if there are no signal pixels detected in the image.
-        Returns:
-            float: The calculated signal-to-background ratio (SBR) for the input image, or -1 if the image format is incorrect or if no signal/background pixels are detected.
         """
         if self._image.ndim not in (2, 3):
             print("Incorrect picture format")
@@ -102,9 +98,10 @@ class MetricTool(object):
         meanSignal = signal / nSignal
         self._SBR = float(meanSignal / meanBackground)
 
-
-    def lateralAsymmetryRatio(self, FWHM):
-        """Calculates the lateral asymmetry ratio (LAR) for the detected point spread function (PSF) based on the calculated full width at half maximum (FWHM) values.
+    def lateralAsymmetryRatio(self, FWHM: list):
+        """Calculates the lateral asymmetry ratio (LAR) for a PSF based on the full width at half maximum (FWHM) values.
+        Args:
+            FWHM (list): A list of FWHM values for the PSF.
         Raises:
            ValueError: If the FWHM values are not available or if there are not enough FWHM values to calculate the LAR.
         """
@@ -113,10 +110,12 @@ class MetricTool(object):
                 "FWHM values are not available or insufficient to calculate LAR."
             )
         tmp = np.array([FWHM[1], FWHM[2]])
-        self.LAR = tmp.min() / tmp.max()
+        self._LAR = tmp.min() / tmp.max()
 
-    def sphericityRatio(self, FWHM):
-        """Calculates the sphericity ratio for the detected point spread function (PSF) based on the calculated full width at half maximum (FWHM) values.
+    def sphericityRatio(self, FWHM: list):
+        """Calculates the sphericity ratio for a PSF based on the full width at half maximum (FWHM) values.
+        Args:
+            FWHM (list): A list of FWHM values for the PSF.
         Raises:
             ValueError: If the FWHM values are not available or if there are not enough FWHM values to calculate the sphericity ratio.
         """

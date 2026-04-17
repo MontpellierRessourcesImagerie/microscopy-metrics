@@ -7,9 +7,9 @@ from matplotlib import pyplot as plt
 
 from scipy.optimize import curve_fit
 
-from microscopy_metrics.fittingTools.fittingTool import FittingTool
-from microscopy_metrics.fittingTools.fitting1D import Fitting1D
 from microscopy_metrics.utils import pxToUm
+from microscopy_metrics.fittingTools.fitting1D import Fitting1D
+from microscopy_metrics.fittingTools.fittingTool import FittingTool
 
 
 class Fitting3D(FittingTool):
@@ -103,7 +103,7 @@ class Fitting3D(FittingTool):
             mu (List(float)): center of the Gaussian
             sigma (List(float)): standard deviation of the Gaussian
             coords (np.array(float)): List of X,Y,Z coordinates
-            psf (np.ndarray): 1D image of the flatten 2D psf
+            psf (np.ndarray): 1D image of the flatten 3D psf
         Returns:
             List(float),Matrix(float): List of fitted parameters and covariance matrix
         """
@@ -235,7 +235,6 @@ class Fitting3D(FittingTool):
         )
         plt.close(fig1)
 
-    #TODO : Change size of the image (too large)
     def plotFit3d(self, outputPath: str):
         """Plots the fitted 3D Gaussian curve along with the original PSF data, and saves the plot to the specified output path.
         Args:
@@ -243,20 +242,16 @@ class Fitting3D(FittingTool):
         """
         center = self.getLocalCentroid()
         psf = self._image.astype(np.float64)
-
         psfs = [
             psf[:, center[1], center[2]],
             psf[center[0], :, center[2]],
             psf[center[0], center[1], :],
         ]
-
         for i in range(3):
             coords = np.arange(psf.shape[i])
             fine = np.linspace(0, psf.shape[i] - 1, 100)
-
             fineCoords = np.full((100, 3), center, dtype=np.float64)
             fineCoords[:, i] = fine
-
             self.plotSingleFit(
                 coords,
                 psfs[i],
@@ -280,8 +275,6 @@ class Fitting3D(FittingTool):
         """Processes a single fit for the given index, performing fitting, plotting, and calculating metrics.
         Args:
             index (int): ID of the PSF and position in lists for which to perform the fit.
-        Returns:
-            List(parameters): A list containing metrics, fwhm, parameters and covariance matrix of the fit.
         """
         psf = self._image.astype(np.float64)
         coords = self.getCoords(psf)

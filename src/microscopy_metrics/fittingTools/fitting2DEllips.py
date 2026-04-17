@@ -268,7 +268,6 @@ class Fitting2DEllips(FittingTool):
         """Generates a list of coordinates for the 2D fit based on the shape of the provided PSF image.
         Args:
             psf (np.ndarray): The PSF image for which to generate the coordinates.
-
         Returns:
             np.ndarray: A list of coordinates corresponding to the shape of the PSF image, suitable for use in the 2D fitting process.
         """
@@ -278,7 +277,7 @@ class Fitting2DEllips(FittingTool):
     def processSingleFit(self, index: int):
         """Processes a single fit for the given index, performing fitting, and plotting.
         Args:
-            index (int): ID of the PSF and position in lists
+            index (int): ID of the PSF.
         """
         imageFloat = self._image.astype(np.float64)
         physic = self.getLocalCentroid()

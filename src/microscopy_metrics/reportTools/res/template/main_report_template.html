@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <meta charset="utf-8">
+            <title>Analysis results - {{ title }}</title>
+        </head>
+        <body style=" background-color: whitesmoke;" >
+            <div class="header" style="display: block; margin-left: auto; margin-right: auto;text-align: center;">
+                <h1>Analysis results - {{ title }}</h1>
+            </div>
+            <div class="corpus">
+                <h2>Bead's list</h2>
+                <ul>
+                    {% for bead in beads %}
+                        {% if bead._rejected == False %}
+                            <li><a href="bead_{{ bead._id }}/report.html">Bead {{ bead._id }}</a></li>
+                        {% endif %}
+                        {% if bead._rejected == True %}
+                            <li>Bead {{ bead._id }} (rejected) : {{ bead._rejectionDesc if bead._rejectionDesc is not none else "N/A" }}</li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+        </body>
+    </html>

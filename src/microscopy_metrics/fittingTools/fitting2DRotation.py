@@ -25,7 +25,16 @@ class Fitting2DRotation(FittingTool):
         super().__init__()
         self.thetas = [0, 0, 0]
 
-    def gauss(self, amp: float, bg: float, muX: float, muY: float, sigmaX: float, sigmaY: float, theta: float):
+    def gauss(
+        self,
+        amp: float,
+        bg: float,
+        muX: float,
+        muY: float,
+        sigmaX: float,
+        sigmaY: float,
+        theta: float,
+    ):
         """Generates a 2D Gaussian function with rotation based on the provided parameters.
         Args:
             amp (float): amplitude of the curve
@@ -47,7 +56,17 @@ class Fitting2DRotation(FittingTool):
 
         return fun
 
-    def evalFun(self, x, amp, bg, muX, muY, sigmaX, sigmaY, theta):
+    def evalFun(
+        self,
+        x: np.ndarray,
+        amp: float,
+        bg: float,
+        muX: float,
+        muY: float,
+        sigmaX: float,
+        sigmaY: float,
+        theta: float,
+    ):
         """Evaluates the 2D Gaussian function with rotation at the given x values.
         Args:
             amp (float): amplitude of the curve
@@ -62,7 +81,16 @@ class Fitting2DRotation(FittingTool):
             amp=amp, bg=bg, muX=muX, muY=muY, sigmaX=sigmaX, sigmaY=sigmaY, theta=theta
         )(x)
 
-    def fitCurve(self, amp, bg, mu, sigma, theta, coords, psf):
+    def fitCurve(
+        self,
+        amp: float,
+        bg: float,
+        mu: list,
+        sigma: list,
+        theta: float,
+        coords: np.ndarray,
+        psf: np.ndarray,
+    ):
         """Fits the 2D Gaussian function with rotation to the provided PSF data using curve fitting.
         Args:
             amp (float): amplitude of the Gaussian
@@ -97,7 +125,7 @@ class Fitting2DRotation(FittingTool):
         )
         return popt, pcov
 
-    def show2dFit(self, psf, params, outputPath):
+    def show2dFit(self, psf: np.ndarray, params: list, outputPath: str):
         """Generates a visual representation of the fitted 2D Gaussian curve with rotation compared to the original PSF data.
         Args:
             psf (np.ndarray): The original PSF data to compare against the fitted curve.
@@ -138,7 +166,15 @@ class Fitting2DRotation(FittingTool):
         fig.savefig(outputPath, dpi=300, bbox_inches="tight")
         plt.close(fig)
 
-    def plotSingleFit(self, coords, psf, fineCoords, fit2D, outputPath, index):
+    def plotSingleFit(
+        self,
+        coords: np.ndarray,
+        psf: np.ndarray,
+        fineCoords: np.ndarray,
+        fit2D: np.ndarray,
+        outputPath: str,
+        index: int,
+    ):
         """Plots the original data points, the fitted curve, and key parameters for a single axis.
         Args:
             coords (array): Coordinates of the data points.
@@ -194,7 +230,7 @@ class Fitting2DRotation(FittingTool):
         )
         plt.close(fig1)
 
-    def plotFit3d(self, outputPath):
+    def plotFit3d(self, outputPath: str):
         """Plots the fitted 2D Gaussian curve in 3D.
         Args:
             outputPath (str): Directory where the plot will be saved.
@@ -240,7 +276,7 @@ class Fitting2DRotation(FittingTool):
         y, x = np.indices(psf.shape)
         return np.stack([y.ravel(), x.ravel()], axis=-1)
 
-    def processSingleFit(self, index):
+    def processSingleFit(self, index: int):
         """Processes a single fit for the given index, performing fitting, and plotting.
         Args:
             index (int): ID of the PSF and position in lists where results are stored.

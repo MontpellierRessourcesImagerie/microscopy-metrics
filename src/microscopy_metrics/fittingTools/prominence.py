@@ -7,7 +7,7 @@ from microscopy_metrics.utils import pxToUm, umToPx
 
 
 class Prominence(FittingTool):
-    """Class for fitting a 1D Gaussian curve to the PSF profile of a microscopy image based on the prominence of peaks in the intensity profile.
+    """Class for estimating full width at half maximum (FWHM) of a PSF image based on the prominence of peaks in the intensity profile.
     This class inherits from the FittingTool base class and implements methods specific to fitting based on peak prominence.
     """
 
@@ -19,8 +19,9 @@ class Prominence(FittingTool):
 
     def processSingleFit(self, index):
         """Processes a single fit by analyzing the intensity profiles along the Z, Y, and X axes, identifying peaks based on their prominence, and calculating the full width at half maximum (FWHM) for the detected peaks.
-         The method retrieves the local centroid of the image, extracts the intensity profiles along the three axes, and applies the find_peaks function to identify peaks based on their prominence. For each detected peak, the method calculates the FWHM by determining the points where the intensity crosses half of the peaks prominence.
-         The calculated FWHM values and corresponding parameters are stored in the class attributes for further analysis and evaluation.
+        The method retrieves the local centroid of the image, extracts the intensity profiles along the three axes, and applies the find_peaks function to identify peaks based on their prominence.
+        For each detected peak, the method calculates the FWHM by determining the points where the intensity crosses half of the peaks prominence.
+        The calculated FWHM values and corresponding parameters are stored in the class attributes for further analysis and evaluation.
         Args:
             index (int): The index of the fit being processed, used for storing results in the parameters attribute.
         Returns:

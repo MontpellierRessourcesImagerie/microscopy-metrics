@@ -46,14 +46,14 @@ class DetectionTool(object):
 
     def setNormalizedImage(self):
         """Normalizes the input image for processing by the detection algorithms.
-        This method checks if the input image is 2D or 3D, converts it to a float32 type, and normalizes its pixel values to the range [0, 1].
+        This method checks if the input image is 2D or 3D, converts it to a float64 type, and normalizes its pixel values to the range [0, 1].
         It also ensures that any negative pixel values are set to zero.
         Raises:
             ValueError: This function only operate on 2D or 3D images
         """
         if self._image.ndim not in (2, 3):
             raise ValueError("Image have to be in 2D or 3D.")
-        self._normalizedImage = self._image.astype(np.float32)
+        self._normalizedImage = self._image.astype(np.float64)
         self._normalizedImage = (
             self._normalizedImage - np.min(self._normalizedImage)
         ) / (np.max(self._normalizedImage) - np.min(self._normalizedImage) + 1e-6)
@@ -64,6 +64,8 @@ class DetectionTool(object):
         This method applies a Gaussian filter to the normalized image to create a low-pass filtered version, and then subtracts this low-pass image from the original normalized image to obtain the high-pass filtered image.
         The resulting high-pass image emphasizes features in the original image that are smaller than the specified sigma value.
         """
+        if self._normalizedImage is None:
+            raise ValueError("Normalized image is not set. Call setNormalizedImage() first.")
         lowPass = ndi.gaussian_filter(self._normalizedImage, self._sigma)
         self._highPassedImage = self._normalizedImage - lowPass
 

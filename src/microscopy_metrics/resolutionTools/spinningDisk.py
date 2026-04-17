@@ -1,6 +1,8 @@
 import math
 
-from microscopy_metrics.resolutionTools.theoretical_resolution import TheoreticalResolution
+from microscopy_metrics.resolutionTools.theoretical_resolution import (
+    TheoreticalResolution,
+)
 
 
 class SpinningDiskResolution(TheoreticalResolution):

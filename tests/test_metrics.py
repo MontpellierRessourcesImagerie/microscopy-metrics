@@ -3,12 +3,10 @@ import numpy as np
 from skimage.draw import disk
 from microscopy_metrics.metrics import Metrics
 from microscopy_metrics.fittingTools.fitting3D import Fitting3D
+from microscopy_metrics.metricTool.metricTool import MetricTool
 
 def test_signal_to_background_ratio():
     """Unit test for signal to background ratio of a picture"""
-    shape = (50,100,100)
-    bead_positions = [(25,50,50)]
-    metrics = Metrics()
     PSF_SIZE = 100
     fitTool = Fitting3D()
     fitTool._show = False
@@ -20,7 +18,11 @@ def test_signal_to_background_ratio():
     coords = np.stack([x.ravel(), y.ravel(), z.ravel()], -1)
     psf = fitTool.gauss(*params)(coords)
     image = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
-    metrics._images = image
-    metrics._ringInnerDistance = 13.0
-    SBR = metrics.processSingleSBRRing(0,image)
-    assert SBR > 10
+    metricTool = MetricTool()
+    metricTool._image = image
+    metricTool._ringInnerDistance = 13.0
+    metricTool._ringThickness = 2.0
+    metricTool._pixelSize = [1, 1, 1]
+    metricTool.processSingleSBRRing()
+    
+    assert metricTool._SBR > 10
