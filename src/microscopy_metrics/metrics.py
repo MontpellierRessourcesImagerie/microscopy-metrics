@@ -48,7 +48,7 @@ class Metrics(object):
         Raises:
             ValueError: If there are no images in the input list or if any of the images have an incorrect format.
         """
-        self.meanSBR = 0.0
+        self._imageAnalyze._meanSBR = 0.0
 
         if len(self._imageAnalyze._beadAnalyze) == 0:
             raise ValueError("You must have at least one PSF")
@@ -64,13 +64,13 @@ class Metrics(object):
                 if bead._rejected == False and bead._roi is not None
             }
             for future in as_completed(futures):
-                result = future.result()
+                _ = future.result()
         total = 0
         for bead in self._imageAnalyze._beadAnalyze:
             if bead._rejected == False and bead._roi is not None:
-                self.meanSBR += bead._metricTool._SBR
+                self._imageAnalyze._meanSBR += bead._metricTool._SBR
                 total += 1
-        self.meanSBR = self.meanSBR / total
+        self._imageAnalyze._meanSBR = self._imageAnalyze._meanSBR / total
 
     def runPrefittingMetrics(self):
         """Runs the pre-fitting metrics calculations, including signal-to-background ratio (SBR) calculation and theoretical resolution estimation."""

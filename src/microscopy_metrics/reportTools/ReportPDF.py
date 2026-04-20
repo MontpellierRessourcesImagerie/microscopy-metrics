@@ -1,4 +1,6 @@
 import os
+
+from datetime import datetime
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
@@ -202,6 +204,7 @@ class ReportPDF(ReportGenerator):
         self.pdf.setFont("Helvetica-Bold", 36)
         self.pdf.drawCentredString(300, 770, "Analysis Results")
         textLines = [
+            f"Date and time of analysis: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
             f"Image location: {self._imageAnalyze._path}",
             f"Identified beads: {len(self._imageAnalyze._beadAnalyze)}",
             f"Signal to background ratio: {self._imageAnalyze._meanSBR:.2f}",
@@ -214,7 +217,7 @@ class ReportPDF(ReportGenerator):
             f"Image shape: [{self._imageAnalyze._image.shape[0]},{self._imageAnalyze._image.shape[1]},{self._imageAnalyze._image.shape[2]}]",
             f"Microscope type: {self._microscopeDatas['microscopeType'] if 'microscopeType' in self._microscopeDatas else 'N/A'}",
             f"Emission wavelength: {self._microscopeDatas['emissionWavelength'] if 'emissionWavelength' in self._microscopeDatas else 'N/A'}nm",
-            f"Refractive index: {self._microscopeDatas['refractionIndex'] if 'refractionIndex' in self._microscopeDatas else 'N/A'}",
+            f"Refractive index: {self._microscopeDatas['refractiveIndex'] if 'refractiveIndex' in self._microscopeDatas else 'N/A'}",
             f"Numerical aperture: {self._microscopeDatas['numericalAperture'] if 'numericalAperture' in self._microscopeDatas else 'N/A'}",
         ]
         self.drawParagaphOnPDF(textLines, 40, 600)
@@ -225,7 +228,7 @@ class ReportPDF(ReportGenerator):
             f"Minimal distance: {self._detectionDatas['minDist'] if 'minDist' in self._detectionDatas else 'N/A'}",
             f"Sigma: {self._detectionDatas['sigma'] if 'sigma' in self._detectionDatas else 'N/A'}",
             f"Threshold tool: {self._thresholdDatas['thresholdTool'] if 'thresholdTool' in self._thresholdDatas else 'N/A'}",
-            f"Threshold relative: {self._thresholdDatas['thresholdRelative'] if 'thresholdRelative' in self._thresholdDatas and self._thresholdDatas['thresholdTool'] == 'manual' else 'N/A'}",
+            f"Threshold relative: {self._thresholdDatas['thresholdRel'] if 'thresholdRel' in self._thresholdDatas and self._thresholdDatas['thresholdTool'] == 'manual' else 'N/A'}",
         ]
         self.drawParagaphOnPDF(textLines, 40, 450)
         self.pdf.setFont("Helvetica-Bold", 18)
@@ -247,9 +250,10 @@ class ReportPDF(ReportGenerator):
             f"Prominence relative: {self._fittingDatas['prominenceRel'] if 'prominenceRel' in self._fittingDatas else 'N/A'}",
         ]
         self.drawParagaphOnPDF(textLines, 40, 100)
-        self.pdf.showPage()
-        self.pdf.setFont("Helvetica-Bold", 36)
-        self.pdf.drawCentredString(150, 770, "REJECTED")
+        if any(bead._rejected == True for bead in self._imageAnalyze._beadAnalyze):
+            self.pdf.showPage()
+            self.pdf.setFont("Helvetica-Bold", 36)
+            self.pdf.drawCentredString(150, 770, "REJECTED")
         for bead in self._imageAnalyze._beadAnalyze:
             if bead._rejected == True:
                 if self.yRejected < 50:
