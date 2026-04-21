@@ -19,10 +19,10 @@ from microscopy_metrics.fittingTools.fitting3DRotation import Fitting3DRotation
 matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
 
-BORNOWOLF_PSF = False
+BORNOWOLF_PSF = True
 ORIENTED = False
 PSF_SIZE = 80
-NOISE = False
+NOISE = True
 FIT_METHODS = ["1D","2D","3D","2DRotation","3DRotation","2DEllips","Prominence"]
 
 TRUE_AMP = 255.0
@@ -58,7 +58,6 @@ def get_rotation_matrix(thetaX, thetaY, thetaZ):
     cx, sx = np.cos(thetaX), np.sin(thetaX)
     cy, sy = np.cos(thetaY), np.sin(thetaY)
     cz, sz = np.cos(thetaZ), np.sin(thetaZ)
-
     R = np.array(
         [
             [cy * cz, cz * sx * sy - cx * sz, cx * cz * sy + sx * sz],
@@ -69,24 +68,12 @@ def get_rotation_matrix(thetaX, thetaY, thetaZ):
     return R
 
 def computeAngularError(estimations, truths, fitMethod="2D"):
-    if fitMethod == "3D Rotation":
-        R_est = get_rotation_matrix(estimations[0], estimations[1], estimations[2])
-        R_true = get_rotation_matrix(truths[0], truths[1], truths[2])
-        dot_x = abs(np.dot(R_est[:, 0], R_true[:, 0]))
-        dot_y = abs(np.dot(R_est[:, 1], R_true[:, 1]))
-        dot_z = abs(np.dot(R_est[:, 2], R_true[:, 2]))        
-        err_x = np.rad2deg(np.arccos(min(dot_x, 1.0)))
-        err_y = np.rad2deg(np.arccos(min(dot_y, 1.0)))
-        err_z = np.rad2deg(np.arccos(min(dot_z, 1.0)))        
-        return np.mean([err_x, err_y, err_z])
-    errors = []
-    for est, truth in zip(estimations, truths):
-        truth_deg = np.rad2deg(truth) if abs(truth) <= 2 * np.pi else truth
-        diff = abs(est - truth_deg)
-        diff = diff % 180.0
-        error = min(diff, 180.0 - diff)
-        errors.append(error)
-    return np.mean(errors) if errors else 0.0
+    R_est = get_rotation_matrix(estimations[0], estimations[1], estimations[2])
+    R_true = get_rotation_matrix(truths[0], truths[1], truths[2])
+    R_diff = R_est @ R_true.T
+    trace = np.trace(R_diff)
+    err_x = np.arccos((trace - 1) / 2)
+    return err_x
 
 
 def computeMSE(estimations, truths):

@@ -8,7 +8,7 @@ authors = [
     { name = "MRI-CIA", email = "mri-cia@mri.cnrs.fr" }, 
     { name = "Voker Baecker", email = "volker.baecker@mri.cnrs.fr"},
     { name = "Clément Benedetti", email = "clement.benedetti@mri.cnrs.fr"},
-    { name = "Bastian Langouet", email = "langouetbastian@gmail.com" } 
+    { name = "Bastian Langouët", email = "langouetbastian@gmail.com" } 
 ]
 requires-python = ">=3.9"
 classifiers = [
@@ -17,10 +17,21 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
+    "scipy",
     "scikit-image",
     "scikit-learn",
-    "reportlab"
+    "reportlab",
+    "matplotlib",
+    "tqdm",
+    "jinja2",
+    "Pillow",
 ]
 [project.urls]
 Homepage = "https://github.com/MontpellierRessourcesImagerie/microscopy-metrics"
 Issues = "https://github.com/MontpellierRessourcesImagerie/microscopy-metrics/issues"
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "coverage"
+]

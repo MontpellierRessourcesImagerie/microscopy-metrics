@@ -70,7 +70,7 @@ class ReportPDF(ReportGenerator):
         normalStyle = stylesheet["Normal"]
         textLines = [
             f"Bead {bead._id if bead._id is not None else 'Unknown'} analysis : REJECTED",
-            f"centroid: {bead._centroid if bead._centroid is not None else 'Unknown'}",
+            f"centroid: {', '.join(f'{c:.2f}' for c in bead._centroid) if bead._centroid is not None else 'Unknown'}",
             f"Rejection reason: {bead._rejectionDesc if bead._rejectionDesc != '' else 'Unknown'}",
         ]
         text = self.pdf.beginText(40, self.yRejected)
@@ -85,8 +85,6 @@ class ReportPDF(ReportGenerator):
             bead (BeadAnalyze): The bead for which we want to write the report
         """
         beadPath = os.path.join(self._inputDir, f"bead_{bead._id}")
-        stylesheet = getSampleStyleSheet()
-        normalStyle = stylesheet["Normal"]
         self.pdf.setFont("Helvetica-Bold", 36)
         self.pdf.drawCentredString(
             150, 770, f"Bead {bead._id if bead._id is not None else 'Unknown'}"
@@ -101,10 +99,10 @@ class ReportPDF(ReportGenerator):
                 preserveAspectRatio=True,
             )
         textLines = [
-            f"centroid: {bead._centroid if bead._centroid is not None else 'Unknown'}",
-            f"Signal to Background ratio: {bead._metricTool._SBR if bead._metricTool._SBR is not None else 'Unknown'}",
-            f"Lateral asymmetry ratio: {bead._metricTool._LAR if bead._metricTool._LAR is not None else 'Unknown'}",
-            f"Sphericity: {bead._metricTool._sphericity if bead._metricTool._sphericity is not None else 'Unknown'}",
+            f"centroid: {', '.join(f'{c:.2f}' for c in bead._centroid) if bead._centroid is not None else 'Unknown'}",
+            f"Signal to Background ratio: {f'{bead._metricTool._SBR:.2f}' if bead._metricTool._SBR is not None else 'Unknown'}",
+            f"Lateral asymmetry ratio: {f'{bead._metricTool._LAR:.2f}' if bead._metricTool._LAR is not None else 'Unknown'}",
+            f"Sphericity: {f'{bead._metricTool._sphericity:.2f}' if bead._metricTool._sphericity is not None else 'Unknown'}",
         ]
         self.drawParagaphOnPDF(textLines, 40, 700)
         data = [

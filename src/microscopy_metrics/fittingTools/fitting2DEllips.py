@@ -126,10 +126,10 @@ class Fitting2DEllips(FittingTool):
         sy = math.sqrt(abs(-a - t - c)) / 2.0 / s
         theta = math.sqrt(1.0 + ((a - c) / t)) / math.sqrt(2.0)
         theta = math.acos(theta)
-        theta_sign = 4 * b * (sx**2) * (sy**2) / ((sx**2) - (sy**2))
-        theta_sign = max(-1.0, min(1.0, theta_sign))
-        theta_sign = np.sign(-0.5 * math.asin(theta_sign))
-        theta = ((math.pi / 2) - theta) * theta_sign
+        thetaSign = 4 * b * (sx**2) * (sy**2) / ((sx**2) - (sy**2))
+        thetaSign = max(-1.0, min(1.0, thetaSign))
+        thetaSign = np.sign(-0.5 * math.asin(thetaSign))
+        theta = ((math.pi / 2) - theta) * thetaSign
         return theta, sx, sy
 
     def show2dFit(self, psf: np.ndarray, outputPath: str, params: list, theta: float):
@@ -140,10 +140,10 @@ class Fitting2DEllips(FittingTool):
             params (List(float)): The fitted parameters for the 2D Ellipse Gaussian.
             theta (float): The angle of rotation for the ellipse.
         """
-        yy_fine = np.linspace(0, psf.shape[0] - 1, psf.shape[0] * 10)
-        xx_fine = np.linspace(0, psf.shape[1] - 1, psf.shape[1] * 10)
-        y_fine, x_fine = np.meshgrid(yy_fine, xx_fine, indexing="ij")
-        fine_coords_yx = np.stack([y_fine.ravel(), x_fine.ravel()], -1)
+        yyFine = np.linspace(0, psf.shape[0] - 1, psf.shape[0] * 10)
+        xxFine = np.linspace(0, psf.shape[1] - 1, psf.shape[1] * 10)
+        yFine, xFine = np.meshgrid(yyFine, xxFine, indexing="ij")
+        fineCoordsyx = np.stack([yFine.ravel(), xFine.ravel()], -1)
         y0 = params[2] * 10
         x0 = params[3] * 10
         L = min(max(psf.shape) * 10 / 4, 30)
@@ -155,7 +155,7 @@ class Fitting2DEllips(FittingTool):
             dx = L * np.cos(theta)
         x1 = x0 + dx
         y1 = y0 + dy
-        fit = self.gauss(*params)(fine_coords_yx)
+        fit = self.gauss(*params)(fineCoordsyx)
         fit = fit.reshape((psf.shape[0] * 10, psf.shape[1] * 10))
         fig = plt.figure(figsize=(10, 5))
         ax1 = fig.add_subplot(1, 2, 1)

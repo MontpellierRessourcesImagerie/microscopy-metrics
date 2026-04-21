@@ -1,5 +1,3 @@
-import numpy as np
-
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 

@@ -2,9 +2,6 @@ import os
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from microscopy_metrics.fittingTools.fittingTool import FittingTool
-
-
 class Fitting(object):
     """Class to manage the fitting process for microscopy image analysis, including running the fitting for individual beads and computing the fitting results for all beads in the analysis."""
 
