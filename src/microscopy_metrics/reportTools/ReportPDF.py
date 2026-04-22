@@ -59,7 +59,7 @@ class ReportPDF(ReportGenerator):
             )
         )
         t.wrapOn(self.pdf, 0, 0)
-        t.drawOn(self.pdf, 40, 600)
+        t.drawOn(self.pdf, 40, 590)
 
     def drawSingleBeadRejectedReportPDF(self, bead):
         """Helper to write the report of a rejected bead on the pdf

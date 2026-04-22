@@ -2,11 +2,13 @@ import math
 from matplotlib import image
 import numpy as np
 
+from scipy.signal import find_peaks
 from scipy.ndimage import median_filter
 from skimage.measure import regionprops, label
 
 from microscopy_metrics.utils import umToPx
 from microscopy_metrics.thresholdTools.legacy import ThresholdLegacy
+from microscopy_metrics.detectionTools.detection_tool import DetectionTool
 
 
 class MetricTool(object):
@@ -112,17 +114,146 @@ class MetricTool(object):
         tmp = np.array([FWHM[1], FWHM[2]])
         self._LAR = tmp.min() / tmp.max()
 
-    def sphericityRatio(self, FWHM: list):
-        """Calculates the sphericity ratio for a PSF based on the full width at half maximum (FWHM) values.
-        Args:
-            FWHM (list): A list of FWHM values for the PSF.
-        Raises:
-            ValueError: If the FWHM values are not available or if there are not enough FWHM values to calculate the sphericity ratio.
-        """
-        if FWHM == []:
-            raise ValueError(
-                "FWHM values are not available or insufficient to calculate sphericity."
-            )
-        FWHMxy = math.sqrt(FWHM[2] * FWHM[1])
-        sphericity = FWHMxy / FWHM[0]
-        self._sphericity = sphericity
+    def getVolume(self):
+        voxelVolume = self._pixelSize[0] * self._pixelSize[1] * self._pixelSize[2]
+        imageFloat = self.setNormalizedImage(self._image)
+        imageFloat = median_filter(imageFloat, size=5)
+        thresholdAbs = ThresholdLegacy(nb_iteration=1000).getThreshold(imageFloat)
+        binaryImage = imageFloat > thresholdAbs
+        voxelCount = np.sum(binaryImage)
+        volume = voxelCount * voxelVolume
+        return volume
+
+    def updateTile(self, tile, tileIndex):
+        for z in range(2):
+            for y in range(2):
+                for x in range(2):
+                    tile[z][y][x] = (tileIndex & (1 << (z * 4 + y * 2 + x))) > 0
+
+    def surfaceAreaLutD3(self):
+        d1 = self._pixelSize[0]
+        d2 = self._pixelSize[1]
+        d3 = self._pixelSize[2]
+        vol = d1 * d2 * d3
+        nbConfigs = 256
+        tab = [0.0 for _ in range (nbConfigs)]
+        im = [
+            [[0,0],[0,0]],
+            [[0,0],[0,0]]
+        ]
+        for iConfig in range(nbConfigs):
+            self.updateTile(im,iConfig)
+            for z in range(2):
+                for y in range(2):
+                    for x in range(2):
+                        if not im[z][y][x]:
+                            continue
+                        ke1 = 0 if im[z][y][1-x] else vol / d1 / 2.0
+                        ke2 = 0 if im[z][1-y][x] else vol / d2 / 2.0
+                        ke3 = 0 if im[1-z][y][x] else vol / d3 / 2.0
+                        tab[iConfig] += (ke1 + ke2 + ke3) / 3.0
+        return tab
+
+    def configIndex(self, configValues):
+        return sum(val << i for i, val in enumerate(configValues))
+
+    def getHistogram3D(self):
+        histo = [0 for _ in range(256)]
+        imageFloat = self.setNormalizedImage(self._image)
+        imageFloat = median_filter(imageFloat, size=5)
+        thresholdAbs = ThresholdLegacy(nb_iteration=1000).getThreshold(imageFloat)
+        binaryImage = imageFloat > thresholdAbs
+
+        sizeZ, sizeY, sizeX = binaryImage.shape
+        configValues = [False for _ in range(8)]
+        for z in range(sizeZ+1):
+            for y in range(sizeY+1):
+                configValues[0] = False
+                configValues[2] = False
+                configValues[4] = False
+                configValues[6] = False
+                for x in range(sizeX+1):
+                    if x < sizeX:
+                        configValues[1] = bool(binaryImage[z - 1, y - 1, x]) if (y > 0 and z > 0) else False
+                        configValues[3] = bool(binaryImage[z - 1, y, x]) if (y < sizeY and z > 0) else False
+                        configValues[5] = bool(binaryImage[z, y - 1, x]) if (y > 0 and z < sizeZ) else False
+                        configValues[7] = bool(binaryImage[z, y, x]) if (y < sizeY and z < sizeZ) else False
+                    else : 
+                        configValues[1] = configValues[3] = configValues[5] = configValues[7] = False
+                    index = self.configIndex(configValues)
+                    histo[index] += 1
+                    configValues[0] = configValues[1]
+                    configValues[2] = configValues[3]
+                    configValues[4] = configValues[5]
+                    configValues[6] = configValues[7]
+        return histo
+
+            
+    def applyLut(self, histogram, lut):
+        sum = 0
+        for i in range(len(histogram)):
+            sum += histogram[i] * lut[i]
+        return sum
+
+    def getSurface(self):
+        lut = self.surfaceAreaLutD3()
+        histo = self.getHistogram3D()
+        return self.applyLut(histo, lut)
+
+    def sphericity(self):
+        c = 36 * math.pi
+        volume = self.getVolume()
+        surface = self.getSurface()
+        
+        if surface == 0:
+            return 0.0
+            
+        print((c * (volume**2)) / (surface**3))
+        self._sphericity = (c * (volume**2)) / (surface**3)
+
+    def distance(self, x1, x2):
+        return abs(x1 - x2)
+
+    def multiplePeak(self):
+        image = self._image[:,int(self._image.shape[1]/2),:]
+        image = median_filter(image, size=3)
+        XScore = 0.0
+        TotalX = 0
+        for x in range(image.shape[1]):
+            profile = image[:,x]
+            amp = float(np.max(profile) - np.min(profile))
+            prominenceMin = amp * float(0.5)
+            peaks, props = find_peaks(profile, prominence=prominenceMin, distance=3)
+            if len(peaks) > 1 and not (any(peaks > self._image.shape[0]/2) and any(peaks < self._image.shape[0]/2)):
+                maxPeak = peaks[np.argmax(profile[peaks])]
+                if all(peaks > self._image.shape[0]/2):
+                    print(f"X Profile {x} : {peaks} (To the right)")
+                    XScore += 1 * (self.distance(x, self._image.shape[1]/2) / (self._image.shape[1])) * (profile[maxPeak] / amp) * (1/ (0.5*self.distance(peaks[0], peaks[-1])))
+                else : 
+                    print(f"X Profile {x} : {peaks} (To the left)")
+                    XScore -= 1 * (self.distance(x, self._image.shape[1]/2) / (self._image.shape[1])) * (profile[maxPeak] / amp) * (1/ (0.5*self.distance(peaks[0], peaks[-1])))
+                TotalX += 1
+        if TotalX > 0:
+            XScore /= TotalX
+        image = self._image[:,:,int(self._image.shape[1]/2)]
+        image = median_filter(image, size=3)
+        YScore = 0.0
+        TotalY = 0
+        for y in range(image.shape[1]):
+            profile = image[:,y]
+            amp = float(np.max(profile) - np.min(profile))
+            prominenceMin = amp * float(0.5)
+            peaks, props = find_peaks(profile, prominence=prominenceMin, distance=3)
+            if len(peaks) > 1 and not (any(peaks > self._image.shape[0]/2) and any(peaks < self._image.shape[0]/2)):
+                maxPeak = peaks[np.argmax(profile[peaks])]
+                if all(peaks > self._image.shape[0]/2):
+                    print(f"Y Profile {y} : {peaks} (To the right)")
+                    YScore += 1 * (self.distance(y, self._image.shape[1]/2) / (self._image.shape[1])) * (profile[maxPeak] / amp) * (1/ (0.5*self.distance(peaks[0], peaks[-1])))
+                else : 
+                    print(f"Y Profile {y} : {peaks} (To the left)")
+                    YScore -= 1 * (self.distance(y, self._image.shape[1]/2) / (self._image.shape[1])) * (profile[maxPeak] / amp) * (1/ (0.5*self.distance(peaks[0], peaks[-1])))
+                TotalY += 1
+        if TotalY > 0:
+            YScore /= TotalY
+        Score = np.sqrt(XScore**2 + YScore**2)
+        print(f"X Score : {XScore} | Y Score : {YScore} | Final Score : {Score}")
