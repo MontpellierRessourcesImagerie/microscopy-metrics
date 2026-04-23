@@ -8,7 +8,7 @@ class ReportGenerator(object):
 
     def __init__(self):
         self._inputDir = None
-        self._imageAnalyze = None
+        self._imageAnalyzer = None
         self._detectionDatas = {}
         self._fittingDatas = {}
         self._microscopeDatas = {}

@@ -7,13 +7,13 @@ from scipy.signal import find_peaks
 from skimage.draw import polygon_perimeter
 
 from microscopy_metrics.utils import umToPx
-from microscopy_metrics.ImageAnalyze import ImageAnalyze
-from microscopy_metrics.BeadAnalyze import BeadAnalyze
+from microscopy_metrics.ImageAnalyzer import ImageAnalyzer
+from microscopy_metrics.BeadAnalyzer import BeadAnalyzer
 
 
 class Detection(object):
     """Class for detecting and extracting regions of interest (ROIs) from microscopy images based on detected centroids.
-    It initializes the imageAnalyze object to manage the analysis of the image and the detected beads, and provides methods for setting parameters related to bead detection and ROI extraction.
+    It initializes the imageAnalyzer object to manage the analysis of the image and the detected beads, and provides methods for setting parameters related to bead detection and ROI extraction.
     """
 
     def __init__(self, image=None):
@@ -24,7 +24,7 @@ class Detection(object):
         self._pixelSize = [0.1, 0.06, 0.06]
         self._thresholdIntensity = 0.75
 
-        self._imageAnalyze = None
+        self._imageAnalyzer = None
         self._thresholdTool = None
         self._detectionTool = None
 
@@ -93,10 +93,10 @@ class Detection(object):
         Returns:
             float: The calculated mean intensity of the detected centroids.
         """
-        if len(self._imageAnalyze._beadAnalyze) > 0:
+        if len(self._imageAnalyzer._beadAnalyzer) > 0:
             result = 0.0
             count = 0
-            for bead in self._imageAnalyze._beadAnalyze:
+            for bead in self._imageAnalyzer._beadAnalyzer:
                 if bead._rejected == False:
                     z, y, x = bead._centroid
                     result += self._image[int(z), int(y), int(x)]
@@ -109,7 +109,7 @@ class Detection(object):
         The method calculates the ROI for each detected bead, checks for overlaps with other beads and the image boundaries, and applies rejection criteria based on intensity and peak detection within the ROI.
         """
         roiSize = umToPx((self._cropFactor * self._beadSize) / 2, self._pixelSize[2])
-        for bead in self._imageAnalyze._beadAnalyze:
+        for bead in self._imageAnalyzer._beadAnalyzer:
             bead._roi = np.array(
                 [
                     [
@@ -134,7 +134,7 @@ class Detection(object):
                     ],
                 ]
             )
-            for other_bead in self._imageAnalyze._beadAnalyze:
+            for other_bead in self._imageAnalyzer._beadAnalyzer:
                 if bead._id != other_bead._id and other_bead._rejected == False:
                     if math.dist(bead._centroid, other_bead._centroid) < (
                         math.sqrt(2) * roiSize
@@ -154,7 +154,7 @@ class Detection(object):
                     bead._rejected = True
                     bead._rejectionDesc = "Centroid in rejection zone"
         meanIntensity = self.getMeanIntensity()
-        for bead in self._imageAnalyze._beadAnalyze:
+        for bead in self._imageAnalyzer._beadAnalyzer:
             bead._image = self._image[
                 ...,
                 bead._roi[0][1] : bead._roi[2][1],
@@ -196,13 +196,13 @@ class Detection(object):
         Returns:
             Boolean: True if the given ROI overlaps with any of the existing ROIs, False otherwise.
         """
-        actualBead = self._imageAnalyze._beadAnalyze[index]
+        actualBead = self._imageAnalyzer._beadAnalyzer[index]
         roi = actualBead._roi
         newYMin = min(roi[:, 1])
         newYMax = max(roi[:, 1])
         newXMin = min(roi[:, 2])
         newXMax = max(roi[:, 2])
-        for bead in self._imageAnalyze._beadAnalyze:
+        for bead in self._imageAnalyzer._beadAnalyzer:
             if (
                 bead._rejected == False
                 and actualBead._id != bead._id
@@ -262,16 +262,16 @@ class Detection(object):
                 "Output directory is required for saving cropped PSF images."
             )
         self._detectionTool._image = self.image
-        self._imageAnalyze = ImageAnalyze(
+        self._imageAnalyzer = ImageAnalyzer(
             image=self._image,
             beadSize=self._beadSize,
             pixelSize=self._pixelSize,
-            BeadAnalyze=[],
+            BeadAnalyzer=[],
         )
         self._detectionTool.detect()
         for i, centroid in enumerate(self._detectionTool._centroids):
-            bead = BeadAnalyze(id=i, centroid=centroid)
-            self._imageAnalyze._beadAnalyze.append(bead)
+            bead = BeadAnalyzer(id=i, centroid=centroid)
+            self._imageAnalyzer._beadAnalyzer.append(bead)
         yield {"desc": "Extracting Rois..."}
         self.extractRegionOfInterest()
         if cropPsf:
@@ -321,7 +321,7 @@ class Detection(object):
         Args:
             outputDir (Path): The directory of the output folder where the cropped PSF images will be saved.
         """
-        for bead in self._imageAnalyze._beadAnalyze:
+        for bead in self._imageAnalyzer._beadAnalyzer:
             if bead._rejected == False and bead._roi is not None:
                 roi = bead._roi
                 data = bead._image

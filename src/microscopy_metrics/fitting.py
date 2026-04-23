@@ -9,18 +9,18 @@ class Fitting(object):
         self.fitType = "1D"
         self._thresholdRSquared = 0.95
         self._prominenceRel = None
-        self._imageAnalyze = None
+        self._imageAnalyzer = None
 
     def runFitting(self, index):
         """Runs the fitting process for a single index, using the specified fitting tool and storing the results.
         Args:
             index (int): The index of the fit being processed, used for retrieving the corresponding image, centroid, spacing, and ROI for the fitting process.
         """
-        bead = self._imageAnalyze._beadAnalyze[index]
+        bead = self._imageAnalyzer._beadAnalyzer[index]
         bead.runFitting(
             fittingType=self.fitType,
-            spacing=self._imageAnalyze._pixelSize,
-            outputDir=self._imageAnalyze._path,
+            spacing=self._imageAnalyzer._pixelSize,
+            outputDir=self._imageAnalyzer._path,
             prominenceRel=self._prominenceRel,
         )
 
@@ -34,12 +34,12 @@ class Fitting(object):
         with ThreadPoolExecutor(max_workers=workers) as executor:
             futures = {
                 executor.submit(self.runFitting, i): i
-                for i, bead in enumerate(self._imageAnalyze._beadAnalyze)
+                for i, bead in enumerate(self._imageAnalyzer._beadAnalyzer)
                 if bead._rejected == False and bead._roi is not None
             }
             for future in as_completed(futures):
                 future.result()
-        for bead in self._imageAnalyze._beadAnalyze:
+        for bead in self._imageAnalyzer._beadAnalyzer:
             if bead._rejected == False and bead._roi is not None:
                 if bead._fitTool is None:
                     bead._rejected = True

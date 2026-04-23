@@ -1,12 +1,13 @@
 import math
-from matplotlib import image
 import numpy as np
+from matplotlib import image
 
+from scipy import ndimage as ndi
 from scipy.signal import find_peaks
 from scipy.ndimage import median_filter
 from skimage.measure import regionprops, label
 
-from microscopy_metrics.utils import umToPx
+from microscopy_metrics.utils import umToPx,pxToUm
 from microscopy_metrics.thresholdTools.legacy import ThresholdLegacy
 from microscopy_metrics.detectionTools.detection_tool import DetectionTool
 
@@ -23,6 +24,9 @@ class MetricTool(object):
         self._SBR = 0
         self._LAR = 0
         self._sphericity = 0
+        self._volume = 0
+        self._surface = 0
+        self._banana = 0
 
     def setNormalizedImage(self, image: np.ndarray) -> np.ndarray:
         """Normalizes the input image to a range of [0, 1] and ensures that all values are non-negative.
@@ -202,58 +206,59 @@ class MetricTool(object):
 
     def sphericity(self):
         c = 36 * math.pi
-        volume = self.getVolume()
-        surface = self.getSurface()
+        self._volume = self.getVolume()
+        self._surface = self.getSurface()
         
-        if surface == 0:
+        if self._surface == 0:
             return 0.0
             
-        print((c * (volume**2)) / (surface**3))
-        self._sphericity = (c * (volume**2)) / (surface**3)
+        print((c * (self._volume**2)) / (self._surface**3))
+        self._sphericity = (c * (self._volume**2)) / (self._surface**3)
 
     def distance(self, x1, x2):
         return abs(x1 - x2)
 
     def multiplePeak(self):
         image = self._image[:,int(self._image.shape[1]/2),:]
-        image = median_filter(image, size=3)
+        ndi.gaussian_filter(image, sigma=2.0, output=image)
         XScore = 0.0
         TotalX = 0
         for x in range(image.shape[1]):
             profile = image[:,x]
             amp = float(np.max(profile) - np.min(profile))
-            prominenceMin = amp * float(0.5)
-            peaks, props = find_peaks(profile, prominence=prominenceMin, distance=3)
+            prominenceMin = amp * float(0.2)
+            peaks, props = find_peaks(profile,prominence=prominenceMin, width=2, distance=3)
             if len(peaks) > 1 and not (any(peaks > self._image.shape[0]/2) and any(peaks < self._image.shape[0]/2)):
                 maxPeak = peaks[np.argmax(profile[peaks])]
                 if all(peaks > self._image.shape[0]/2):
                     print(f"X Profile {x} : {peaks} (To the right)")
-                    XScore += 1 * (self.distance(x, self._image.shape[1]/2) / (self._image.shape[1])) * (profile[maxPeak] / amp) * (1/ (0.5*self.distance(peaks[0], peaks[-1])))
+                    XScore += pxToUm(self.distance(x, self._image.shape[1]/2),self._pixelSize[2]) * (1.0/ (1.0+pxToUm(self.distance(peaks[0], peaks[-1]),self._pixelSize[0])))
                 else : 
                     print(f"X Profile {x} : {peaks} (To the left)")
-                    XScore -= 1 * (self.distance(x, self._image.shape[1]/2) / (self._image.shape[1])) * (profile[maxPeak] / amp) * (1/ (0.5*self.distance(peaks[0], peaks[-1])))
+                    XScore -= pxToUm(self.distance(x, self._image.shape[1]/2),self._pixelSize[2]) * (1.0/ (1.0+pxToUm(self.distance(peaks[0], peaks[-1]),self._pixelSize[0])))
                 TotalX += 1
         if TotalX > 0:
             XScore /= TotalX
         image = self._image[:,:,int(self._image.shape[1]/2)]
-        image = median_filter(image, size=3)
+        ndi.gaussian_filter(image, sigma=2.0, output=image)
+        globalAmp = float(np.max(image) - np.min(image))
         YScore = 0.0
         TotalY = 0
         for y in range(image.shape[1]):
             profile = image[:,y]
             amp = float(np.max(profile) - np.min(profile))
-            prominenceMin = amp * float(0.5)
-            peaks, props = find_peaks(profile, prominence=prominenceMin, distance=3)
+            prominenceMin = amp * float(0.2)
+            peaks, props = find_peaks(profile,prominence=prominenceMin, width=2, distance=3)
             if len(peaks) > 1 and not (any(peaks > self._image.shape[0]/2) and any(peaks < self._image.shape[0]/2)):
                 maxPeak = peaks[np.argmax(profile[peaks])]
                 if all(peaks > self._image.shape[0]/2):
                     print(f"Y Profile {y} : {peaks} (To the right)")
-                    YScore += 1 * (self.distance(y, self._image.shape[1]/2) / (self._image.shape[1])) * (profile[maxPeak] / amp) * (1/ (0.5*self.distance(peaks[0], peaks[-1])))
+                    YScore += pxToUm(self.distance(y, self._image.shape[1]/2),self._pixelSize[1]) * (1.0/ (1.0+pxToUm(self.distance(peaks[0], peaks[-1]),self._pixelSize[0])))
                 else : 
                     print(f"Y Profile {y} : {peaks} (To the left)")
-                    YScore -= 1 * (self.distance(y, self._image.shape[1]/2) / (self._image.shape[1])) * (profile[maxPeak] / amp) * (1/ (0.5*self.distance(peaks[0], peaks[-1])))
+                    YScore -= pxToUm(self.distance(y, self._image.shape[1]/2),self._pixelSize[1]) * (1.0/ (1.0+pxToUm(self.distance(peaks[0], peaks[-1]),self._pixelSize[0])))
                 TotalY += 1
         if TotalY > 0:
             YScore /= TotalY
-        Score = np.sqrt(XScore**2 + YScore**2)
-        print(f"X Score : {XScore} | Y Score : {YScore} | Final Score : {Score}")
+        self._banana = np.sqrt(XScore**2 + YScore**2)
+        print(f"X Score : {XScore} | Y Score : {YScore} | Final Score : {self._banana}")

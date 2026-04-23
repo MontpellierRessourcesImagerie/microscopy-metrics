@@ -2,7 +2,7 @@ from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.metricTool.metricTool import MetricTool
 
 
-class BeadAnalyze(object):
+class BeadAnalyzer(object):
     """Class to manage the analysis of individual beads, including storing the bead's image, region of interest (ROI), centroid, and results of fitting and metric calculations.
     It provides methods for running fitting and calculating metrics for the bead, which are used in the overall analysis of microscopy images.
     """

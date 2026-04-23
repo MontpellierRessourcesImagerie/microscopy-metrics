@@ -18,18 +18,18 @@ class ReportHTML(ReportGenerator):
             outputPath (str, optional): Path to the directory where the HTML report will be saved. Defaults to None.
         """
         if outputPath is None:
-            outputPath = os.path.dirname(self._imageAnalyze._path)
+            outputPath = os.path.dirname(self._imageAnalyzer._path)
         templateDir = os.path.join(os.path.dirname(__file__), "res", "template")
         env = Environment(loader=FileSystemLoader(templateDir))
         template = env.get_template("report_template.html")
-        for bead in self._imageAnalyze._beadAnalyze:
+        for bead in self._imageAnalyzer._beadAnalyzer:
             if bead._rejected == False and bead._roi is not None:
                 beadPath = os.path.join(outputPath, f"bead_{bead._id}")
                 activePath = os.path.join(beadPath, "report.html")
                 data = {
                     "title": f"Bead {bead._id}",
                     "bead": bead,
-                    "theoretical_resolution": self._imageAnalyze._theoreticalResolution,
+                    "theoretical_resolution": self._imageAnalyzer._theoreticalResolution,
                     "path": beadPath,
                 }
                 htmlContent = template.render(data)
@@ -37,8 +37,8 @@ class ReportHTML(ReportGenerator):
                     f.write(htmlContent)
         mainTemplate = env.get_template("main_report_template.html")
         data = {
-            "title": f"Microscopy Metrics Report - {os.path.basename(self._imageAnalyze._path)}",
-            "beads": self._imageAnalyze._beadAnalyze,
+            "title": f"Microscopy Metrics Report - {os.path.basename(self._imageAnalyzer._path)}",
+            "beads": self._imageAnalyzer._beadAnalyzer,
         }
         mainHtmlContent = mainTemplate.render(data)
         mainReportPath = os.path.join(outputPath, "index.html")

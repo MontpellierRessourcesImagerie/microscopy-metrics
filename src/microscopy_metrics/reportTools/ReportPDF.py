@@ -59,12 +59,12 @@ class ReportPDF(ReportGenerator):
             )
         )
         t.wrapOn(self.pdf, 0, 0)
-        t.drawOn(self.pdf, 40, 590)
+        t.drawOn(self.pdf, 40, 580)
 
     def drawSingleBeadRejectedReportPDF(self, bead):
         """Helper to write the report of a rejected bead on the pdf
         Args:
-            bead (BeadAnalyze): The bead for which we want to write the rejected report
+            bead (BeadAnalyzer): The bead for which we want to write the rejected report
         """
         stylesheet = getSampleStyleSheet()
         normalStyle = stylesheet["Normal"]
@@ -82,7 +82,7 @@ class ReportPDF(ReportGenerator):
     def drawSingleBeadReportPDF(self, bead):
         """Helper to write the report of a single bead on the pdf
         Args:
-            bead (BeadAnalyze): The bead for which we want to write the report
+            bead (BeadAnalyzer): The bead for which we want to write the report
         """
         beadPath = os.path.join(self._inputDir, f"bead_{bead._id}")
         self.pdf.setFont("Helvetica-Bold", 36)
@@ -103,15 +103,16 @@ class ReportPDF(ReportGenerator):
             f"Signal to Background ratio: {f'{bead._metricTool._SBR:.2f}' if bead._metricTool._SBR is not None else 'Unknown'}",
             f"Lateral asymmetry ratio: {f'{bead._metricTool._LAR:.2f}' if bead._metricTool._LAR is not None else 'Unknown'}",
             f"Sphericity: {f'{bead._metricTool._sphericity:.2f}' if bead._metricTool._sphericity is not None else 'Unknown'}",
+            f"Banana magnitude: {f'{bead._metricTool._banana:.2f}' if bead._metricTool._banana is not None else 'Unknown'}"
         ]
         self.drawParagaphOnPDF(textLines, 40, 700)
         data = [
             ["", "Z", "Y", "X"],
             [
                 "Theoretical resolution",
-                f"{self._imageAnalyze._theoreticalResolution[0]:.4f}",
-                f"{self._imageAnalyze._theoreticalResolution[1]:.4f}",
-                f"{self._imageAnalyze._theoreticalResolution[2]:.4f}",
+                f"{self._imageAnalyzer._theoreticalResolution[0]:.4f}",
+                f"{self._imageAnalyzer._theoreticalResolution[1]:.4f}",
+                f"{self._imageAnalyzer._theoreticalResolution[2]:.4f}",
             ],
             [
                 "FWHM (µm)",
@@ -195,7 +196,7 @@ class ReportPDF(ReportGenerator):
             outputPath (str, optional): Path to the directory where the PDF report will be saved. Defaults to None.
         """
         if outputPath is None:
-            outputPath = os.path.dirname(self._imageAnalyze._path)
+            outputPath = os.path.dirname(self._imageAnalyzer._path)
         pdfPath = os.path.join(outputPath, f"PSF_analysis_result.pdf")
         self.pdf = canvas.Canvas(pdfPath, pagesize=A4)
         self.pdf.setTitle("PSF analysis results")
@@ -203,16 +204,17 @@ class ReportPDF(ReportGenerator):
         self.pdf.drawCentredString(300, 770, "Analysis Results")
         textLines = [
             f"Date and time of analysis: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-            f"Image location: {self._imageAnalyze._path}",
-            f"Identified beads: {len(self._imageAnalyze._beadAnalyze)}",
-            f"Signal to background ratio: {self._imageAnalyze._meanSBR:.2f}",
+            f"Image location: {self._imageAnalyzer._path}",
+            f"Identified beads: {len(self._imageAnalyzer._beadAnalyzer)}",
+            f"Signal to background ratio: {self._imageAnalyzer._meanSBR:.2f}",
+            f"Banana magnitude: {self._imageAnalyzer._meanbanana:.2f}"
         ]
         self.drawParagaphOnPDF(textLines, 40, 680)
         self.pdf.setFont("Helvetica-Bold", 18)
         self.pdf.drawCentredString(300, 650, "Acquisition parameters")
         textLines = [
-            f"Pixel size: [{self._imageAnalyze._pixelSize[0]},{self._imageAnalyze._pixelSize[1]},{self._imageAnalyze._pixelSize[2]}]",
-            f"Image shape: [{self._imageAnalyze._image.shape[0]},{self._imageAnalyze._image.shape[1]},{self._imageAnalyze._image.shape[2]}]",
+            f"Pixel size: [{self._imageAnalyzer._pixelSize[0]},{self._imageAnalyzer._pixelSize[1]},{self._imageAnalyzer._pixelSize[2]}]",
+            f"Image shape: [{self._imageAnalyzer._image.shape[0]},{self._imageAnalyzer._image.shape[1]},{self._imageAnalyzer._image.shape[2]}]",
             f"Microscope type: {self._microscopeDatas['microscopeType'] if 'microscopeType' in self._microscopeDatas else 'N/A'}",
             f"Emission wavelength: {self._microscopeDatas['emissionWavelength'] if 'emissionWavelength' in self._microscopeDatas else 'N/A'}nm",
             f"Refractive index: {self._microscopeDatas['refractiveIndex'] if 'refractiveIndex' in self._microscopeDatas else 'N/A'}",
@@ -248,11 +250,11 @@ class ReportPDF(ReportGenerator):
             f"Prominence relative: {self._fittingDatas['prominenceRel'] if 'prominenceRel' in self._fittingDatas else 'N/A'}",
         ]
         self.drawParagaphOnPDF(textLines, 40, 100)
-        if any(bead._rejected == True for bead in self._imageAnalyze._beadAnalyze):
+        if any(bead._rejected == True for bead in self._imageAnalyzer._beadAnalyzer):
             self.pdf.showPage()
             self.pdf.setFont("Helvetica-Bold", 36)
             self.pdf.drawCentredString(150, 770, "REJECTED")
-        for bead in self._imageAnalyze._beadAnalyze:
+        for bead in self._imageAnalyzer._beadAnalyzer:
             if bead._rejected == True:
                 if self.yRejected < 50:
                     self.pdf.showPage()
@@ -262,7 +264,7 @@ class ReportPDF(ReportGenerator):
                 self.drawSingleBeadRejectedReportPDF(bead)
                 self.yRejected -= 50
         self.pdf.showPage()
-        for bead in self._imageAnalyze._beadAnalyze:
+        for bead in self._imageAnalyzer._beadAnalyzer:
             if bead._rejected == False and bead._roi is not None:
                 self.drawSingleBeadReportPDF(bead)
         self.pdf.save()

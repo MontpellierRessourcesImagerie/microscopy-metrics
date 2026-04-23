@@ -5,7 +5,7 @@ class Metrics(object):
     """Class for calculating various metrics related to microscopy images."""
 
     def __init__(self):
-        self._imageAnalyze = None
+        self._imageAnalyzer = None
         self._ringInnerDistance = None
         self._ringThickness = None
 
@@ -46,29 +46,29 @@ class Metrics(object):
         Raises:
             ValueError: If there are no images in the input list or if any of the images have an incorrect format.
         """
-        self._imageAnalyze._meanSBR = 0.0
+        self._imageAnalyzer._meanSBR = 0.0
 
-        if len(self._imageAnalyze._beadAnalyze) == 0:
+        if len(self._imageAnalyzer._beadAnalyzer) == 0:
             raise ValueError("You must have at least one PSF")
         with ThreadPoolExecutor() as executor:
             futures = {
                 executor.submit(
                     bead.runSBRMetric,
-                    self._imageAnalyze._pixelSize,
+                    self._imageAnalyzer._pixelSize,
                     self._ringInnerDistance,
                     self._ringThickness,
                 ): i
-                for i, bead in enumerate(self._imageAnalyze._beadAnalyze)
+                for i, bead in enumerate(self._imageAnalyzer._beadAnalyzer)
                 if bead._rejected == False and bead._roi is not None
             }
             for future in as_completed(futures):
                 _ = future.result()
         total = 0
-        for bead in self._imageAnalyze._beadAnalyze:
+        for bead in self._imageAnalyzer._beadAnalyzer:
             if bead._rejected == False and bead._roi is not None:
-                self._imageAnalyze._meanSBR += bead._metricTool._SBR
+                self._imageAnalyzer._meanSBR += bead._metricTool._SBR
                 total += 1
-        self._imageAnalyze._meanSBR = self._imageAnalyze._meanSBR / total
+        self._imageAnalyzer._meanSBR = self._imageAnalyzer._meanSBR / total
 
     def runPrefittingMetrics(self):
         """Runs the pre-fitting metrics calculations, including signal-to-background ratio (SBR) calculation and theoretical resolution estimation."""
@@ -77,6 +77,6 @@ class Metrics(object):
         yield {"desc": "SBR calculation..."}
         self.signalToBackgroundRatioRing()
         yield {"desc": "Estimating theoretical resolution..."}
-        self._imageAnalyze._theoreticalResolution = (
+        self._imageAnalyzer._theoreticalResolution = (
             self._TheoreticalResolutionTool.getTheoreticalResolution()
         )
