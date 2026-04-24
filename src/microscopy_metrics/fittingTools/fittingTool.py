@@ -33,6 +33,7 @@ class FittingTool(object):
         self.pcovs = [[], [], []]
         self.params1D = [0.0] * 8
         self.axes = ["Z", "Y", "X"]
+        self.contrast = 0.0
 
     def __init_subclass__(cls):
         name = cls.name
@@ -178,3 +179,23 @@ class FittingTool(object):
         """
         psfFit = self.evalFun(coords, *params)
         return r2_score(psf, psfFit)
+
+    def getMu(self):
+        """Extracts the fitted centroid coordinates (mu) from the fitted parameters.
+        Returns:
+            list: The fitted centroid coordinates (mu) for each axis.
+        """
+        return [self.parameters[2], self.parameters[3], self.parameters[4]]
+    
+    def getSigma(self):
+        """Extracts the fitted sigma values from the fitted parameters.
+        Returns:
+            list: The fitted sigma values for each axis.
+        """
+        return [self.parameters[5], self.parameters[6], self.parameters[7]]
+    
+
+    def computeContrast(self):
+        """Calculates the contrast of the fitted curve based on the Weber contrast formula.
+        """
+        self.contrast = (self.parameters[0] - self.parameters[1]) / self.parameters[1]

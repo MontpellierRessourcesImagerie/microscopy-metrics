@@ -1,15 +1,21 @@
 import math
 import numpy as np
 from matplotlib import image
+import matplotlib.pyplot as plt
 
 from scipy import ndimage as ndi
 from scipy.signal import find_peaks
 from scipy.ndimage import median_filter
+from sklearn.metrics import r2_score
 from skimage.measure import regionprops, label
+from skimage.filters import gaussian
+from skimage.segmentation import active_contour, chan_vese
+from skimage.measure import find_contours
 
 from microscopy_metrics.utils import umToPx,pxToUm
 from microscopy_metrics.thresholdTools.legacy import ThresholdLegacy
 from microscopy_metrics.detectionTools.detection_tool import DetectionTool
+from microscopy_metrics.fittingTools.fitting2D import Fitting2D
 
 
 class MetricTool(object):
@@ -26,7 +32,8 @@ class MetricTool(object):
         self._sphericity = 0
         self._volume = 0
         self._surface = 0
-        self._banana = 0
+        self._comaticity = 0
+        self._sphericalAberration = 0
 
     def setNormalizedImage(self, image: np.ndarray) -> np.ndarray:
         """Normalizes the input image to a range of [0, 1] and ensures that all values are non-negative.
@@ -119,6 +126,11 @@ class MetricTool(object):
         self._LAR = tmp.min() / tmp.max()
 
     def getVolume(self):
+        """Calculates the volume of the object in the microscopy image based on the voxel count and voxel volume.
+
+        Returns:
+            float: The calculated volume of the object.
+        """
         voxelVolume = self._pixelSize[0] * self._pixelSize[1] * self._pixelSize[2]
         imageFloat = self.setNormalizedImage(self._image)
         imageFloat = median_filter(imageFloat, size=5)
@@ -129,12 +141,23 @@ class MetricTool(object):
         return volume
 
     def updateTile(self, tile, tileIndex):
+        """Updates the tile configuration based on the provided tile index, which represents the presence or absence of voxels in a 2x2x2 neighborhood.
+
+        Args:
+            tile (list): A 3D list representing the tile.
+            tileIndex (int): The index of the tile.
+        """
         for z in range(2):
             for y in range(2):
                 for x in range(2):
                     tile[z][y][x] = (tileIndex & (1 << (z * 4 + y * 2 + x))) > 0
 
     def surfaceAreaLutD3(self):
+        """Calculates the surface area lookup table for 3D tiles.
+
+        Returns:
+            list: A list of surface area values for each tile configuration.
+        """
         d1 = self._pixelSize[0]
         d2 = self._pixelSize[1]
         d3 = self._pixelSize[2]
@@ -159,9 +182,19 @@ class MetricTool(object):
         return tab
 
     def configIndex(self, configValues):
+        """Calculates the index of a tile configuration.
+        Args:
+            configValues (list): A list of boolean values representing the presence or absence of voxels in a 2x2x2 neighborhood.
+        Returns:
+            int: The index of the tile configuration.
+        """
         return sum(val << i for i, val in enumerate(configValues))
 
     def getHistogram3D(self):
+        """Calculates the histogram of 3D tile configurations in the binary image.
+        Returns:
+            list: A list of counts for each tile configuration.
+        """
         histo = [0 for _ in range(256)]
         imageFloat = self.setNormalizedImage(self._image)
         imageFloat = median_filter(imageFloat, size=5)
@@ -194,71 +227,180 @@ class MetricTool(object):
 
             
     def applyLut(self, histogram, lut):
+        """Applies the surface area lookup table to the histogram of tile configurations to calculate the total surface area.
+        Args:
+            histogram (list): A list of counts for each tile configuration.
+            lut (list): A list of surface area values for each tile configuration.
+        Returns:
+            float: The total surface area calculated by applying the lookup table to the histogram.
+        """
         sum = 0
         for i in range(len(histogram)):
             sum += histogram[i] * lut[i]
         return sum
 
     def getSurface(self):
+        """Calculates the surface area of the object in the microscopy image.
+        Returns:
+            float: The calculated surface area of the object.
+        """
         lut = self.surfaceAreaLutD3()
         histo = self.getHistogram3D()
         return self.applyLut(histo, lut)
 
     def sphericity(self):
+        """Calculates the sphericity of the object in the microscopy image based on its volume and surface area, using the formula: sphericity = (36 * π * volume^2) / (surface^3).
+        Returns:
+            float: The calculated sphericity of the object.
+        """
         c = 36 * math.pi
         self._volume = self.getVolume()
         self._surface = self.getSurface()
         
         if self._surface == 0:
+            self._sphericity = 0.0
             return 0.0
             
         print((c * (self._volume**2)) / (self._surface**3))
         self._sphericity = (c * (self._volume**2)) / (self._surface**3)
+        return self._sphericity
 
     def distance(self, x1, x2):
+        """Calculates the distance between two points, x1 and x2.
+        Args:
+            x1 (float): The first point.
+            x2 (float): The second point.
+        Returns:            
+            float: The calculated distance between the two points.
+        """
         return abs(x1 - x2)
 
-    def multiplePeak(self):
+    def getContours(self, image):
+        """Calculates the contours of the object in the microscopy image using the Chan-Vese active contour model.
+        The method applies a Gaussian filter to smooth the input image, then uses the Chan-Vese algorithm to segment the image and find the contours of the detected object. 
+        Args:
+            image (numpy.ndarray): The input image.
+
+        Returns:
+            numpy.ndarray: The detected contours.
+        """
+        smoothImage = gaussian(image, sigma=1.0)
+        cvMask = chan_vese(
+            smoothImage, 
+            mu=0.1, 
+            lambda1=1.15, 
+            lambda2=1, 
+            tol=1e-3, 
+            max_num_iter=200, 
+            dt=0.5, 
+            init_level_set="checkerboard"
+        )
+        contours = find_contours(cvMask, 0.5)
+        if not contours:
+            return np.array([])
+        snake = max(contours, key=len)
+        return snake
+
+    def _computeAxisComacity(self, image, pixelSize):
+        """Calculates the axis comaticity for a given 1D image by analyzing the intensity profiles along the specified axis and comparing them to the detected contours of the object in the image.
+        Args:
+            image (numpy.ndarray): The input image.
+            pixelSize (float): The size of each pixel in the image.
+        Returns:
+            float: The calculated axis comacity.
+        """
+        snake = self.getContours(image)
+        if snake.size == 0:
+            return 0.0
+        ndi.gaussian_filter(image, sigma=1.0, output=image)
+        score = 0.0
+        total = 0
+        margin = 3
+        for i in range(image.shape[1]):
+            if i < snake[:,1].min() - margin or i > snake[:,1].max() + margin:
+                continue
+            profile = image[:,i]
+            amp = float(np.max(profile) - np.min(profile))
+            prominenceMin = amp * float(0.5)
+            peaks, props = find_peaks(profile,prominence=prominenceMin, distance=2)
+            if len(peaks) > 1 and (any(peaks > image.shape[0]/2) and any(peaks < image.shape[0]/2)):
+                if all(peaks > image.shape[0]/2):
+                    score += pxToUm(self.distance(i, image.shape[1]/2), pixelSize) * (1.0/ (1.0+0.5*pxToUm(self.distance(peaks[0], peaks[-1]), self._pixelSize[0])))
+                else : 
+                    score -= pxToUm(self.distance(i, image.shape[1]/2), pixelSize) * (1.0/ (1.0+0.5*pxToUm(self.distance(peaks[0], peaks[-1]), self._pixelSize[0])))
+                total += 1
+        if total > 0:
+            score /= total
+        return score
+
+    def comaticity(self):
+        """Calculates the comaticity of the object in the microscopy image by analyzing the intensity profiles along the X and Y axes and comparing them to the detected contours of the object in the image. 
+        The method computes the comaticity score for both axes and combines them to provide an overall comaticity score for the object."""
         image = self._image[:,int(self._image.shape[1]/2),:]
-        ndi.gaussian_filter(image, sigma=2.0, output=image)
-        XScore = 0.0
-        TotalX = 0
-        for x in range(image.shape[1]):
-            profile = image[:,x]
-            amp = float(np.max(profile) - np.min(profile))
-            prominenceMin = amp * float(0.2)
-            peaks, props = find_peaks(profile,prominence=prominenceMin, width=2, distance=3)
-            if len(peaks) > 1 and not (any(peaks > self._image.shape[0]/2) and any(peaks < self._image.shape[0]/2)):
-                maxPeak = peaks[np.argmax(profile[peaks])]
-                if all(peaks > self._image.shape[0]/2):
-                    print(f"X Profile {x} : {peaks} (To the right)")
-                    XScore += pxToUm(self.distance(x, self._image.shape[1]/2),self._pixelSize[2]) * (1.0/ (1.0+pxToUm(self.distance(peaks[0], peaks[-1]),self._pixelSize[0])))
-                else : 
-                    print(f"X Profile {x} : {peaks} (To the left)")
-                    XScore -= pxToUm(self.distance(x, self._image.shape[1]/2),self._pixelSize[2]) * (1.0/ (1.0+pxToUm(self.distance(peaks[0], peaks[-1]),self._pixelSize[0])))
-                TotalX += 1
-        if TotalX > 0:
-            XScore /= TotalX
-        image = self._image[:,:,int(self._image.shape[1]/2)]
-        ndi.gaussian_filter(image, sigma=2.0, output=image)
-        globalAmp = float(np.max(image) - np.min(image))
-        YScore = 0.0
-        TotalY = 0
-        for y in range(image.shape[1]):
-            profile = image[:,y]
-            amp = float(np.max(profile) - np.min(profile))
-            prominenceMin = amp * float(0.2)
-            peaks, props = find_peaks(profile,prominence=prominenceMin, width=2, distance=3)
-            if len(peaks) > 1 and not (any(peaks > self._image.shape[0]/2) and any(peaks < self._image.shape[0]/2)):
-                maxPeak = peaks[np.argmax(profile[peaks])]
-                if all(peaks > self._image.shape[0]/2):
-                    print(f"Y Profile {y} : {peaks} (To the right)")
-                    YScore += pxToUm(self.distance(y, self._image.shape[1]/2),self._pixelSize[1]) * (1.0/ (1.0+pxToUm(self.distance(peaks[0], peaks[-1]),self._pixelSize[0])))
-                else : 
-                    print(f"Y Profile {y} : {peaks} (To the left)")
-                    YScore -= pxToUm(self.distance(y, self._image.shape[1]/2),self._pixelSize[1]) * (1.0/ (1.0+pxToUm(self.distance(peaks[0], peaks[-1]),self._pixelSize[0])))
-                TotalY += 1
-        if TotalY > 0:
-            YScore /= TotalY
-        self._banana = np.sqrt(XScore**2 + YScore**2)
-        print(f"X Score : {XScore} | Y Score : {YScore} | Final Score : {self._banana}")
+        XScore = self._computeAxisComacity(image, self._pixelSize[2])
+        image = self._image[:,:,int(self._image.shape[2]/2)]
+        YScore = self._computeAxisComacity(image, self._pixelSize[1])
+        self._comaticity = np.sqrt(XScore**2 + YScore**2)
+        print(f"X Score : {XScore} | Y Score : {YScore} | Final Score : {self._comaticity}")
+
+    def sphericalAberration(self):
+        """Calculates the spherical aberration of the object in the microscopy image by comparing the two halves of the intensity profile along the Z-axis to assess the symmetry of the point spread function (PSF) and determine the degree of spherical aberration present in the image."""
+        profile = self._image[:,int(self._image.shape[1]/2),int(self._image.shape[2]/2)]
+        ndi.gaussian_filter(profile, sigma=1.0, output=profile)
+        zCenter = np.argmax(profile)
+        length = min(zCenter, len(profile) - 1 - zCenter)
+        before = profile[zCenter-length:zCenter][::-1]
+        after = profile[zCenter+1:zCenter+1+length]
+        self._sphericalAberration = 1-r2_score(before, after)
+        print(f"Spherical Aberration (R²) : {self._sphericalAberration}")
+
+    def getFWHM(self, image,mu,sigma):
+        """Calculates the full width at half maximum (FWHM) of the point spread function (PSF) in the given image by fitting a 2D Gaussian function to the intensity profile and extracting the FWHM values along the Y and X axes based on the fitted parameters.
+        Args:
+            image (numpy.ndarray): The input image containing the PSF to be analyzed.
+            mu (list): A list of mean values for the Gaussian fit along the Z, Y, and X axes.
+            sigma (list): A list of standard deviation values for the Gaussian fit along the Z, Y, and X axes.
+        Returns:
+            list: A list containing the FWHM values along the Y and X axes.
+        """
+        amp = np.max(image) - np.min(image)
+        bg = np.min(image)
+        mu2 = [mu[1], mu[2]]
+        sigma2 = [sigma[1], sigma[2]]
+        fittingTool = Fitting2D()
+        fittingTool._spacing = self._pixelSize
+        params, _ = fittingTool.fitCurve(amp,bg,mu2,sigma2,fittingTool.getCoords(image),image)
+        fwhmY = fittingTool.fwhm(params[4])
+        fwhmX = fittingTool.fwhm(params[5])
+        return [fwhmY, fwhmX]
+
+    def astigmatism(self,mu,sigma):
+        """Calculates the astigmatism of the object in the microscopy image by comparing the FWHM values along the Y and X axes for two points on either side of the object.
+        Args:
+            mu (list): A list of mean values for the Gaussian fit along the Z, Y, and X axes.
+            sigma (list): A list of standard deviation values for the Gaussian fit along the Z, Y, and X axes.
+        """
+        fwhmZ = 2 * np.sqrt(2 * np.log(2)) * sigma[0]
+        pointBefore = [mu[0] - fwhmZ/2,mu[1], mu[2]]
+        pointAfter = [mu[0] + fwhmZ/2,mu[1], mu[2]]
+        imageBefore = self._image[int(pointBefore[0])]
+        imageAfter = self._image[int(pointAfter[0])]
+        fwhmsBefore = self.getFWHM(imageBefore,mu,sigma)
+        fwhmsAfter = self.getFWHM(imageAfter,mu,sigma)
+        scoreBefore  =  (fwhmsBefore[0] - fwhmsBefore[1]) / (fwhmsBefore[0] + fwhmsBefore[1])
+        scoreAfter = (fwhmsAfter[0] - fwhmsAfter[1]) / (fwhmsAfter[0] + fwhmsAfter[1])
+        self._astigmatism = abs(scoreAfter - scoreBefore)
+        print(f"Astigmatism : {self._astigmatism}")
+
+    def ellipsRatio(self):
+        """Calculates the ellipticity ratio of the object in the microscopy image by analyzing the major and minor axes of the detected contours."""
+        image = self._image[int(self._image.shape[0]/2)]
+        props = regionprops(label(image > ThresholdLegacy(nb_iteration=1000).getThreshold(image)))
+        if not props:
+            return 0.0
+        largestRegion = max(props, key=lambda r: r.area)
+        if largestRegion.axis_minor_length == 0:
+            return 0.0
+        self._ellipsRatio = largestRegion.axis_major_length / largestRegion.axis_minor_length
+        self._orientation = np.rad2deg(largestRegion.orientation)%180
+        print(f"Ellips Ratio : {self._ellipsRatio} | Orientation : {self._orientation}")

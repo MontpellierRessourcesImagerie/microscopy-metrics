@@ -11,7 +11,10 @@ class ImageAnalyzer(object):
         self._image = image
         self._theoreticalResolution = [0.0, 0.0, 0.0]
         self._meanSBR = 0.0
-        self._meanbanana = 0.0
+        self._meanComaticity = 0.0
+        self._meanSphericalAberration = 0.0
+        self._meanAstigmatism = 0.0
+        self._meanContrast = 0.0
 
     def toDict(self):
         """Converts the image analysis results into a dictionary format for easier access and manipulation of the image's data.
@@ -25,5 +28,6 @@ class ImageAnalyzer(object):
             "pixelSize": self._pixelSize,
             "theoreticalResolution": self._theoreticalResolution,
             "meanSBR": self._meanSBR,
-            "meanbanana":self._meanbanana
+            "meanComaticity": self._meanComaticity,
+            "meanSphericalAberration": self._meanSphericalAberration,
         }

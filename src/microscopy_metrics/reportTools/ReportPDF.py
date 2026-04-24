@@ -103,7 +103,10 @@ class ReportPDF(ReportGenerator):
             f"Signal to Background ratio: {f'{bead._metricTool._SBR:.2f}' if bead._metricTool._SBR is not None else 'Unknown'}",
             f"Lateral asymmetry ratio: {f'{bead._metricTool._LAR:.2f}' if bead._metricTool._LAR is not None else 'Unknown'}",
             f"Sphericity: {f'{bead._metricTool._sphericity:.2f}' if bead._metricTool._sphericity is not None else 'Unknown'}",
-            f"Banana magnitude: {f'{bead._metricTool._banana:.2f}' if bead._metricTool._banana is not None else 'Unknown'}"
+            f"Comaticity: {f'{bead._metricTool._comaticity:.2f}' if bead._metricTool._comaticity is not None else 'Unknown'}",
+            f"Spherical aberration: {f'{bead._metricTool._sphericalAberration:.2f}' if bead._metricTool._sphericalAberration is not None else 'Unknown'}",
+            f"Astigmatism: {f'{bead._metricTool._astigmatism:.2f}' if bead._metricTool._astigmatism is not None else 'Unknown'}",
+            f"Contrast: {f'{bead._fitTool.contrast:.2f}' if bead._fitTool.contrast is not None else 'Unknown'}",
         ]
         self.drawParagaphOnPDF(textLines, 40, 700)
         data = [
@@ -207,7 +210,10 @@ class ReportPDF(ReportGenerator):
             f"Image location: {self._imageAnalyzer._path}",
             f"Identified beads: {len(self._imageAnalyzer._beadAnalyzer)}",
             f"Signal to background ratio: {self._imageAnalyzer._meanSBR:.2f}",
-            f"Banana magnitude: {self._imageAnalyzer._meanbanana:.2f}"
+            f"Comaticity: {self._imageAnalyzer._meanComaticity:.2f}",
+            f"Spherical aberration: {self._imageAnalyzer._meanSphericalAberration:.2f}",
+            f"Astigmatism: {self._imageAnalyzer._meanAstigmatism:.2f}",
+            f"Contrast: {self._imageAnalyzer._meanContrast:.2f}",
         ]
         self.drawParagaphOnPDF(textLines, 40, 680)
         self.pdf.setFont("Helvetica-Bold", 18)

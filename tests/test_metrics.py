@@ -52,8 +52,8 @@ def test_signal_to_background_ratio(psf):
     assert metricTool._SBR == SIGNALVAL / BACKGROUNVAL
 
 def test_signal_to_background_ratio_psf(psf):
-    psf,_ = psf
-    image = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    psfData,_ = psf
+    image = psfData.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
     metricTool = MetricTool()
     metricTool._image = image
     metricTool._ringInnerDistance = 13.0
@@ -63,8 +63,8 @@ def test_signal_to_background_ratio_psf(psf):
     assert metricTool._SBR > 20
 
 def test_LAR_psf(psf):
-    psf,FWHM = psf
-    image = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    psfData,FWHM = psf
+    image = psfData.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
     metricTool = MetricTool()
     metricTool._image = image
     metricTool._ringInnerDistance = 13.0
@@ -74,8 +74,8 @@ def test_LAR_psf(psf):
     assert metricTool._LAR == 1
 
 def test_sphericity(psf):
-    psf,_ = psf
-    image = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    psfData,_ = psf
+    image = psfData.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
     metricTool = MetricTool()
     metricTool._image = image
     metricTool._ringInnerDistance = 13.0
@@ -85,8 +85,8 @@ def test_sphericity(psf):
     assert np.isclose(metricTool._sphericity,1,rtol=0.05)
 
 def test_sphericity_ellipsPsf(ellipsPsf):
-    psf,FWHM = ellipsPsf
-    image = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    psfData,FWHM = ellipsPsf
+    image = psfData.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
     metricTool = MetricTool()
     metricTool._image = image
     metricTool._ringInnerDistance = 13.0
@@ -94,3 +94,32 @@ def test_sphericity_ellipsPsf(ellipsPsf):
     metricTool._pixelSize = [1, 1, 1]
     metricTool.sphericity()
     assert np.isclose(metricTool._sphericity,0.7,rtol=0.05)
+
+def test_comaticity_perfect_psf(psf):
+    psfData, _ = psf
+    image = psfData.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    metricTool = MetricTool()
+    metricTool._image = image
+    metricTool._pixelSize = [1, 1, 1]
+    metricTool.comaticity()
+    assert metricTool._comaticity == 0.0
+
+def test_sphericalAberration_perfect_psf(psf):
+    psfData, _ = psf
+    image = psfData.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    metricTool = MetricTool()
+    metricTool._image = image
+    metricTool._pixelSize = [1, 1, 1]
+    metricTool.sphericalAberration()
+    assert np.isclose(metricTool._sphericalAberration, 0.0, atol=0.01)
+
+def test_astigmatism_perfect_psf(psf):
+    psfData, _ = psf
+    image = psfData.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    metricTool = MetricTool()
+    metricTool._image = image
+    metricTool._pixelSize = [1, 1, 1]    
+    mu = [PSF_SIZE/2, PSF_SIZE/2, PSF_SIZE/2]
+    sigma = [PSF_SIZE/10, PSF_SIZE/10, PSF_SIZE/10]
+    metricTool.astigmatism(mu, sigma)
+    assert np.isclose(metricTool._astigmatism, 0.0, atol=0.05)

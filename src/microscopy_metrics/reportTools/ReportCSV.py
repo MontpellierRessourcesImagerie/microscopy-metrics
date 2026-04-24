@@ -75,7 +75,10 @@ class ReportCSV(ReportGenerator):
                     ["Signal to background ratio", f"{bead._metricTool._SBR:.4f}"],
                     ["Lateral asymmetry ratio", f"{bead._metricTool._LAR:.4f}"],
                     ["Sphericity", f"{bead._metricTool._sphericity:.4f}"],
-                    ["Banana magnitude", f"{bead._metricTool._banana:.4f}"]
+                    ["Comaticity", f"{bead._metricTool._comaticity:.4f}"],
+                    ["Spherical aberration", f"{bead._metricTool._sphericalAberration:.4f}"],
+                    ["Astigmatism", f"{bead._metricTool._astigmatism:.4f}"],
+                    ["Contrast", f"{bead._fitTool.contrast:.4f}"],
                 ]
                 writer.writerow(["Metric's results"])
                 writer.writerows(dataMetrics)

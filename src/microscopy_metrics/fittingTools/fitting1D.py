@@ -195,7 +195,7 @@ class Fitting1D(FittingTool):
         self.parameters[1] = 0.0
         for u in range(3):
             bg = np.median(psf[u])
-            amp = psf[u].max() - bg
+            amp = psf[u].max()
             sigma = self.getCovMatrix(psf[u], physic)
             mu = np.argmax(psf[u])
             params, pcov = self.fitCurve(amp, bg, mu, sigma, self.coords[u], psf[u])

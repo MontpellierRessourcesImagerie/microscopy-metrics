@@ -2,8 +2,8 @@ import pytest
 import numpy as np
 from skimage.draw import disk
 from microscopy_metrics.detection import Detection
-from microscopy_metrics.BeadAnalyze import BeadAnalyze
-from microscopy_metrics.ImageAnalyze import ImageAnalyze
+from microscopy_metrics.BeadAnalyzer import BeadAnalyzer
+from microscopy_metrics.ImageAnalyzer import ImageAnalyzer
 from microscopy_metrics.detectionTools.detection_tool import DetectionTool
 from microscopy_metrics.thresholdTools.threshold_tool import Threshold
 
@@ -106,13 +106,13 @@ def test_extract_ROI(image):
     detectionTool.detect()
     
     
-    detector._imageAnalyze = ImageAnalyze(image=image, beadSize=3, pixelSize=[1,1,1])
+    detector._imageAnalyzer = ImageAnalyzer(image=image, beadSize=3, pixelSize=[1,1,1])
     for i, centroid in enumerate(detectionTool._centroids):
-        detector._imageAnalyze._beadAnalyze.append(BeadAnalyze(id=i, centroid=centroid))
+        detector._imageAnalyzer._beadAnalyzer.append(BeadAnalyzer(id=i, centroid=centroid))
     detector.cropFactor = 5
     detector.beadSize = 3.0
     detector.rejectionDistance = 15.0
     detector.pixelSize = np.array([1,1,1])
     detector.extractRegionOfInterest()
     
-    assert len(detector._imageAnalyze._beadAnalyze) == 3 and detector._imageAnalyze._beadAnalyze[0]._rejected == True
+    assert len(detector._imageAnalyzer._beadAnalyzer) == 3 and detector._imageAnalyzer._beadAnalyzer[0]._rejected == True
