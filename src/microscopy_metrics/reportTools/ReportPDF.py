@@ -59,7 +59,7 @@ class ReportPDF(ReportGenerator):
             )
         )
         t.wrapOn(self.pdf, 0, 0)
-        t.drawOn(self.pdf, 40, 580)
+        t.drawOn(self.pdf, 40, 530)
 
     def drawSingleBeadRejectedReportPDF(self, bead):
         """Helper to write the report of a rejected bead on the pdf
@@ -107,8 +107,11 @@ class ReportPDF(ReportGenerator):
             f"Spherical aberration: {f'{bead._metricTool._sphericalAberration:.2f}' if bead._metricTool._sphericalAberration is not None else 'Unknown'}",
             f"Astigmatism: {f'{bead._metricTool._astigmatism:.2f}' if bead._metricTool._astigmatism is not None else 'Unknown'}",
             f"Contrast: {f'{bead._fitTool.contrast:.2f}' if bead._fitTool.contrast is not None else 'Unknown'}",
+            f"Ellipticity ratio: {f'{bead._metricTool._ellipsRatio:.2f}' if bead._metricTool._ellipsRatio is not None else 'Unknown'}",
+            f"Orientation: {f'{bead._metricTool._orientation:.2f}' if bead._metricTool._orientation is not None else 'Unknown'}",
+
         ]
-        self.drawParagaphOnPDF(textLines, 40, 700)
+        self.drawParagaphOnPDF(textLines, 40, 640)
         data = [
             ["", "Z", "Y", "X"],
             [
@@ -141,7 +144,7 @@ class ReportPDF(ReportGenerator):
             self.pdf.drawImage(
                 os.path.join(beadPath, "YZ_view.png"),
                 50,
-                425,
+                375,
                 width=150,
                 height=150,
                 preserveAspectRatio=True,
@@ -150,7 +153,7 @@ class ReportPDF(ReportGenerator):
             self.pdf.drawImage(
                 os.path.join(beadPath, "fit_curve_1D_X.png"),
                 300,
-                375,
+                300,
                 width=250,
                 height=250,
                 preserveAspectRatio=True,
@@ -159,7 +162,7 @@ class ReportPDF(ReportGenerator):
             self.pdf.drawImage(
                 os.path.join(beadPath, "XZ_view.png"),
                 50,
-                225,
+                175,
                 width=150,
                 height=150,
                 preserveAspectRatio=True,
@@ -168,7 +171,7 @@ class ReportPDF(ReportGenerator):
             self.pdf.drawImage(
                 os.path.join(beadPath, "fit_curve_1D_Y.png"),
                 300,
-                175,
+                100,
                 width=250,
                 height=250,
                 preserveAspectRatio=True,
@@ -177,7 +180,7 @@ class ReportPDF(ReportGenerator):
             self.pdf.drawImage(
                 os.path.join(beadPath, "XY_view.png"),
                 50,
-                25,
+                0,
                 width=150,
                 height=150,
                 preserveAspectRatio=True,
@@ -186,7 +189,7 @@ class ReportPDF(ReportGenerator):
             self.pdf.drawImage(
                 os.path.join(beadPath, "fit_curve_1D_Z.png"),
                 300,
-                -25,
+                -75,
                 width=250,
                 height=250,
                 preserveAspectRatio=True,
@@ -214,6 +217,8 @@ class ReportPDF(ReportGenerator):
             f"Spherical aberration: {self._imageAnalyzer._meanSphericalAberration:.2f}",
             f"Astigmatism: {self._imageAnalyzer._meanAstigmatism:.2f}",
             f"Contrast: {self._imageAnalyzer._meanContrast:.2f}",
+            f"Ellipticity ratio: {self._imageAnalyzer._meanEllipsRatio:.2f}",
+            f"Orientation: {self._imageAnalyzer._meanOrientation:.2f}",
         ]
         self.drawParagaphOnPDF(textLines, 40, 680)
         self.pdf.setFont("Helvetica-Bold", 18)

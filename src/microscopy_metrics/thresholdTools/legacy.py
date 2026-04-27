@@ -22,11 +22,11 @@ class ThresholdLegacy(Threshold):
         Returns:
             float: The computed legacy threshold value.
         """
-        imgMin = np.min(image)
-        imgMax = np.max(image)
-        midpoint = (imgMax - imgMin) / 2
+        imgMin = float(np.min(image))
+        imgMax = float(np.max(image))
+        midpoint = (imgMax + imgMin) / 2
         image[image < 0] = 0
-        for i in range(self.nbIteration):
+        for _ in range(self.nbIteration):
             background = image[image <= midpoint]
             signal = image[image > midpoint]
             meanBackground = np.mean(background) if len(background) > 0 else imgMin

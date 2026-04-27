@@ -54,11 +54,13 @@
              <p>
             Signal to background ratio (SBR): {{ "%.4f"|format(bead._metricTool._SBR if bead._metricTool._SBR is not none else 0) }} <br>
             Lateral asymmetry ratio (LAR): {{ "%.4f"|format(bead._metricTool._LAR if bead._metricTool._LAR is not none else 0) }} <br>
-            Sphericity: {{ "%.4f"|format(bead._metricTool._sphericity if bead._metricTool._sphericity is not none else 0) }}
-            Comaticity: {{ "%.4f"|format(bead._metricTool._comaticity if bead._metricTool._comaticity is not none else 0) }}
-            Spherical aberration: {{ "%.4f"|format(bead._metricTool._sphericalAberration if bead._metricTool._sphericalAberration is not none else 0) }}
-            Astigmatism: {{ "%.4f"|format(bead._metricTool._astigmatism if bead._metricTool._astigmatism is not none else 0) }}
-            Contrast: {{ "%.4f"|format(bead._fitTool.contrast if bead._fitTool.contrast is not none else 0) }}
+            Sphericity: {{ "%.4f"|format(bead._metricTool._sphericity if bead._metricTool._sphericity is not none else 0) }} <br>
+            Comaticity: {{ "%.4f"|format(bead._metricTool._comaticity if bead._metricTool._comaticity is not none else 0) }} <br>
+            Spherical aberration: {{ "%.4f"|format(bead._metricTool._sphericalAberration if bead._metricTool._sphericalAberration is not none else 0) }} <br>
+            Astigmatism: {{ "%.4f"|format(bead._metricTool._astigmatism if bead._metricTool._astigmatism is not none else 0) }} <br>
+            Contrast: {{ "%.4f"|format(bead._fitTool.contrast if bead._fitTool.contrast is not none else 0) }} <br>
+            ellipsRatio: {{ "%.4f"|format(bead._metricTool._ellipsRatio if bead._metricTool._ellipsRatio is not none else 0) }} <br>
+            Orientation: {{ "%.4f"|format(bead._metricTool._orientation if bead._metricTool._orientation is not none else 0) }} <br>
             </p>
         </div>
     </body>

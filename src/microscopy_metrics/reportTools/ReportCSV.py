@@ -79,6 +79,8 @@ class ReportCSV(ReportGenerator):
                     ["Spherical aberration", f"{bead._metricTool._sphericalAberration:.4f}"],
                     ["Astigmatism", f"{bead._metricTool._astigmatism:.4f}"],
                     ["Contrast", f"{bead._fitTool.contrast:.4f}"],
+                    ["Ellipticity ratio", f"{bead._metricTool._ellipsRatio:.4f}"],
+                    ["Orientation", f"{bead._metricTool._orientation:.4f}"],
                 ]
                 writer.writerow(["Metric's results"])
                 writer.writerows(dataMetrics)

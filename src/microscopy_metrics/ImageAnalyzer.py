@@ -15,6 +15,8 @@ class ImageAnalyzer(object):
         self._meanSphericalAberration = 0.0
         self._meanAstigmatism = 0.0
         self._meanContrast = 0.0
+        self._meanEllipsRatio = 0.0
+        self._meanOrientation = 0.0
 
     def toDict(self):
         """Converts the image analysis results into a dictionary format for easier access and manipulation of the image's data.
@@ -30,4 +32,6 @@ class ImageAnalyzer(object):
             "meanSBR": self._meanSBR,
             "meanComaticity": self._meanComaticity,
             "meanSphericalAberration": self._meanSphericalAberration,
+            "meanEllipsRatio": self._meanEllipsRatio,
+            "meanOrientation": self._meanOrientation,
         }

@@ -1,6 +1,5 @@
 import math
 import numpy as np
-from matplotlib import image
 import matplotlib.pyplot as plt
 
 from scipy import ndimage as ndi
@@ -9,12 +8,11 @@ from scipy.ndimage import median_filter
 from sklearn.metrics import r2_score
 from skimage.measure import regionprops, label
 from skimage.filters import gaussian
-from skimage.segmentation import active_contour, chan_vese
+from skimage.segmentation import chan_vese
 from skimage.measure import find_contours
 
 from microscopy_metrics.utils import umToPx,pxToUm
 from microscopy_metrics.thresholdTools.legacy import ThresholdLegacy
-from microscopy_metrics.detectionTools.detection_tool import DetectionTool
 from microscopy_metrics.fittingTools.fitting2D import Fitting2D
 
 
@@ -256,12 +254,9 @@ class MetricTool(object):
         c = 36 * math.pi
         self._volume = self.getVolume()
         self._surface = self.getSurface()
-        
         if self._surface == 0:
             self._sphericity = 0.0
-            return 0.0
-            
-        print((c * (self._volume**2)) / (self._surface**3))
+            return 0.0            
         self._sphericity = (c * (self._volume**2)) / (self._surface**3)
         return self._sphericity
 
@@ -300,14 +295,39 @@ class MetricTool(object):
             return np.array([])
         snake = max(contours, key=len)
         return snake
+    
+    def computeComaticityCentroids(self):
+        """Calculates the comaticity centroids for the object in the microscopy image by analyzing each image along the Z-axis and determining the maximum drift in the X and Y directions from the center of the image."""
+        threshold = ThresholdLegacy(nb_iteration=1000).getThreshold(self._image)
+        centroids = []
+        maxDriftX = 0.0
+        maxDriftY = 0.0 
+        for z in range(self._image.shape[0]):
+            image = self._image[z]
+            imageBinary = image > threshold
+            if np.sum(imageBinary) == 0:
+                continue
+            props = regionprops(label(imageBinary))
+            if not props:
+                continue
+            largestRegion = max(props, key=lambda r: r.area)
+            centroids.append(largestRegion.centroid)
+            if len(centroids) > 1:
+                driftX = pxToUm(abs(centroids[-1][1] - image.shape[1]//2), self._pixelSize[2])
+                driftY = pxToUm(abs(centroids[-1][0] - image.shape[0]//2), self._pixelSize[1])
+                if driftX > maxDriftX:
+                    maxDriftX = driftX
+                if driftY > maxDriftY:
+                    maxDriftY = driftY
+        self._comaticityCentroids = (maxDriftX, maxDriftY)
 
-    def _computeAxisComacity(self, image, pixelSize):
+    def _computeAxisComaticity(self, image, pixelSize):
         """Calculates the axis comaticity for a given 1D image by analyzing the intensity profiles along the specified axis and comparing them to the detected contours of the object in the image.
         Args:
             image (numpy.ndarray): The input image.
             pixelSize (float): The size of each pixel in the image.
         Returns:
-            float: The calculated axis comacity.
+            float: The calculated axis comaticity.
         """
         snake = self.getContours(image)
         if snake.size == 0:
@@ -321,13 +341,13 @@ class MetricTool(object):
                 continue
             profile = image[:,i]
             amp = float(np.max(profile) - np.min(profile))
-            prominenceMin = amp * float(0.5)
+            prominenceMin = amp * float(0.4)
             peaks, props = find_peaks(profile,prominence=prominenceMin, distance=2)
             if len(peaks) > 1 and (any(peaks > image.shape[0]/2) and any(peaks < image.shape[0]/2)):
                 if all(peaks > image.shape[0]/2):
-                    score += pxToUm(self.distance(i, image.shape[1]/2), pixelSize) * (1.0/ (1.0+0.5*pxToUm(self.distance(peaks[0], peaks[-1]), self._pixelSize[0])))
+                    score += pxToUm(self.distance(i, image.shape[1]/2), pixelSize) / (pxToUm(self.distance(peaks[0], peaks[-1]), self._pixelSize[0]))
                 else : 
-                    score -= pxToUm(self.distance(i, image.shape[1]/2), pixelSize) * (1.0/ (1.0+0.5*pxToUm(self.distance(peaks[0], peaks[-1]), self._pixelSize[0])))
+                    score -= pxToUm(self.distance(i, image.shape[1]/2), pixelSize) /(pxToUm(self.distance(peaks[0], peaks[-1]), self._pixelSize[0]))
                 total += 1
         if total > 0:
             score /= total
@@ -336,12 +356,15 @@ class MetricTool(object):
     def comaticity(self):
         """Calculates the comaticity of the object in the microscopy image by analyzing the intensity profiles along the X and Y axes and comparing them to the detected contours of the object in the image. 
         The method computes the comaticity score for both axes and combines them to provide an overall comaticity score for the object."""
-        image = self._image[:,int(self._image.shape[1]/2),:]
-        XScore = self._computeAxisComacity(image, self._pixelSize[2])
-        image = self._image[:,:,int(self._image.shape[2]/2)]
-        YScore = self._computeAxisComacity(image, self._pixelSize[1])
-        self._comaticity = np.sqrt(XScore**2 + YScore**2)
-        print(f"X Score : {XScore} | Y Score : {YScore} | Final Score : {self._comaticity}")
+        self.computeComaticityCentroids()
+        if self._comaticityCentroids[0] >= self._pixelSize[2] or self._comaticityCentroids[1] >= self._pixelSize[1]:
+            image = self._image[:,int(self._image.shape[1]/2),:]
+            XScore = self._computeAxisComaticity(image, self._pixelSize[2])
+            image = self._image[:,:,int(self._image.shape[2]/2)]
+            YScore = self._computeAxisComaticity(image, self._pixelSize[1])
+            self._comaticity = np.sqrt(XScore**2 + YScore**2)
+        else : 
+            self._comaticity = 0.0
 
     def sphericalAberration(self):
         """Calculates the spherical aberration of the object in the microscopy image by comparing the two halves of the intensity profile along the Z-axis to assess the symmetry of the point spread function (PSF) and determine the degree of spherical aberration present in the image."""
@@ -352,7 +375,6 @@ class MetricTool(object):
         before = profile[zCenter-length:zCenter][::-1]
         after = profile[zCenter+1:zCenter+1+length]
         self._sphericalAberration = 1-r2_score(before, after)
-        print(f"Spherical Aberration (R²) : {self._sphericalAberration}")
 
     def getFWHM(self, image,mu,sigma):
         """Calculates the full width at half maximum (FWHM) of the point spread function (PSF) in the given image by fitting a 2D Gaussian function to the intensity profile and extracting the FWHM values along the Y and X axes based on the fitted parameters.
@@ -390,7 +412,6 @@ class MetricTool(object):
         scoreBefore  =  (fwhmsBefore[0] - fwhmsBefore[1]) / (fwhmsBefore[0] + fwhmsBefore[1])
         scoreAfter = (fwhmsAfter[0] - fwhmsAfter[1]) / (fwhmsAfter[0] + fwhmsAfter[1])
         self._astigmatism = abs(scoreAfter - scoreBefore)
-        print(f"Astigmatism : {self._astigmatism}")
 
     def ellipsRatio(self):
         """Calculates the ellipticity ratio of the object in the microscopy image by analyzing the major and minor axes of the detected contours."""
@@ -403,4 +424,8 @@ class MetricTool(object):
             return 0.0
         self._ellipsRatio = largestRegion.axis_major_length / largestRegion.axis_minor_length
         self._orientation = np.rad2deg(largestRegion.orientation)%180
-        print(f"Ellips Ratio : {self._ellipsRatio} | Orientation : {self._orientation}")
+
+    def distance2D(self, point1, point2):
+        return np.sqrt((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2)
+
+    
