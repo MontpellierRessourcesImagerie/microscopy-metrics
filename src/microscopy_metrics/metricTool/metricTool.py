@@ -14,6 +14,7 @@ from skimage.measure import find_contours
 from microscopy_metrics.utils import umToPx,pxToUm
 from microscopy_metrics.thresholdTools.legacy import ThresholdLegacy
 from microscopy_metrics.fittingTools.fitting2D import Fitting2D
+from microscopy_metrics.metricTool.meshTool import MeshBuilder
 
 
 class MetricTool(object):
@@ -427,5 +428,10 @@ class MetricTool(object):
 
     def distance2D(self, point1, point2):
         return np.sqrt((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2)
+    
+    def meshMetrics(self):
+        self.meshBuilder = MeshBuilder()
+        self.meshBuilder._image = self._image
+        self.meshBuilder.computeMeshMetrics()
 
     

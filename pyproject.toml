@@ -25,6 +25,8 @@ dependencies = [
     "tqdm",
     "jinja2",
     "Pillow",
+    "simpleitk",
+    "open3d"
 ]
 [project.urls]
 Homepage = "https://github.com/MontpellierRessourcesImagerie/microscopy-metrics"
