@@ -432,6 +432,7 @@ class MetricTool(object):
     def meshMetrics(self):
         self.meshBuilder = MeshBuilder()
         self.meshBuilder._image = self._image
+        self.meshBuilder._pixelSize = self._pixelSize
         self.meshBuilder.computeMeshMetrics()
 
     

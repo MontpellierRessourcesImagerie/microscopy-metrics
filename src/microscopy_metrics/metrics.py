@@ -10,7 +10,6 @@ class Metrics(object):
         self._ringThickness = None
 
         self._TheoreticalResolutionTool = None
-        self.meanSBR = 0.0
 
     @property
     def ringInnerDistance(self):
@@ -73,10 +72,26 @@ class Metrics(object):
     def runPrefittingMetrics(self):
         """Runs the pre-fitting metrics calculations, including signal-to-background ratio (SBR) calculation and theoretical resolution estimation."""
         self.SBR = []
-        self.meanSBR = 0.0
         yield {"desc": "SBR calculation..."}
         self.signalToBackgroundRatioRing()
         yield {"desc": "Estimating theoretical resolution..."}
         self._imageAnalyzer._theoreticalResolution = (
             self._TheoreticalResolutionTool.getTheoreticalResolution()
         )
+        yield {"desc": "Mesh-based metrics calculation..."}
+        self.runMeshMetrics()
+
+    def runMeshMetrics(self):
+        """Runs the mesh-based metrics calculations, including mesh building, concavity, curvature, and sphericity calculations."""
+        if len(self._imageAnalyzer._beadAnalyzer) == 0:
+            raise ValueError("You must have at least one PSF")
+        with ThreadPoolExecutor() as executor:
+            futures = {
+                executor.submit(
+                    bead._metricTool.meshMetrics,
+                ): i
+                for i, bead in enumerate(self._imageAnalyzer._beadAnalyzer)
+                if bead._rejected == False and bead._roi is not None
+            }
+            for future in as_completed(futures):
+                _ = future.result()

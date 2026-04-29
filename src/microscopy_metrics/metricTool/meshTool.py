@@ -4,7 +4,8 @@ from skimage import measure
 from scipy.spatial import ConvexHull
 import open3d as o3d
 import pyvista as pv
-from scipy.ndimage import zoom
+from skimage.segmentation import clear_border
+from scipy.ndimage import gaussian_filter
 
 class MeshBuilder(object):
     def __init__(self, image=None):
@@ -18,14 +19,14 @@ class MeshBuilder(object):
         self._concavity = None
         self._curvature = None
         self._sphericity = None
+        self._largestRegionMask = None
 
-#TODO : delete border vertices of the image to avoid artifacts in the mesh
     def BuildMesh(self):
         if self._image is None : 
             raise ValueError("Image is not set. Please set the image before building the mesh.")
-        imageVolume = sitk.SmoothingRecursiveGaussian(sitk.GetImageFromArray(self._image.astype(np.float32)), sigma=1.0)
+        imageVolume = sitk.GetImageFromArray(self._image.astype(np.float32))
 
-        otsuFilter = sitk.OtsuThresholdImageFilter()
+        otsuFilter = sitk.TriangleThresholdImageFilter()
         otsuFilter.SetInsideValue(0)
         otsuFilter.SetOutsideValue(1)
         binaryImage = sitk.Cast(otsuFilter.Execute(imageVolume), sitk.sitkFloat32)
@@ -37,15 +38,27 @@ class MeshBuilder(object):
         chanVese.SetCurvatureWeight(self._curvatureScaling)
         segmentation = chanVese.Execute(binaryImage, imageVolume)
         segArray = sitk.GetArrayFromImage(segmentation)
+        binaryImage = clear_border(segArray.astype(bool))
+        LabelledImage = measure.label(binaryImage)
+        regions = measure.regionprops(LabelledImage)
+        if len(regions) == 0:
+            raise ValueError("No regions found in the image. Please check the input image.")
+        largestRegion = max(regions, key=lambda r: r.area)
+        self._largestRegionMask = (LabelledImage == largestRegion.label).astype(float)
+        self._largestRegionMask = gaussian_filter(self._largestRegionMask, sigma=1.0)
 
-        self._vertices, self._faces, _, _ = measure.marching_cubes(segArray, level=0.5)
+        self._vertices, self._faces, _, _ = measure.marching_cubes(self._largestRegionMask, level=0.5)
 
         mesh = o3d.geometry.TriangleMesh()
         mesh.vertices = o3d.utility.Vector3dVector(self._vertices)
         mesh.triangles = o3d.utility.Vector3iVector(self._faces)
-        mesh = mesh.filter_smooth_taubin(number_of_iterations=10)
+        mesh.remove_duplicated_vertices()
+        mesh.remove_duplicated_triangles()
+        mesh.remove_degenerate_triangles()
+        mesh.remove_non_manifold_edges()
+        mesh.remove_unreferenced_vertices()
         mesh.compute_vertex_normals()
-        self._vertices = np.asarray(mesh.vertices)
+        self._vertices = np.asarray(mesh.vertices) * np.array(self._pixelSize)
         self._faces = np.asarray(mesh.triangles)
         return self._vertices, self._faces
     
@@ -55,7 +68,12 @@ class MeshBuilder(object):
         mesh = o3d.geometry.TriangleMesh()
         mesh.vertices = o3d.utility.Vector3dVector(self._vertices)
         mesh.triangles = o3d.utility.Vector3iVector(self._faces)
-        meshVolume = mesh.get_volume()
+        if mesh.is_watertight():
+            meshVolume = mesh.get_volume()
+        else:
+            print("Warning: Mesh is not watertight! Using Voxel Volume fallback.")
+            voxel_volume = self._pixelSize[0] * self._pixelSize[1] * self._pixelSize[2]
+            meshVolume = np.sum(self._largestRegionMask) * voxel_volume
         hull = ConvexHull(self._vertices)
         hullVolume = hull.volume
         print(f"Mesh Volume: {meshVolume}, Hull Volume: {hullVolume}")
