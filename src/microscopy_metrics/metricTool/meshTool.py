@@ -13,12 +13,13 @@ class MeshBuilder(object):
         self._image = image
         self._pixelSize = [1.0, 1.0, 1.0]
         self._RMSMaxError = 0.02
-        self._numIterations = 100
+        self._numIterations = 30
         self._curvatureScaling = 5.0
         self._vertices = None
+        self._verticesResized = None
         self._faces = None
         self._concavity = None
-        self._curvature = None
+        self._curvature = []
         self._sphericity = None
         self._largestRegionMask = None
 
@@ -32,7 +33,7 @@ class MeshBuilder(object):
         enhancedImg = (NormImg ** 1.25) * maxImg
         imageVolume = sitk.GetImageFromArray(enhancedImg)
 
-        otsuFilter = sitk.TriangleThresholdImageFilter()
+        otsuFilter = sitk.OtsuThresholdImageFilter()
         otsuFilter.SetInsideValue(0)
         otsuFilter.SetOutsideValue(1)
         thesholdImage = otsuFilter.Execute(imageVolume)
@@ -46,7 +47,7 @@ class MeshBuilder(object):
         segmentation = chanVese.Execute(binaryImage, imageVolume)
 
         segArray = sitk.GetArrayFromImage(segmentation)
-        binaryImage = clear_border(segArray.astype(bool))
+        binaryImage = segArray.astype(bool)
 
         LabelledImage = measure.label(binaryImage)
         regions = measure.regionprops(LabelledImage)
@@ -65,32 +66,39 @@ class MeshBuilder(object):
         mesh.remove_duplicated_vertices()
         mesh.remove_duplicated_triangles()
         mesh.compute_vertex_normals()
-        self._vertices = np.asarray(mesh.vertices) * np.array(self._pixelSize)
+        self._vertices = np.asarray(mesh.vertices)
+        self._verticesResized = np.asarray(mesh.vertices) * np.array(self._pixelSize)
         self._faces = np.asarray(mesh.triangles)
-        return self._vertices, self._faces
+        return self._verticesResized, self._faces
+    
+    def saveMesh(self, filename):
+        if self._verticesResized is None or self._faces is None:
+            raise ValueError("Mesh has not been built. Please build the mesh before saving.")
+        mesh = o3d.geometry.TriangleMesh()
+        mesh.vertices = o3d.utility.Vector3dVector(self._verticesResized)
+        mesh.triangles = o3d.utility.Vector3iVector(self._faces)
+        o3d.io.write_triangle_mesh(filename, mesh)
     
     def concavity(self):
-        if self._vertices is None or self._faces is None:
+        if self._verticesResized is None or self._faces is None:
             raise ValueError("Mesh has not been built. Please build the mesh before calculating concavity.")
-        p1 = self._vertices[self._faces[:, 0]]
-        p2 = self._vertices[self._faces[:, 1]]
-        p3 = self._vertices[self._faces[:, 2]]
+        p1 = self._verticesResized[self._faces[:, 0]]
+        p2 = self._verticesResized[self._faces[:, 1]]
+        p3 = self._verticesResized[self._faces[:, 2]]
         meshVolume = abs(np.sum(p1 * np.cross(p2, p3, axis=1)) / 6.0)
-        hull = ConvexHull(self._vertices)
+        hull = ConvexHull(self._verticesResized)
         hullVolume = hull.volume
-        print(f"Mesh Volume: {meshVolume}, Hull Volume: {hullVolume}")
         self._concavity = (hullVolume - meshVolume) / hullVolume
         print(f"Concavity: {self._concavity}")
         return self._concavity
     
     def curvature(self):
-        if self._vertices is None or self._faces is None:
+        if self._verticesResized is None or self._faces is None:
             raise ValueError("Mesh has not been built. Please build the mesh before calculating curvature.")
         facesPV = np.insert(self._faces, 0, 3, axis=1).flatten()
-        meshPV = pv.PolyData(self._vertices, facesPV)
-        curvature = meshPV.curvature(curv_type='mean')
-        self._curvature = np.nanmean(np.abs(curvature))
-        print(f"Curvature: {self._curvature}")
+        meshPV = pv.PolyData(self._verticesResized, facesPV)
+        meshPV.flip_normals()
+        self._curvature = meshPV.curvature()
         return self._curvature
     
     def computeMeshMetrics(self):

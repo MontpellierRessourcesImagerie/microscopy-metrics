@@ -29,3 +29,13 @@ class MultiphotonResolution(TheoreticalResolution):
             - math.sqrt(self._refractiveIndex**2 - self._numericalAperture**2)
         )
         return [resZ, resXY, resXY]
+    
+    def getSamplingDistance(self,k=2):
+        """Calculates the recommended sampling distance for a multiphoton microscope based on the theoretical resolution in the XY and Z dimensions.
+        Returns:
+            list: A list containing the recommended sampling distance in the Z dimension followed by the distance in the XY dimensions (distZ, distXY, distXY).
+        """
+        res = self.angularAperture()
+        distXY = self._emissionWavelength / (4*k*self._numericalAperture)
+        distZ = self._emissionWavelength / (2*k*self._refractiveIndex * (1 - math.cos(res)))
+        return [distZ, distXY, distXY]

@@ -1,3 +1,4 @@
+import numpy as np
 from abc import abstractmethod
 
 
@@ -14,6 +15,7 @@ class TheoreticalResolution(object):
         self._numericalAperture = 0.9
         self._emissionWavelength = 490
         self._refractiveIndex = 1.5
+        self._angularAperture = None
 
     def __init_subclass__(cls):
         name = cls.name
@@ -70,3 +72,9 @@ class TheoreticalResolution(object):
     def getTheoreticalResolution(self):
         """Abstract method to calculate the theoretical resolution of the microscope based on its parameters."""
         return [0, 0, 0]
+    
+    def angularAperture(self):
+        """Calculates the angular aperture of the microscope based on its numerical aperture and refractive index."""
+        if self._angularAperture is None:
+            self._angularAperture = np.arcsin(self._numericalAperture / self._refractiveIndex)
+        return self._angularAperture
