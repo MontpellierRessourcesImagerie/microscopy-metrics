@@ -22,6 +22,7 @@ class MeshBuilder(object):
         self._curvature = []
         self._sphericity = None
         self._largestRegionMask = None
+        self._segArray = None
 
     def BuildMesh(self):
         if self._image is None : 
@@ -46,8 +47,8 @@ class MeshBuilder(object):
         chanVese.SetCurvatureWeight(self._curvatureScaling)
         segmentation = chanVese.Execute(binaryImage, imageVolume)
 
-        segArray = sitk.GetArrayFromImage(segmentation)
-        binaryImage = segArray.astype(bool)
+        self._segArray = sitk.GetArrayFromImage(segmentation)
+        binaryImage = self._segArray.astype(bool)
 
         LabelledImage = measure.label(binaryImage)
         regions = measure.regionprops(LabelledImage)

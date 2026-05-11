@@ -1,18 +1,22 @@
 import math
 import numpy as np
+import skan
 import matplotlib.pyplot as plt
 
 from scipy import ndimage as ndi
 from scipy.signal import find_peaks
 from scipy.ndimage import median_filter
+from scipy.interpolate import splrep
 from sklearn.metrics import r2_score
 from skimage.measure import regionprops, label
 from skimage.filters import gaussian
 from skimage.segmentation import chan_vese
 from skimage.measure import find_contours
+from skimage.morphology import skeletonize
 
 from microscopy_metrics.utils import umToPx,pxToUm
 from microscopy_metrics.thresholdTools.legacy import ThresholdLegacy
+from microscopy_metrics.thresholdTools.otsu import ThresholdOtsu
 from microscopy_metrics.fittingTools.fitting2D import Fitting2D
 from microscopy_metrics.metricTool.meshTool import MeshBuilder
 
@@ -33,6 +37,9 @@ class MetricTool(object):
         self._surface = 0
         self._comaticity = 0
         self._sphericalAberration = 0
+        self._pathSkeleton = None
+        self._centroids = []
+        self._summary = None
 
     def setNormalizedImage(self, image: np.ndarray) -> np.ndarray:
         """Normalizes the input image to a range of [0, 1] and ensures that all values are non-negative.
@@ -299,8 +306,7 @@ class MetricTool(object):
     
     def computeComaticityCentroids(self):
         """Calculates the comaticity centroids for the object in the microscopy image by analyzing each image along the Z-axis and determining the maximum drift in the X and Y directions from the center of the image."""
-        threshold = ThresholdLegacy(nb_iteration=1000).getThreshold(self._image)
-        centroids = []
+        threshold = ThresholdOtsu().getThreshold(self._image)
         maxDriftX = 0.0
         maxDriftY = 0.0 
         for z in range(self._image.shape[0]):
@@ -312,14 +318,15 @@ class MetricTool(object):
             if not props:
                 continue
             largestRegion = max(props, key=lambda r: r.area)
-            centroids.append(largestRegion.centroid)
-            if len(centroids) > 1:
-                driftX = pxToUm(abs(centroids[-1][1] - image.shape[1]//2), self._pixelSize[2])
-                driftY = pxToUm(abs(centroids[-1][0] - image.shape[0]//2), self._pixelSize[1])
+            self._centroids.append(largestRegion.centroid)
+            if len(self._centroids) > 1:
+                driftX = pxToUm(abs(self._centroids[-1][1] - image.shape[1]//2), self._pixelSize[2])
+                driftY = pxToUm(abs(self._centroids[-1][0] - image.shape[0]//2), self._pixelSize[1])
                 if driftX > maxDriftX:
                     maxDriftX = driftX
                 if driftY > maxDriftY:
                     maxDriftY = driftY
+            self._centroids[-1] = [z, self._centroids[-1][0], self._centroids[-1][1]]
         self._comaticityCentroids = (maxDriftX, maxDriftY)
 
     def _computeAxisComaticity(self, image, pixelSize):
@@ -435,4 +442,24 @@ class MetricTool(object):
         self.meshBuilder._pixelSize = self._pixelSize
         self.meshBuilder.computeMeshMetrics()
 
+    def skeletonizePath(self):
+        """Calculates the skeletonized path of the object in the microscopy image by applying a skeletonization algorithm to the binary representation of the image and extracting the resulting skeletonized structure."""
+        if self.meshBuilder is not None and self.meshBuilder._segArray is not None:
+            binaryImage = (self.meshBuilder._largestRegionMask > 0.5)
+        else :
+            imageFloat = self.setNormalizedImage(self._image)
+            imageFloat = ndi.gaussian_filter(imageFloat, sigma=5)
+            thresholdAbs = ThresholdOtsu().getThreshold(imageFloat)
+            binaryImage = imageFloat > thresholdAbs
+        skeletonImg = skeletonize(binaryImage)  
+        if np.sum(skeletonImg) < 2:
+             print("Skeletonization failed: not enough skeleton pixels found.")
+             return
+        self._pathSkeleton = skan.Skeleton(skeletonImg, spacing=self._pixelSize)
+        self._pathSkeleton.path_lengths()
+        maxLength = np.max(self._pathSkeleton.distances)
+        self._summary = skan.summarize(self._pathSkeleton, separator="_")
+        maxDistance = self._summary['euclidean_distance'].values.max()
+        skeleton2Extremities = maxLength/maxDistance if maxDistance > 0 else 0
+        print("Skeleton to extremities ratio: ", skeleton2Extremities)
     
