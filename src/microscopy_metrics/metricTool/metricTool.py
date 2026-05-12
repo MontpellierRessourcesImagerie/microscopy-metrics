@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from scipy import ndimage as ndi
 from scipy.signal import find_peaks
 from scipy.ndimage import median_filter
-from scipy.interpolate import splrep
+from scipy.interpolate import make_interp_spline, splprep
 from sklearn.metrics import r2_score
 from skimage.measure import regionprops, label
 from skimage.filters import gaussian
@@ -328,6 +328,7 @@ class MetricTool(object):
                     maxDriftY = driftY
             self._centroids[-1] = [z, self._centroids[-1][0], self._centroids[-1][1]]
         self._comaticityCentroids = (maxDriftX, maxDriftY)
+        self.curvaturePath()
 
     def _computeAxisComaticity(self, image, pixelSize):
         """Calculates the axis comaticity for a given 1D image by analyzing the intensity profiles along the specified axis and comparing them to the detected contours of the object in the image.
@@ -460,6 +461,38 @@ class MetricTool(object):
         maxLength = np.max(self._pathSkeleton.distances)
         self._summary = skan.summarize(self._pathSkeleton, separator="_")
         maxDistance = self._summary['euclidean_distance'].values.max()
-        skeleton2Extremities = maxLength/maxDistance if maxDistance > 0 else 0
+        skeleton2Extremities = (maxLength/maxDistance)**2 if maxDistance > 0 else 0
         print("Skeleton to extremities ratio: ", skeleton2Extremities)
+
+    def curvaturePath(self):
+        if self._centroids is None or len(self._centroids) < 3:
+            print("Not enough centroids to calculate curvature.")
+            return
+        centroidsArray = np.array(self._centroids)
+        t = np.linspace(0, 1, len(centroidsArray))
+        pz = np.polyfit(t, centroidsArray[:, 0] * self._pixelSize[0], 2)
+        py = np.polyfit(t, centroidsArray[:, 1] * self._pixelSize[1], 2)
+        px = np.polyfit(t, centroidsArray[:, 2] * self._pixelSize[2], 2)
+        centroidsArray = np.column_stack((np.polyval(pz, t), np.polyval(py, t), np.polyval(px, t)))
+        self._centroids = centroidsArray / self._pixelSize
+        dpz = np.polyder(pz, 1)
+        dpy = np.polyder(py, 1)
+        dpx = np.polyder(px, 1)
+        ddpz = np.polyder(pz, 2)
+        ddpy = np.polyder(py, 2)
+        ddpx = np.polyder(px, 2)
+        v = np.column_stack((np.polyval(dpz, t), np.polyval(dpy, t), np.polyval(dpx, t)))
+        a = np.column_stack((np.polyval(ddpz, t), np.polyval(ddpy, t), np.polyval(ddpx, t)))
+        cross_prod = np.cross(v, a)
+        numerator = np.linalg.norm(cross_prod, axis=1)
+        denominator = np.linalg.norm(v, axis=1)**3
+        with np.errstate(divide='ignore', invalid='ignore'):
+            curvature = numerator / denominator
+            curvature[denominator == 0] = 0
+        k_max = np.max(curvature)
+        if k_max < 1e-10: 
+            R_min = float('inf')
+        else:
+            R_min = 1.0 / k_max
+        print(f"R_min: {R_min}")
     

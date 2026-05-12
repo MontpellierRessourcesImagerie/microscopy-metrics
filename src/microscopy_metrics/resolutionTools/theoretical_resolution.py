@@ -13,9 +13,10 @@ class TheoreticalResolution(object):
 
     def __init__(self):
         self._numericalAperture = 0.9
-        self._emissionWavelength = 490
+        self._emissionWavelength = 450
         self._refractiveIndex = 1.5
         self._angularAperture = None
+        self._excitationWavelength = 225
 
     def __init_subclass__(cls):
         name = cls.name
@@ -58,6 +59,16 @@ class TheoreticalResolution(object):
         if not isinstance(value, float) and not isinstance(value, int):
             raise ValueError("Emission wavelength must be a number")
         self._emissionWavelength = value / 1000
+    
+    @property
+    def excitationWavelength(self):
+        return self._excitationWavelength
+    
+    @excitationWavelength.setter
+    def excitationWavelength(self, value):
+        if not isinstance(value,float) and not isinstance(value, int):
+            raise ValueError("Excitation wavelength must be a number")
+        self._excitationWavelength = value / 1000
 
     @property
     def refractiveIndex(self):

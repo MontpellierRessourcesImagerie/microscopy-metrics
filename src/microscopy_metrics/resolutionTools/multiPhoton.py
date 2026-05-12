@@ -21,10 +21,10 @@ class MultiphotonResolution(TheoreticalResolution):
             list: A list containing the theoretical resolution in the Z dimension followed by the resolution in the XY dimensions (resZ, resXY, resXY).
         """
         if self._numericalAperture < 0.7:
-            resXY = (0.377 * self._emissionWavelength) / self._numericalAperture
+            resXY = (0.377 * self._excitationWavelength) / self._numericalAperture
         else:
-            resXY = (0.383 * self._emissionWavelength) / (self._numericalAperture**0.91)
-        resZ = (0.626 * self._emissionWavelength) / (
+            resXY = (0.383 * self._excitationWavelength) / (self._numericalAperture**0.91)
+        resZ = (0.626 * self._excitationWavelength) / (
             self._refractiveIndex
             - math.sqrt(self._refractiveIndex**2 - self._numericalAperture**2)
         )
@@ -36,6 +36,6 @@ class MultiphotonResolution(TheoreticalResolution):
             list: A list containing the recommended sampling distance in the Z dimension followed by the distance in the XY dimensions (distZ, distXY, distXY).
         """
         res = self.angularAperture()
-        distXY = self._emissionWavelength / (4*k*self._numericalAperture)
-        distZ = self._emissionWavelength / (2*k*self._refractiveIndex * (1 - math.cos(res)))
+        distXY = self._excitationWavelength / (4*k*self._numericalAperture)
+        distZ = self._excitationWavelength / (2*k*self._refractiveIndex * (1 - math.cos(res)))
         return [distZ, distXY, distXY]

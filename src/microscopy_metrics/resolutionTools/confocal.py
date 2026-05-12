@@ -20,8 +20,8 @@ class ConfocalResolution(TheoreticalResolution):
         Returns:
             list: A list containing the theoretical resolution in the Z dimension followed by the resolution in the XY dimensions (resZ, resXY, resXY).
         """
-        resXY = (0.51 * self._emissionWavelength) / self._numericalAperture
-        resZ = (0.88 * self._emissionWavelength) / (
+        resXY = (0.51 * self._excitationWavelength) / self._numericalAperture
+        resZ = (0.88 * self._excitationWavelength) / (
             self._refractiveIndex
             - math.sqrt(self._refractiveIndex**2 - self._numericalAperture**2)
         )
@@ -33,6 +33,6 @@ class ConfocalResolution(TheoreticalResolution):
             list: A list containing the recommended sampling distance in the Z dimension followed by the distance in the XY dimensions (distZ, distXY, distXY).
         """
         res = self.angularAperture()
-        distXY = self._emissionWavelength / (8*self._numericalAperture)
-        distZ = self._emissionWavelength / (4*self._refractiveIndex * (1 - math.cos(res)))
+        distXY = self._excitationWavelength / (8*self._numericalAperture)
+        distZ = self._excitationWavelength / (4*self._refractiveIndex * (1 - math.cos(res)))
         return [distZ, distXY, distXY]
