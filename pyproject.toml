@@ -26,7 +26,10 @@ dependencies = [
     "jinja2",
     "Pillow",
     "simpleitk",
-    "open3d"
+    "open3d",
+    "skan",
+    "pyvista",
+    "psfmodels",
 ]
 [project.urls]
 Homepage = "https://github.com/MontpellierRessourcesImagerie/microscopy-metrics"

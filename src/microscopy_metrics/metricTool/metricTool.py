@@ -1,6 +1,6 @@
 import math
-import numpy as np
 import skan
+import numpy as np
 import matplotlib.pyplot as plt
 
 from scipy import ndimage as ndi
@@ -14,7 +14,7 @@ from skimage.segmentation import chan_vese
 from skimage.measure import find_contours
 from skimage.morphology import skeletonize
 
-from microscopy_metrics.utils import umToPx,pxToUm
+from microscopy_metrics.utils import umToPx, pxToUm
 from microscopy_metrics.thresholdTools.legacy import ThresholdLegacy
 from microscopy_metrics.thresholdTools.otsu import ThresholdOtsu
 from microscopy_metrics.fittingTools.fitting2D import Fitting2D
@@ -169,21 +169,18 @@ class MetricTool(object):
         d3 = self._pixelSize[2]
         vol = d1 * d2 * d3
         nbConfigs = 256
-        tab = [0.0 for _ in range (nbConfigs)]
-        im = [
-            [[0,0],[0,0]],
-            [[0,0],[0,0]]
-        ]
+        tab = [0.0 for _ in range(nbConfigs)]
+        im = [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
         for iConfig in range(nbConfigs):
-            self.updateTile(im,iConfig)
+            self.updateTile(im, iConfig)
             for z in range(2):
                 for y in range(2):
                     for x in range(2):
                         if not im[z][y][x]:
                             continue
-                        ke1 = 0 if im[z][y][1-x] else vol / d1 / 2.0
-                        ke2 = 0 if im[z][1-y][x] else vol / d2 / 2.0
-                        ke3 = 0 if im[1-z][y][x] else vol / d3 / 2.0
+                        ke1 = 0 if im[z][y][1 - x] else vol / d1 / 2.0
+                        ke2 = 0 if im[z][1 - y][x] else vol / d2 / 2.0
+                        ke3 = 0 if im[1 - z][y][x] else vol / d3 / 2.0
                         tab[iConfig] += (ke1 + ke2 + ke3) / 3.0
         return tab
 
@@ -209,20 +206,38 @@ class MetricTool(object):
 
         sizeZ, sizeY, sizeX = binaryImage.shape
         configValues = [False for _ in range(8)]
-        for z in range(sizeZ+1):
-            for y in range(sizeY+1):
+        for z in range(sizeZ + 1):
+            for y in range(sizeY + 1):
                 configValues[0] = False
                 configValues[2] = False
                 configValues[4] = False
                 configValues[6] = False
-                for x in range(sizeX+1):
+                for x in range(sizeX + 1):
                     if x < sizeX:
-                        configValues[1] = bool(binaryImage[z - 1, y - 1, x]) if (y > 0 and z > 0) else False
-                        configValues[3] = bool(binaryImage[z - 1, y, x]) if (y < sizeY and z > 0) else False
-                        configValues[5] = bool(binaryImage[z, y - 1, x]) if (y > 0 and z < sizeZ) else False
-                        configValues[7] = bool(binaryImage[z, y, x]) if (y < sizeY and z < sizeZ) else False
-                    else : 
-                        configValues[1] = configValues[3] = configValues[5] = configValues[7] = False
+                        configValues[1] = (
+                            bool(binaryImage[z - 1, y - 1, x])
+                            if (y > 0 and z > 0)
+                            else False
+                        )
+                        configValues[3] = (
+                            bool(binaryImage[z - 1, y, x])
+                            if (y < sizeY and z > 0)
+                            else False
+                        )
+                        configValues[5] = (
+                            bool(binaryImage[z, y - 1, x])
+                            if (y > 0 and z < sizeZ)
+                            else False
+                        )
+                        configValues[7] = (
+                            bool(binaryImage[z, y, x])
+                            if (y < sizeY and z < sizeZ)
+                            else False
+                        )
+                    else:
+                        configValues[1] = configValues[3] = configValues[5] = (
+                            configValues[7]
+                        ) = False
                     index = self.configIndex(configValues)
                     histo[index] += 1
                     configValues[0] = configValues[1]
@@ -231,7 +246,6 @@ class MetricTool(object):
                     configValues[6] = configValues[7]
         return histo
 
-            
     def applyLut(self, histogram, lut):
         """Applies the surface area lookup table to the histogram of tile configurations to calculate the total surface area.
         Args:
@@ -264,7 +278,7 @@ class MetricTool(object):
         self._surface = self.getSurface()
         if self._surface == 0:
             self._sphericity = 0.0
-            return 0.0            
+            return 0.0
         self._sphericity = (c * (self._volume**2)) / (self._surface**3)
         return self._sphericity
 
@@ -273,14 +287,14 @@ class MetricTool(object):
         Args:
             x1 (float): The first point.
             x2 (float): The second point.
-        Returns:            
+        Returns:
             float: The calculated distance between the two points.
         """
         return abs(x1 - x2)
 
     def getContours(self, image):
         """Calculates the contours of the object in the microscopy image using the Chan-Vese active contour model.
-        The method applies a Gaussian filter to smooth the input image, then uses the Chan-Vese algorithm to segment the image and find the contours of the detected object. 
+        The method applies a Gaussian filter to smooth the input image, then uses the Chan-Vese algorithm to segment the image and find the contours of the detected object.
         Args:
             image (numpy.ndarray): The input image.
 
@@ -289,26 +303,26 @@ class MetricTool(object):
         """
         smoothImage = gaussian(image, sigma=1.0)
         cvMask = chan_vese(
-            smoothImage, 
-            mu=0.1, 
-            lambda1=1.15, 
-            lambda2=1, 
-            tol=1e-3, 
-            max_num_iter=200, 
-            dt=0.5, 
-            init_level_set="checkerboard"
+            smoothImage,
+            mu=0.1,
+            lambda1=1.15,
+            lambda2=1,
+            tol=1e-3,
+            max_num_iter=200,
+            dt=0.5,
+            init_level_set="checkerboard",
         )
         contours = find_contours(cvMask, 0.5)
         if not contours:
             return np.array([])
         snake = max(contours, key=len)
         return snake
-    
+
     def computeComaticityCentroids(self):
         """Calculates the comaticity centroids for the object in the microscopy image by analyzing each image along the Z-axis and determining the maximum drift in the X and Y directions from the center of the image."""
         threshold = ThresholdOtsu().getThreshold(self._image)
         maxDriftX = 0.0
-        maxDriftY = 0.0 
+        maxDriftY = 0.0
         for z in range(self._image.shape[0]):
             image = self._image[z]
             imageBinary = image > threshold
@@ -320,8 +334,14 @@ class MetricTool(object):
             largestRegion = max(props, key=lambda r: r.area)
             self._centroids.append(largestRegion.centroid)
             if len(self._centroids) > 1:
-                driftX = pxToUm(abs(self._centroids[-1][1] - image.shape[1]//2), self._pixelSize[2])
-                driftY = pxToUm(abs(self._centroids[-1][0] - image.shape[0]//2), self._pixelSize[1])
+                driftX = pxToUm(
+                    abs(self._centroids[-1][1] - image.shape[1] // 2),
+                    self._pixelSize[2],
+                )
+                driftY = pxToUm(
+                    abs(self._centroids[-1][0] - image.shape[0] // 2),
+                    self._pixelSize[1],
+                )
                 if driftX > maxDriftX:
                     maxDriftX = driftX
                 if driftY > maxDriftY:
@@ -346,46 +366,58 @@ class MetricTool(object):
         total = 0
         margin = 3
         for i in range(image.shape[1]):
-            if i < snake[:,1].min() - margin or i > snake[:,1].max() + margin:
+            if i < snake[:, 1].min() - margin or i > snake[:, 1].max() + margin:
                 continue
-            profile = image[:,i]
+            profile = image[:, i]
             amp = float(np.max(profile) - np.min(profile))
             prominenceMin = amp * float(0.4)
-            peaks, props = find_peaks(profile,prominence=prominenceMin, distance=2)
-            if len(peaks) > 1 and (any(peaks > image.shape[0]/2) and any(peaks < image.shape[0]/2)):
-                if all(peaks > image.shape[0]/2):
-                    score += pxToUm(self.distance(i, image.shape[1]/2), pixelSize) / (pxToUm(self.distance(peaks[0], peaks[-1]), self._pixelSize[0]))
-                else : 
-                    score -= pxToUm(self.distance(i, image.shape[1]/2), pixelSize) /(pxToUm(self.distance(peaks[0], peaks[-1]), self._pixelSize[0]))
+            peaks, props = find_peaks(profile, prominence=prominenceMin, distance=2)
+            if len(peaks) > 1 and (
+                any(peaks > image.shape[0] / 2) and any(peaks < image.shape[0] / 2)
+            ):
+                if all(peaks > image.shape[0] / 2):
+                    score += pxToUm(self.distance(i, image.shape[1] / 2), pixelSize) / (
+                        pxToUm(self.distance(peaks[0], peaks[-1]), self._pixelSize[0])
+                    )
+                else:
+                    score -= pxToUm(self.distance(i, image.shape[1] / 2), pixelSize) / (
+                        pxToUm(self.distance(peaks[0], peaks[-1]), self._pixelSize[0])
+                    )
                 total += 1
         if total > 0:
             score /= total
         return score
 
     def comaticity(self):
-        """Calculates the comaticity of the object in the microscopy image by analyzing the intensity profiles along the X and Y axes and comparing them to the detected contours of the object in the image. 
-        The method computes the comaticity score for both axes and combines them to provide an overall comaticity score for the object."""
+        """Calculates the comaticity of the object in the microscopy image by analyzing the intensity profiles along the X and Y axes and comparing them to the detected contours of the object in the image.
+        The method computes the comaticity score for both axes and combines them to provide an overall comaticity score for the object.
+        """
         self.computeComaticityCentroids()
-        if self._comaticityCentroids[0] >= self._pixelSize[2] or self._comaticityCentroids[1] >= self._pixelSize[1]:
-            image = self._image[:,int(self._image.shape[1]/2),:]
+        if (
+            self._comaticityCentroids[0] >= self._pixelSize[2]
+            or self._comaticityCentroids[1] >= self._pixelSize[1]
+        ):
+            image = self._image[:, int(self._image.shape[1] / 2), :]
             XScore = self._computeAxisComaticity(image, self._pixelSize[2])
-            image = self._image[:,:,int(self._image.shape[2]/2)]
+            image = self._image[:, :, int(self._image.shape[2] / 2)]
             YScore = self._computeAxisComaticity(image, self._pixelSize[1])
             self._comaticity = np.sqrt(XScore**2 + YScore**2)
-        else : 
+        else:
             self._comaticity = 0.0
 
     def sphericalAberration(self):
         """Calculates the spherical aberration of the object in the microscopy image by comparing the two halves of the intensity profile along the Z-axis to assess the symmetry of the point spread function (PSF) and determine the degree of spherical aberration present in the image."""
-        profile = self._image[:,int(self._image.shape[1]/2),int(self._image.shape[2]/2)]
+        profile = self._image[
+            :, int(self._image.shape[1] / 2), int(self._image.shape[2] / 2)
+        ]
         ndi.gaussian_filter(profile, sigma=1.0, output=profile)
         zCenter = np.argmax(profile)
         length = min(zCenter, len(profile) - 1 - zCenter)
-        before = profile[zCenter-length:zCenter][::-1]
-        after = profile[zCenter+1:zCenter+1+length]
-        self._sphericalAberration = 1-r2_score(before, after)
+        before = profile[zCenter - length : zCenter][::-1]
+        after = profile[zCenter + 1 : zCenter + 1 + length]
+        self._sphericalAberration = 1 - r2_score(before, after)
 
-    def getFWHM(self, image,mu,sigma):
+    def getFWHM(self, image, mu, sigma):
         """Calculates the full width at half maximum (FWHM) of the point spread function (PSF) in the given image by fitting a 2D Gaussian function to the intensity profile and extracting the FWHM values along the Y and X axes based on the fitted parameters.
         Args:
             image (numpy.ndarray): The input image containing the PSF to be analyzed.
@@ -400,43 +432,59 @@ class MetricTool(object):
         sigma2 = [sigma[1], sigma[2]]
         fittingTool = Fitting2D()
         fittingTool._spacing = self._pixelSize
-        params, _ = fittingTool.fitCurve(amp,bg,mu2,sigma2,fittingTool.getCoords(image),image)
+        params, _ = fittingTool.fitCurve(
+            amp, bg, mu2, sigma2, fittingTool.getCoords(image), image
+        )
         fwhmY = fittingTool.fwhm(params[4])
         fwhmX = fittingTool.fwhm(params[5])
         return [fwhmY, fwhmX]
 
-    def astigmatism(self,mu,sigma):
+    def astigmatism(self, mu, sigma):
         """Calculates the astigmatism of the object in the microscopy image by comparing the FWHM values along the Y and X axes for two points on either side of the object.
         Args:
             mu (list): A list of mean values for the Gaussian fit along the Z, Y, and X axes.
             sigma (list): A list of standard deviation values for the Gaussian fit along the Z, Y, and X axes.
         """
         fwhmZ = 2 * np.sqrt(2 * np.log(2)) * sigma[0]
-        pointBefore = [mu[0] - fwhmZ/2,mu[1], mu[2]]
-        pointAfter = [mu[0] + fwhmZ/2,mu[1], mu[2]]
+        pointBefore = (
+            [mu[0] - fwhmZ / 2, mu[1], mu[2]]
+            if mu[0] - fwhmZ / 2 >= 0
+            else [0, mu[1], mu[2]]
+        )
+        pointAfter = (
+            [mu[0] + fwhmZ / 2, mu[1], mu[2]]
+            if mu[0] + fwhmZ / 2 < self._image.shape[0]
+            else [self._image.shape[0] - 1, mu[1], mu[2]]
+        )
         imageBefore = self._image[int(pointBefore[0])]
         imageAfter = self._image[int(pointAfter[0])]
-        fwhmsBefore = self.getFWHM(imageBefore,mu,sigma)
-        fwhmsAfter = self.getFWHM(imageAfter,mu,sigma)
-        scoreBefore  =  (fwhmsBefore[0] - fwhmsBefore[1]) / (fwhmsBefore[0] + fwhmsBefore[1])
+        fwhmsBefore = self.getFWHM(imageBefore, mu, sigma)
+        fwhmsAfter = self.getFWHM(imageAfter, mu, sigma)
+        scoreBefore = (fwhmsBefore[0] - fwhmsBefore[1]) / (
+            fwhmsBefore[0] + fwhmsBefore[1]
+        )
         scoreAfter = (fwhmsAfter[0] - fwhmsAfter[1]) / (fwhmsAfter[0] + fwhmsAfter[1])
         self._astigmatism = abs(scoreAfter - scoreBefore)
 
     def ellipsRatio(self):
         """Calculates the ellipticity ratio of the object in the microscopy image by analyzing the major and minor axes of the detected contours."""
-        image = self._image[int(self._image.shape[0]/2)]
-        props = regionprops(label(image > ThresholdLegacy(nb_iteration=1000).getThreshold(image)))
+        image = self._image[int(self._image.shape[0] / 2)]
+        props = regionprops(
+            label(image > ThresholdLegacy(nb_iteration=1000).getThreshold(image))
+        )
         if not props:
             return 0.0
         largestRegion = max(props, key=lambda r: r.area)
         if largestRegion.axis_minor_length == 0:
             return 0.0
-        self._ellipsRatio = largestRegion.axis_major_length / largestRegion.axis_minor_length
-        self._orientation = np.rad2deg(largestRegion.orientation)%180
+        self._ellipsRatio = (
+            largestRegion.axis_major_length / largestRegion.axis_minor_length
+        )
+        self._orientation = np.rad2deg(largestRegion.orientation) % 180
 
     def distance2D(self, point1, point2):
-        return np.sqrt((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2)
-    
+        return np.sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2)
+
     def meshMetrics(self):
         self.meshBuilder = MeshBuilder()
         self.meshBuilder._image = self._image
@@ -446,22 +494,22 @@ class MetricTool(object):
     def skeletonizePath(self):
         """Calculates the skeletonized path of the object in the microscopy image by applying a skeletonization algorithm to the binary representation of the image and extracting the resulting skeletonized structure."""
         if self.meshBuilder is not None and self.meshBuilder._segArray is not None:
-            binaryImage = (self.meshBuilder._largestRegionMask > 0.5)
-        else :
+            binaryImage = self.meshBuilder._largestRegionMask > 0.5
+        else:
             imageFloat = self.setNormalizedImage(self._image)
             imageFloat = ndi.gaussian_filter(imageFloat, sigma=5)
             thresholdAbs = ThresholdOtsu().getThreshold(imageFloat)
             binaryImage = imageFloat > thresholdAbs
-        skeletonImg = skeletonize(binaryImage)  
+        skeletonImg = skeletonize(binaryImage)
         if np.sum(skeletonImg) < 2:
-             print("Skeletonization failed: not enough skeleton pixels found.")
-             return
+            print("Skeletonization failed: not enough skeleton pixels found.")
+            return
         self._pathSkeleton = skan.Skeleton(skeletonImg, spacing=self._pixelSize)
         self._pathSkeleton.path_lengths()
         maxLength = np.max(self._pathSkeleton.distances)
         self._summary = skan.summarize(self._pathSkeleton, separator="_")
-        maxDistance = self._summary['euclidean_distance'].values.max()
-        skeleton2Extremities = (maxLength/maxDistance)**2 if maxDistance > 0 else 0
+        maxDistance = self._summary["euclidean_distance"].values.max()
+        skeleton2Extremities = (maxLength / maxDistance) ** 2 if maxDistance > 0 else 0
         print("Skeleton to extremities ratio: ", skeleton2Extremities)
 
     def curvaturePath(self):
@@ -473,7 +521,9 @@ class MetricTool(object):
         pz = np.polyfit(t, centroidsArray[:, 0] * self._pixelSize[0], 2)
         py = np.polyfit(t, centroidsArray[:, 1] * self._pixelSize[1], 2)
         px = np.polyfit(t, centroidsArray[:, 2] * self._pixelSize[2], 2)
-        centroidsArray = np.column_stack((np.polyval(pz, t), np.polyval(py, t), np.polyval(px, t)))
+        centroidsArray = np.column_stack(
+            (np.polyval(pz, t), np.polyval(py, t), np.polyval(px, t))
+        )
         self._centroids = centroidsArray / self._pixelSize
         dpz = np.polyder(pz, 1)
         dpy = np.polyder(py, 1)
@@ -481,18 +531,21 @@ class MetricTool(object):
         ddpz = np.polyder(pz, 2)
         ddpy = np.polyder(py, 2)
         ddpx = np.polyder(px, 2)
-        v = np.column_stack((np.polyval(dpz, t), np.polyval(dpy, t), np.polyval(dpx, t)))
-        a = np.column_stack((np.polyval(ddpz, t), np.polyval(ddpy, t), np.polyval(ddpx, t)))
+        v = np.column_stack(
+            (np.polyval(dpz, t), np.polyval(dpy, t), np.polyval(dpx, t))
+        )
+        a = np.column_stack(
+            (np.polyval(ddpz, t), np.polyval(ddpy, t), np.polyval(ddpx, t))
+        )
         cross_prod = np.cross(v, a)
         numerator = np.linalg.norm(cross_prod, axis=1)
-        denominator = np.linalg.norm(v, axis=1)**3
-        with np.errstate(divide='ignore', invalid='ignore'):
+        denominator = np.linalg.norm(v, axis=1) ** 3
+        with np.errstate(divide="ignore", invalid="ignore"):
             curvature = numerator / denominator
             curvature[denominator == 0] = 0
         k_max = np.max(curvature)
-        if k_max < 1e-10: 
-            R_min = float('inf')
+        if k_max < 1e-10:
+            R_min = float("inf")
         else:
             R_min = 1.0 / k_max
         print(f"R_min: {R_min}")
-    

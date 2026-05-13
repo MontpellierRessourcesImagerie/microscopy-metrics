@@ -59,14 +59,14 @@ class TheoreticalResolution(object):
         if not isinstance(value, float) and not isinstance(value, int):
             raise ValueError("Emission wavelength must be a number")
         self._emissionWavelength = value / 1000
-    
+
     @property
     def excitationWavelength(self):
         return self._excitationWavelength
-    
+
     @excitationWavelength.setter
     def excitationWavelength(self, value):
-        if not isinstance(value,float) and not isinstance(value, int):
+        if not isinstance(value, float) and not isinstance(value, int):
             raise ValueError("Excitation wavelength must be a number")
         self._excitationWavelength = value / 1000
 
@@ -83,9 +83,11 @@ class TheoreticalResolution(object):
     def getTheoreticalResolution(self):
         """Abstract method to calculate the theoretical resolution of the microscope based on its parameters."""
         return [0, 0, 0]
-    
+
     def angularAperture(self):
         """Calculates the angular aperture of the microscope based on its numerical aperture and refractive index."""
         if self._angularAperture is None:
-            self._angularAperture = np.arcsin(self._numericalAperture / self._refractiveIndex)
+            self._angularAperture = np.arcsin(
+                self._numericalAperture / self._refractiveIndex
+            )
         return self._angularAperture

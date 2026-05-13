@@ -4,9 +4,8 @@ from skimage import measure
 from scipy.spatial import ConvexHull
 import open3d as o3d
 import pyvista as pv
-from skimage.segmentation import clear_border
 from scipy.ndimage import gaussian_filter
-from microscopy_metrics.thresholdTools.legacy import ThresholdLegacy
+
 
 class MeshBuilder(object):
     def __init__(self, image=None):
@@ -25,13 +24,15 @@ class MeshBuilder(object):
         self._segArray = None
 
     def BuildMesh(self):
-        if self._image is None : 
-            raise ValueError("Image is not set. Please set the image before building the mesh.")
+        if self._image is None:
+            raise ValueError(
+                "Image is not set. Please set the image before building the mesh."
+            )
         imgArray = self._image.astype(np.float32)
         imgBlurred = gaussian_filter(imgArray, sigma=0.5)
         maxImg = np.max(imgBlurred)
         NormImg = imgBlurred / maxImg if maxImg > 0 else imgBlurred
-        enhancedImg = (NormImg ** 1.25) * maxImg
+        enhancedImg = (NormImg**1.25) * maxImg
         imageVolume = sitk.GetImageFromArray(enhancedImg)
 
         otsuFilter = sitk.OtsuThresholdImageFilter()
@@ -53,12 +54,17 @@ class MeshBuilder(object):
         LabelledImage = measure.label(binaryImage)
         regions = measure.regionprops(LabelledImage)
         if len(regions) == 0:
-            raise ValueError("No regions found in the image. Please check the input image.")
+            print(LabelledImage.max())
+            raise ValueError(
+                "No regions found in the image. Please check the input image."
+            )
         largestRegion = max(regions, key=lambda r: r.area)
         self._largestRegionMask = (LabelledImage == largestRegion.label).astype(float)
         self._largestRegionMask = gaussian_filter(self._largestRegionMask, sigma=0.5)
 
-        self._vertices, self._faces, _, _ = measure.marching_cubes(self._largestRegionMask, level=0.5)
+        self._vertices, self._faces, _, _ = measure.marching_cubes(
+            self._largestRegionMask, level=0.5
+        )
 
         mesh = o3d.geometry.TriangleMesh()
         mesh.vertices = o3d.utility.Vector3dVector(self._vertices)
@@ -71,18 +77,22 @@ class MeshBuilder(object):
         self._verticesResized = np.asarray(mesh.vertices) * np.array(self._pixelSize)
         self._faces = np.asarray(mesh.triangles)
         return self._verticesResized, self._faces
-    
+
     def saveMesh(self, filename):
         if self._verticesResized is None or self._faces is None:
-            raise ValueError("Mesh has not been built. Please build the mesh before saving.")
+            raise ValueError(
+                "Mesh has not been built. Please build the mesh before saving."
+            )
         mesh = o3d.geometry.TriangleMesh()
         mesh.vertices = o3d.utility.Vector3dVector(self._verticesResized)
         mesh.triangles = o3d.utility.Vector3iVector(self._faces)
         o3d.io.write_triangle_mesh(filename, mesh)
-    
+
     def concavity(self):
         if self._verticesResized is None or self._faces is None:
-            raise ValueError("Mesh has not been built. Please build the mesh before calculating concavity.")
+            raise ValueError(
+                "Mesh has not been built. Please build the mesh before calculating concavity."
+            )
         p1 = self._verticesResized[self._faces[:, 0]]
         p2 = self._verticesResized[self._faces[:, 1]]
         p3 = self._verticesResized[self._faces[:, 2]]
@@ -92,17 +102,20 @@ class MeshBuilder(object):
         self._concavity = (hullVolume - meshVolume) / hullVolume
         print(f"Concavity: {self._concavity}")
         return self._concavity
-    
+
     def curvature(self):
         if self._verticesResized is None or self._faces is None:
-            raise ValueError("Mesh has not been built. Please build the mesh before calculating curvature.")
+            raise ValueError(
+                "Mesh has not been built. Please build the mesh before calculating curvature."
+            )
         facesPV = np.insert(self._faces, 0, 3, axis=1).flatten()
         meshPV = pv.PolyData(self._verticesResized, facesPV)
-        meshPV.flip_normals()
+        meshPV.flip_faces()
         self._curvature = meshPV.curvature()
+        print(self._curvature)
         return self._curvature
-    
+
     def computeMeshMetrics(self):
         self.BuildMesh()
         self.concavity()
-        self.curvature()        
+        self.curvature()
