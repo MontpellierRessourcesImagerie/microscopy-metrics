@@ -199,3 +199,9 @@ class FittingTool(object):
         """Calculates the contrast of the fitted curve based on the Weber contrast formula.
         """
         self.contrast = (self.parameters[0] - self.parameters[1]) / self.parameters[1]
+
+    def plotFit(self, outputPath:str):
+        pass
+
+    def showFit(self):
+        pass

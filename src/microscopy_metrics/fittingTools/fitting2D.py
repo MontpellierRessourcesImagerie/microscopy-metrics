@@ -114,7 +114,7 @@ class Fitting2D(FittingTool):
         )
         return popt, pcov
 
-    def show2dFit(self, psf: np.ndarray, outputPath: str, params: list):
+    def showFit(self, psf: np.ndarray, outputPath: str, params: list):
         """Generates and saves a visualization of the 2D Gaussian fit compared to the original PSF data.
         Args:
             psf (np.ndarray): The original PSF data.
@@ -201,7 +201,7 @@ class Fitting2D(FittingTool):
         )
         plt.close(fig1)
 
-    def plotFit3d(self, outputPath: str):
+    def plotFit(self, outputPath: str):
         """Generates and saves a visualization of the 3D Gaussian fit compared to the original PSF data.
         Args:
             outputPath (str): The path where the visualization will be saved.
@@ -295,6 +295,4 @@ class Fitting2D(FittingTool):
             self.pcovs[u] = pcov
             outputPath = os.path.join(activePath, f"2D_Gaussian_Image_{axe[u]}.png")
             if self._show:
-                self.show2dFit(psf[u], outputPath, params)
-        if self._show:
-            self.plotFit3d(activePath)
+                self.showFit(psf[u], outputPath, params)

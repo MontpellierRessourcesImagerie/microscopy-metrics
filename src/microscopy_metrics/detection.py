@@ -2,7 +2,7 @@ import os
 import math
 import numpy as np
 
-from PIL import Image
+from PIL import Image, ImageDraw
 from scipy.signal import find_peaks
 from skimage.draw import polygon_perimeter
 
@@ -274,9 +274,6 @@ class Detection(object):
             self._imageAnalyzer._beadAnalyzer.append(bead)
         yield {"desc": "Extracting Rois..."}
         self.extractRegionOfInterest()
-        if cropPsf:
-            yield {"desc": "Cropping PSFs..."}
-            self.cropPsf(outputDir)
 
     def getActivePath(self, index, outputDir):
         """Provides the path to the folder corresponding to the selected bead, creating it if it does not exist.
@@ -292,28 +289,43 @@ class Detection(object):
             os.makedirs(activePath)
         return activePath
 
-    def addRoiOnImage(self, roi):
+    def addRoiOnImage(self, roi, image=None, beadId=None):
         """Adds a visual representation of the ROI on the image by drawing a polygon perimeter around the specified ROI coordinates.
         Args:
             roi (np.ndarray): Coordinates of the corners of the ROI to be highlighted on the image.
+            image (np.ndarray, optional): The image on which to draw the ROI. If not provided, the internal image will be used.
+            beadId (int, optional): The ID of the bead for which to add the ROI. If not provided, no specific bead will be targeted.
 
         Returns:
             np.ndarray: The image with the ROI highlighted by a polygon perimeter.
         """
-        if self._image.ndim == 3:
-            imageTmp = np.max(self._image, axis=0)
-        imageTmp = (
-            (imageTmp - imageTmp.min()) / (imageTmp.max() - imageTmp.min()) * 255
-        ).astype(np.uint8)
-        imageRGB = np.stack([imageTmp, imageTmp, imageTmp], axis=-1)
+        if image is None:
+            if self._image.ndim == 3:
+                imageTmp = np.max(self._image, axis=0)
+            else:
+                imageTmp = image
+            imageTmp = imageTmp.astype(np.float32)
+            imageTmp = (
+                (imageTmp - imageTmp.min()) / (imageTmp.max() - imageTmp.min()) * 255
+            ).astype(np.uint8)
+            imageRGB = np.stack([imageTmp, imageTmp, imageTmp], axis=-1)
+        else :
+            imageRGB = image
         rr, cc = polygon_perimeter(
             [roi[0, 1], roi[1, 1], roi[2, 1], roi[3, 1]],
             [roi[0, 2], roi[1, 2], roi[2, 2], roi[3, 2]],
-            imageTmp.shape,
+            imageRGB.shape[:2],
         )
+        rr = np.clip(rr, 0, imageRGB.shape[0] - 1)
+        cc = np.clip(cc, 0, imageRGB.shape[1] - 1)
         imageRGB[rr, cc, 0] = 255
         imageRGB[rr, cc, 1] = 255
         imageRGB[rr, cc, 2] = 255
+        if beadId is not None:
+            pilImg = Image.fromarray(imageRGB)
+            draw = ImageDraw.Draw(pilImg)
+            draw.text((roi[0, 2], roi[0, 1]), f"Bead {beadId}", fill=(255, 255, 255))
+            imageRGB = np.array(pilImg)
         return imageRGB
 
     def cropPsf(self, outputDir):
@@ -345,3 +357,21 @@ class Detection(object):
                 XZData.save(os.path.join(activePath, "XZ_view.png"))
                 imageRoi = Image.fromarray(self.addRoiOnImage(roi))
                 imageRoi.save(os.path.join(activePath, "Localisation.png"))
+
+    def GlobalCropPsf(self, outputDir):
+        """Crops the PSF images for all valid ROIs and saves them in the specified output directory.
+        Args:
+            outputDir (Path): The directory of the output folder where the cropped PSF images will be saved.
+        """
+        MIPImage = np.max(self._image, axis=0)
+        canvasRGB = None
+        for bead in self._imageAnalyzer._beadAnalyzer:
+            if bead._rejected == False and bead._roi is not None:
+                roi = bead._roi
+                if canvasRGB is None:
+                    canvasRGB = self.addRoiOnImage(roi, image=None, beadId=bead._id)
+                else:
+                    canvasRGB = self.addRoiOnImage(roi, image=canvasRGB, beadId=bead._id)
+        imageRoi = Image.fromarray(canvasRGB)
+        imageRoi.save(os.path.join(outputDir, "Localisation.png"))
+

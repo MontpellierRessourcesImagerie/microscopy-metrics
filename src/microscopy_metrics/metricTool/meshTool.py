@@ -54,7 +54,6 @@ class MeshBuilder(object):
         LabelledImage = measure.label(binaryImage)
         regions = measure.regionprops(LabelledImage)
         if len(regions) == 0:
-            print(LabelledImage.max())
             raise ValueError(
                 "No regions found in the image. Please check the input image."
             )
@@ -112,7 +111,6 @@ class MeshBuilder(object):
         meshPV = pv.PolyData(self._verticesResized, facesPV)
         meshPV.flip_faces()
         self._curvature = meshPV.curvature()
-        print(self._curvature)
         return self._curvature
 
     def computeMeshMetrics(self):

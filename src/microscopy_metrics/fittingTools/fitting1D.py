@@ -148,7 +148,7 @@ class Fitting1D(FittingTool):
         )
         plt.close(fig1)
 
-    def plotFit1d(self, outputPath: str):
+    def plotFit(self, outputPath: str):
         """Plots the fitted curves for all three axes.
         Args:
             outputPath (str): Directory where the plots will be saved.
@@ -207,5 +207,3 @@ class Fitting1D(FittingTool):
             self.parameters[2 + u] = params[2]
             self.parameters[5 + u] = params[3]
             self.pcovs[u] = pcov
-        if self._show:
-            self.plotFit1d(activePath)

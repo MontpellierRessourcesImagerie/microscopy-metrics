@@ -52,3 +52,12 @@ class Fitting(object):
                 if meanDetermination < self._thresholdRSquared:
                     bead._rejected = True
                     bead._rejectionDesc = "R² below threshold"
+
+    def displayFitting(self, outputDir):
+        if self._imageAnalyzer is None:
+            return None
+        if len(self._imageAnalyzer._beadAnalyzer) == 0:
+            return None
+        for bead in self._imageAnalyzer._beadAnalyzer:
+            if bead._rejected == False and bead._roi is not None:
+                bead._fitTool.plotFit(os.path.join(outputDir, f"bead_{bead._id}"))

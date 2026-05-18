@@ -131,7 +131,7 @@ class Fitting3D(FittingTool):
         )
         return popt, pcov
 
-    def show2dFit(self, psf: np.ndarray, outputPath: str):
+    def showFit(self, psf: np.ndarray, outputPath: str):
         """Plots the 2D slices of the PSF data and the corresponding fitted Gaussian curves, and saves the plots to the specified output path.
         Args:
             psf (np.ndarray): 3D image of the PSF data
@@ -235,7 +235,7 @@ class Fitting3D(FittingTool):
         )
         plt.close(fig1)
 
-    def plotFit3d(self, outputPath: str):
+    def plotFit(self, outputPath: str):
         """Plots the fitted 3D Gaussian curve along with the original PSF data, and saves the plot to the specified output path.
         Args:
             outputPath (str): Path to the folder where the plot will be saved
@@ -298,5 +298,4 @@ class Fitting3D(FittingTool):
         self.pcovs = [pcov] * 3
 
         if self._show:
-            self.plotFit3d(activePath)
-            self.show2dFit(psf, activePath)
+            self.showFit(psf, activePath)

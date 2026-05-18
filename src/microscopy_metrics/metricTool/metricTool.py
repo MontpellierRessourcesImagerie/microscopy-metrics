@@ -38,6 +38,8 @@ class MetricTool(object):
         self._comaticity = 0
         self._sphericalAberration = 0
         self._pathSkeleton = None
+        self._RMin = 0
+        self._skeleton2Extremities = 0
         self._centroids = []
         self._summary = None
 
@@ -509,8 +511,8 @@ class MetricTool(object):
         maxLength = np.max(self._pathSkeleton.distances)
         self._summary = skan.summarize(self._pathSkeleton, separator="_")
         maxDistance = self._summary["euclidean_distance"].values.max()
-        skeleton2Extremities = (maxLength / maxDistance) ** 2 if maxDistance > 0 else 0
-        print("Skeleton to extremities ratio: ", skeleton2Extremities)
+        self._skeleton2Extremities = (maxLength / maxDistance) ** 2 if maxDistance > 0 else 0
+        print("Skeleton to extremities ratio: ", self._skeleton2Extremities)
 
     def curvaturePath(self):
         if self._centroids is None or len(self._centroids) < 3:
@@ -545,7 +547,7 @@ class MetricTool(object):
             curvature[denominator == 0] = 0
         k_max = np.max(curvature)
         if k_max < 1e-10:
-            R_min = float("inf")
+            self._RMin = float("inf")
         else:
-            R_min = 1.0 / k_max
-        print(f"R_min: {R_min}")
+            self._RMin = 1.0 / k_max
+        print(f"R_min: {self._RMin:.2f} um")

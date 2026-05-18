@@ -132,7 +132,7 @@ class Fitting2DEllips(FittingTool):
         theta = ((math.pi / 2) - theta) * thetaSign
         return theta, sx, sy
 
-    def show2dFit(self, psf: np.ndarray, outputPath: str, params: list, theta: float):
+    def showFit(self, psf: np.ndarray, outputPath: str, params: list, theta: float):
         """Generates and saves a plot comparing the original PSF data with the fitted 2D Ellipse Gaussian curve, including the angle of rotation (theta) and the center of the Gaussian.
         Args:
             psf (np.ndarray): The original PSF data.
@@ -237,7 +237,7 @@ class Fitting2DEllips(FittingTool):
         )
         plt.close(fig1)
 
-    def plotFit3d(self, popt: list, outputPath: str):
+    def plotFit(self, outputPath: str):
         """Generates and saves a 3D plot comparing the original PSF data with the fitted 2D Ellipse Gaussian curve, including the center of the Gaussian (mu) and the angle of rotation (theta).
         Args:
             popt (List(List(float))): The fitted parameters for the 2D Ellipse Gaussian.
@@ -255,13 +255,13 @@ class Fitting2DEllips(FittingTool):
             if i < 2:
                 index = i + 1
                 fineCoords = np.column_stack((fine, np.full_like(fine, center[index])))
-                mu = popt[i][2]
+                mu = self.params2D[i][2]
             else:
                 index = 0
                 fineCoords = np.column_stack((np.full_like(fine, center[index]), fine))
-                mu = popt[i][3]
+                mu = self.params2D[i][3]
             self.plotSingleFit(
-                psfs[i], fine, self.gauss(*popt[i])(fineCoords), outputPath, mu, i
+                psfs[i], fine, self.gauss(*self.params2D[i])(fineCoords), outputPath, mu, i
             )
 
     def getCoords(self, psf: np.ndarray):
@@ -294,7 +294,7 @@ class Fitting2DEllips(FittingTool):
         ]
         activePath = self.getActivePath(index)
         self.compute1DParams()
-        params2D = []
+        self.params2D = []
         amp = self.params1D[0]
         bg = self.params1D[1]
 
@@ -308,7 +308,7 @@ class Fitting2DEllips(FittingTool):
 
             params, pcov = self.fitCurve(amp, bg, mu, sigma, coords[u], psf[u])
 
-            params2D.append(params)
+            self.params2D.append(params)
             theta, s1, s2 = self.ellipseParmConversion(params[4], params[5], params[6])
             self.thetas[u] = theta
             self.parameters[0] += params[0] / 3.0
@@ -336,8 +336,5 @@ class Fitting2DEllips(FittingTool):
             self.pcovs[u] = pcov
             outputPath = os.path.join(activePath, f"2D_Gaussian_Image_{axe[u]}.png")
             if self._show:
-                self.show2dFit(psf[u], outputPath, params, theta)
-        if self._show:
-            self.plotFit3d(params2D, activePath)
-            for i in range(3):
-                print(f"mean angle {axe[i]}: {math.degrees(self.thetas[i])}")
+                self.showFit(psf[u], outputPath, params, theta)
+

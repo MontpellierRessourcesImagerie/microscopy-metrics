@@ -163,7 +163,7 @@ class Fitting3DRotation(FittingTool):
         )
         return popt, pcov
 
-    def show2dFit(self, outputPath: str):
+    def showFit(self, outputPath: str):
         """Plots the fitted 3D Gaussian curve with rotation against the original PSF data for all three axes.
         Args:
             outputPath (str): Directory where the plots will be saved.
@@ -341,7 +341,7 @@ class Fitting3DRotation(FittingTool):
         )
         plt.close(fig1)
 
-    def plotFit3d(self, outputPath: str):
+    def plotFit(self, outputPath: str):
         """Plots the fitted 3D Gaussian curve with rotation against the original PSF data for all three axes.
         Args:
             outputPath (str): Directory where the plots will be saved.
@@ -403,8 +403,7 @@ class Fitting3DRotation(FittingTool):
         self.parameters[5:8] = params[5:8]
         self.pcovs = [pcov] * 3
         if self._show:
-            self.plotFit3d(activePath)
-            self.show2dFit(activePath)
+            self.showFit(activePath)
             thetaX, thetaY, thetaZ = self.thetas
             cx, sx, cy, sy, cz, sz = (
                 np.cos(thetaX),

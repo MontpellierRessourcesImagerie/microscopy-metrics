@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 from scipy.signal import find_peaks
 
@@ -16,6 +17,28 @@ class Prominence(FittingTool):
     def __init__(self):
         super().__init__()
         self._prominenceRel = 0.1
+
+    def plotFit(self, outputPath):
+        """Plots the intensity profiles along the Z, Y, and X axes of the PSF image, highlighting the detected peaks based on their prominence, and saves the plot to the specified output path.
+        Args:
+            outputPath (str): Path to the folder where the plot will be saved
+        """
+        fig1, axs = plt.subplots(1, 3, figsize=(15, 5))
+        axes = ["Z", "Y", "X"]
+        for idx in range(3):
+            profile = self._image[:, :, :][:, :, :][idx]
+            amp = float(np.max(profile) - np.min(profile))
+            prominenceMin = amp * float(self._prominenceRel)
+            peaks, props = find_peaks(profile, prominence=prominenceMin)
+            axs[idx].plot(profile, label="Intensity Profile")
+            axs[idx].plot(peaks, profile[peaks], "x", label="Detected Peaks")
+            axs[idx].set_title(f"Intensity Profile along {axes[idx]} axis")
+            axs[idx].set_xlabel("Pixel Index")
+            axs[idx].set_ylabel("Intensity")
+            axs[idx].legend()
+        plt.tight_layout()
+        plt.savefig(outputPath)
+        plt.close(fig1)
 
     def processSingleFit(self, index):
         """Processes a single fit by analyzing the intensity profiles along the Z, Y, and X axes, identifying peaks based on their prominence, and calculating the full width at half maximum (FWHM) for the detected peaks.

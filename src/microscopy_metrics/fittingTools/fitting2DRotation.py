@@ -125,7 +125,7 @@ class Fitting2DRotation(FittingTool):
         )
         return popt, pcov
 
-    def show2dFit(self, psf: np.ndarray, params: list, outputPath: str):
+    def showFit(self, psf: np.ndarray, params: list, outputPath: str):
         """Generates a visual representation of the fitted 2D Gaussian curve with rotation compared to the original PSF data.
         Args:
             psf (np.ndarray): The original PSF data to compare against the fitted curve.
@@ -230,7 +230,7 @@ class Fitting2DRotation(FittingTool):
         )
         plt.close(fig1)
 
-    def plotFit3d(self, outputPath: str):
+    def plotFit(self, outputPath: str):
         """Plots the fitted 2D Gaussian curve in 3D.
         Args:
             outputPath (str): Directory where the plot will be saved.
@@ -342,10 +342,4 @@ class Fitting2DRotation(FittingTool):
             self.pcovs[u] = pcov
             outputPath = os.path.join(activePath, f"2D_Gaussian_Image_{axe[u]}.png")
             if self._show:
-                self.show2dFit(psf[u], params, outputPath)
-        if self._show:
-            self.plotFit3d(activePath)
-            for i in range(3):
-                print(
-                    f"Plane {axe[i]} | Local Angle: {math.degrees(self.thetas[i]):.2f}° => Major axis: {visual_angles[i]:.2f}°"
-                )
+                self.showFit(psf[u], params, outputPath)
