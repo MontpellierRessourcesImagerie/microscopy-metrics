@@ -18,8 +18,8 @@ from microscopy_metrics.fittingTools.fitting3DRotation import Fitting3DRotation
 matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
 
-GIBSONLANNI = True
-ORIENTED = False
+GIBSONLANNI = False
+ORIENTED = True
 PSF_SIZE = 80
 NOISE = False
 FIT_METHODS = ["1D", "2D", "3D", "2DRotation", "3DRotation", "2DEllips", "Prominence"]

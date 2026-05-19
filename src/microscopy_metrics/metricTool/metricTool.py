@@ -1,3 +1,4 @@
+import os
 import math
 import skan
 import numpy as np
@@ -6,7 +7,6 @@ import matplotlib.pyplot as plt
 from scipy import ndimage as ndi
 from scipy.signal import find_peaks
 from scipy.ndimage import median_filter
-from scipy.interpolate import make_interp_spline, splprep
 from sklearn.metrics import r2_score
 from skimage.measure import regionprops, label
 from skimage.filters import gaussian
@@ -399,9 +399,9 @@ class MetricTool(object):
             self._comaticityCentroids[0] >= self._pixelSize[2]
             or self._comaticityCentroids[1] >= self._pixelSize[1]
         ):
-            image = self._image[:, int(self._image.shape[1] / 2), :]
+            image = self._image[:, int(self._image.shape[1] / 2), :].copy()
             XScore = self._computeAxisComaticity(image, self._pixelSize[2])
-            image = self._image[:, :, int(self._image.shape[2] / 2)]
+            image = self._image[:, :, int(self._image.shape[2] / 2)].copy()
             YScore = self._computeAxisComaticity(image, self._pixelSize[1])
             self._comaticity = np.sqrt(XScore**2 + YScore**2)
         else:
@@ -411,7 +411,7 @@ class MetricTool(object):
         """Calculates the spherical aberration of the object in the microscopy image by comparing the two halves of the intensity profile along the Z-axis to assess the symmetry of the point spread function (PSF) and determine the degree of spherical aberration present in the image."""
         profile = self._image[
             :, int(self._image.shape[1] / 2), int(self._image.shape[2] / 2)
-        ]
+        ].copy()
         ndi.gaussian_filter(profile, sigma=1.0, output=profile)
         zCenter = np.argmax(profile)
         length = min(zCenter, len(profile) - 1 - zCenter)
@@ -551,3 +551,26 @@ class MetricTool(object):
         else:
             self._RMin = 1.0 / k_max
         print(f"R_min: {self._RMin:.2f} um")
+
+
+    def generateBeadOrientation(self, outputPath):
+        if self._orientation is None:
+            print("Orientation not calculated, cannot generate bead orientation.")
+            return
+        fig, ax = plt.subplots(figsize=(5, 5))
+        ax.set_xlim(-1, 1)
+        ax.set_ylim(-1, 1)
+        ax.arrow(
+            0,
+            0,
+            np.sin(np.radians(self._orientation)),
+            np.cos(np.radians(self._orientation)),
+            head_width=0.1,
+            head_length=0.2,
+            fc="blue",
+            ec="blue",
+        )
+        ax.set_aspect("equal")
+        plt.title(f"Bead Orientation: {self._orientation:.2f} degrees")
+        plt.savefig(os.path.join(outputPath, "bead_orientation.png"))
+        plt.close()

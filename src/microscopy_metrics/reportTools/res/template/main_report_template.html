@@ -1,25 +1,332 @@
 <!DOCTYPE html>
-    <html lang="en">
-        <head>
-            <meta charset="utf-8">
-            <title>Analysis results - {{ title }}</title>
-        </head>
-        <body style=" background-color: whitesmoke;" >
-            <div class="header" style="display: block; margin-left: auto; margin-right: auto;text-align: center;">
-                <h1>Analysis results - {{ title }}</h1>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Analysis results - {{ title }}</title>
+    <style>
+        /* Base typography and body */
+        body {
+            background-color: #f7f9f9; /* Soft off-white */
+            color: #2c3e50; /* Softer black for better reading */
+            font-family: 'Charter', 'Georgia', 'Times New Roman', serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Main container acting as a "Page" */
+        .container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 850px;
+            padding: 40px 60px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1);
+            border-top: 5px solid #2980b9; /* Academic blue accent */
+            box-sizing: border-box;
+        }
+
+        /* Typography */
+        h1 {
+            font-family: 'Helvetica Neue', 'Arial', sans-serif;
+            color: #2c3e50;
+            margin-top: 0;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #ecf0f1;
+            font-size: 2.2em;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-family: 'Helvetica Neue', 'Arial', sans-serif;
+            color: #34495e;
+            font-size: 1.4em;
+            margin-top: 35px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ecf0f1;
+            padding-bottom: 5px;
+        }
+
+        p {
+            margin: 10px 0;
+            font-size: 1.05em;
+        }
+
+        strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        /* Tables (Academic style) */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95em;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        th {
+            font-family: 'Helvetica Neue', 'Arial', sans-serif;
+            font-weight: 600;
+            color: #34495e;
+            border-bottom: 2px solid #34495e;
+        }
+
+        tr:last-child td {
+            border-bottom: 2px solid #34495e;
+        }
+
+        /* Lists */
+        ul {
+            list-style-type: square;
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+            font-size: 1.05em;
+        }
+
+        /* Links */
+        a {
+            color: #2980b9;
+            text-decoration: none;
+            border-bottom: 1px dotted #2980b9;
+            transition: all 0.2s ease-in-out;
+        }
+
+        a:hover {
+            color: #c0392b; /* Change to a deep red on hover */
+            border-bottom: 1px solid #c0392b;
+        }
+
+        /* Specific section styling */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .rejected-bead {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px 30px;
+            background-color: #fcfcfc;
+            padding: 20px;
+            border: 1px solid #e1e8ed;
+            border-radius: 4px;
+        }
+
+        .metrics-grid p {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dotted #e1e8ed;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+            text-align: center;
+            font-size: 0.9em;
+            color: #7f8c8d;
+            font-family: 'Helvetica Neue', 'Arial', sans-serif;
+        }
+        
+        .footer a {
+            border: none;
+            font-weight: bold;
+        }
+
+        /* Status dots for metrics */
+        .status-dot {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .status-good {
+            background-color: #27ae60;
+            box-shadow: 0 0 4px #27ae60;
+        }
+
+        .status-warn {
+            background-color: #f39c12;
+            box-shadow: 0 0 4px #f39c12;
+        }
+
+        .status-bad {
+            background-color: #e74c3c;
+            box-shadow: 0 0 4px #e74c3c;
+        }
+
+        .metric-value {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Analysis results - {{ title }}</h1>
+        </div>
+
+        <div>
+            <h2>Image Analysis Summary</h2>
+            <p><strong>Image path:</strong> <span>{{ imageAnalyzer._path }}</span></p>
+            <div class="metrics-grid">
+                <p><strong>Image shape:</strong> <span>{{ imageAnalyzer._image.shape }}</span></p>
+                <p><strong>Pixel size (µm):</strong> <span>{{ imageAnalyzer._pixelSize }}</span></p>
+                <p><strong>Beads detected:</strong> <span>{{ imageAnalyzer._beadAnalyzer|length }}</span></p>
+                <p><strong>Beads rejected:</strong> <span>{{ imageAnalyzer._beadAnalyzer|selectattr("_rejected")|list|length }}</span></p>
             </div>
-            <div class="corpus">
-                <h2>Bead's list</h2>
-                <ul>
-                    {% for bead in beads %}
-                        {% if bead._rejected == False %}
-                            <li><a href="bead_{{ bead._id }}/report.html">Bead {{ bead._id }}</a></li>
-                        {% endif %}
-                        {% if bead._rejected == True %}
-                            <li>Bead {{ bead._id }} (rejected) : {{ bead._rejectionDesc if bead._rejectionDesc is not none else "N/A" }}</li>
-                        {% endif %}
-                    {% endfor %}
-                </ul>
+        </div>
+
+        <div>
+            <h2>Global Resolution & Fitting Quality</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter (Mean)</th>
+                        <th>X-axis</th>
+                        <th>Y-axis</th>
+                        <th>Z-axis</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Theoretical resolution (µm)</strong></td>
+                        <td>{{ "%.4f"|format(imageAnalyzer._theoreticalResolution[2] if imageAnalyzer._theoreticalResolution[2] is not none else 0) }}</td>
+                        <td>{{ "%.4f"|format(imageAnalyzer._theoreticalResolution[1] if imageAnalyzer._theoreticalResolution[1] is not none else 0) }}</td>
+                        <td>{{ "%.4f"|format(imageAnalyzer._theoreticalResolution[0] if imageAnalyzer._theoreticalResolution[0] is not none else 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sampling distance (µm)</strong></td>
+                        <td>{{ "%.4f"|format(imageAnalyzer._samplingDistance[2] if imageAnalyzer._samplingDistance[2] is not none else 0) }}</td>
+                        <td>{{ "%.4f"|format(imageAnalyzer._samplingDistance[1] if imageAnalyzer._samplingDistance[1] is not none else 0) }}</td>
+                        <td>{{ "%.4f"|format(imageAnalyzer._samplingDistance[0] if imageAnalyzer._samplingDistance[0] is not none else 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Full width at half maximum (µm)</strong></td>
+                        <td>{{ "%.4f"|format(imageAnalyzer._meanFWHM[2] if imageAnalyzer._meanFWHM[2] is not none else 0) }}</td>
+                        <td>{{ "%.4f"|format(imageAnalyzer._meanFWHM[1] if imageAnalyzer._meanFWHM[1] is not none else 0) }}</td>
+                        <td>{{ "%.4f"|format(imageAnalyzer._meanFWHM[0] if imageAnalyzer._meanFWHM[0] is not none else 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Uncertainty</strong></td>
+                        <td>{{ "%.4f"|format(imageAnalyzer._meanUncertainty[2][3] if imageAnalyzer._meanUncertainty[2] is not none else 0) }}</td>
+                        <td>{{ "%.4f"|format(imageAnalyzer._meanUncertainty[1][3] if imageAnalyzer._meanUncertainty[1] is not none else 0) }}</td>
+                        <td>{{ "%.4f"|format(imageAnalyzer._meanUncertainty[0][3] if imageAnalyzer._meanUncertainty[0] is not none else 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Determination coefficient</strong></td>
+                        <td>{{ "%.4f"|format(imageAnalyzer._meanDetermination[2] if imageAnalyzer._meanDetermination[2] is not none else 0) }}</td>
+                        <td>{{ "%.4f"|format(imageAnalyzer._meanDetermination[1] if imageAnalyzer._meanDetermination[1] is not none else 0) }}</td>
+                        <td>{{ "%.4f"|format(imageAnalyzer._meanDetermination[0] if imageAnalyzer._meanDetermination[0] is not none else 0) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="corpus">
+            <h2>Bead Registry</h2>
+            <ul>
+                {% for bead in beads %}
+                    {% if bead._rejected == False %}
+                        <li><a href="bead_{{ bead._id }}/report.html">Bead {{ bead._id }}</a></li>
+                    {% endif %}
+                    {% if bead._rejected == True %}
+                        <li class="rejected-bead">Bead {{ bead._id }} (rejected) : {{ bead._rejectionDesc if bead._rejectionDesc is not none else "N/A" }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div>
+            <h2>Global Metrics Overview</h2>
+            <div class="metrics-grid">
+                
+                <p><strong>Signal to Background:</strong> 
+                    <span class="metric-value">
+                        {% set sbr = imageAnalyzer._meanSBR if imageAnalyzer._meanSBR else 0 %}
+                        {% if sbr > 15 %} <span class="status-dot status-good"></span>
+                        {% elif sbr > 5 %} <span class="status-dot status-warn"></span>
+                        {% else %} <span class="status-dot status-bad"></span>{% endif %}
+                        {{ sbr|round(4) if imageAnalyzer._meanSBR else "N/A" }}
+                    </span>
+                </p>
+
+                <p><strong>Spherical Aberration:</strong> 
+                    <span class="metric-value">
+                        {% set sa = imageAnalyzer._meanSphericalAberration if imageAnalyzer._meanSphericalAberration else 100 %}
+                        {% if sa < 0.2 %} <span class="status-dot status-good"></span>
+                        {% elif sa < 0.5 %} <span class="status-dot status-warn"></span>
+                        {% else %} <span class="status-dot status-bad"></span>{% endif %}
+                        {{ imageAnalyzer._meanSphericalAberration|round(4) if imageAnalyzer._meanSphericalAberration else "N/A" }}
+                    </span>
+                </p>
+
+                <p><strong>Contrast:</strong> 
+                    <span class="metric-value">{{ imageAnalyzer._meanContrast|round(4) if imageAnalyzer._meanContrast else "N/A" }}</span>
+                </p>
+                
+                <p><strong>Ellips Ratio:</strong> 
+                    <span class="metric-value">
+                        {% set er = imageAnalyzer._meanEllipsRatio if imageAnalyzer._meanEllipsRatio else 0 %}
+                        {% if er > 0.8 %} <span class="status-dot status-good"></span>
+                        {% elif er > 0.5 %} <span class="status-dot status-warn"></span>
+                        {% else %} <span class="status-dot status-bad"></span>{% endif %}
+                        {{ er|round(4) if imageAnalyzer._meanEllipsRatio else "N/A" }}
+                    </span>
+                </p>
+
+                <p><strong>Orientation:</strong> 
+                    <span class="metric-value">{{ imageAnalyzer._meanOrientation|round(2) if imageAnalyzer._meanOrientation else "N/A" }}°</span>
+                </p>
+                
+                <p><strong>Comaticity:</strong> 
+                    <span class="metric-value">
+                        {% set co = imageAnalyzer._meanComaticity if imageAnalyzer._meanComaticity else 100 %}
+                        {% if co < 0.1 %} <span class="status-dot status-good"></span>
+                        {% elif co < 0.3 %} <span class="status-dot status-warn"></span>
+                        {% else %} <span class="status-dot status-bad"></span>{% endif %}
+                        {{ imageAnalyzer._meanComaticity|round(4) if imageAnalyzer._meanComaticity else "N/A" }}
+                    </span>
+                </p>
+
+                <p><strong>Astigmatism:</strong> 
+                    <span class="metric-value">
+                        {% set ast = imageAnalyzer._meanAstigmatism if imageAnalyzer._meanAstigmatism else 100 %}
+                        {% if ast < 0.1 %} <span class="status-dot status-good"></span>
+                        {% elif ast < 0.3 %} <span class="status-dot status-warn"></span>
+                        {% else %} <span class="status-dot status-bad"></span>{% endif %}
+                        {{ imageAnalyzer._meanAstigmatism|round(4) if imageAnalyzer._meanAstigmatism else "N/A" }}
+                    </span>
+                </p>
             </div>
-        </body>
-    </html>
+        </div>
+
+        <div class="footer">
+            <p>Generated by Microscopy Metrics - <a href="https://github.com/MontpellierRessourcesImagerie/microscopy-metrics">GitHub</a></p>
+        </div>
+    </div>
+</body>
+</html>

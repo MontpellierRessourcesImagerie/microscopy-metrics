@@ -30,6 +30,7 @@ class ReportHTML(ReportGenerator):
                     "title": f"Bead {bead._id}",
                     "bead": bead,
                     "theoretical_resolution": self._imageAnalyzer._theoreticalResolution,
+                    "sampling_distance": self._imageAnalyzer._samplingDistance,
                     "path": beadPath,
                 }
                 htmlContent = template.render(data)
@@ -38,6 +39,7 @@ class ReportHTML(ReportGenerator):
         mainTemplate = env.get_template("main_report_template.html")
         data = {
             "title": f"Microscopy Metrics Report - {os.path.basename(self._imageAnalyzer._path)}",
+            "imageAnalyzer": self._imageAnalyzer,
             "beads": self._imageAnalyzer._beadAnalyzer,
         }
         mainHtmlContent = mainTemplate.render(data)

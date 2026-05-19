@@ -363,7 +363,6 @@ class Detection(object):
         Args:
             outputDir (Path): The directory of the output folder where the cropped PSF images will be saved.
         """
-        MIPImage = np.max(self._image, axis=0)
         canvasRGB = None
         for bead in self._imageAnalyzer._beadAnalyzer:
             if bead._rejected == False and bead._roi is not None:

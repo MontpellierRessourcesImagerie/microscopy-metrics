@@ -52,6 +52,20 @@ class Fitting(object):
                 if meanDetermination < self._thresholdRSquared:
                     bead._rejected = True
                     bead._rejectionDesc = "R² below threshold"
+        beadsKept = len([b for b in self._imageAnalyzer._beadAnalyzer if b._rejected == False and b._roi is not None])
+        if beadsKept == 0:
+            print("No beads kept after fitting. Please check the fitting results and adjust the threshold if necessary.")
+        for bead in self._imageAnalyzer._beadAnalyzer:
+            if bead._rejected == False and bead._roi is not None:
+                self._imageAnalyzer._meanDetermination[0] += bead._fitTool.determinations[0] / beadsKept
+                self._imageAnalyzer._meanDetermination[1] += bead._fitTool.determinations[1] / beadsKept
+                self._imageAnalyzer._meanDetermination[2] += bead._fitTool.determinations[2] / beadsKept
+                self._imageAnalyzer._meanFWHM[0] += bead._fitTool.fwhms[0] / beadsKept
+                self._imageAnalyzer._meanFWHM[1] += bead._fitTool.fwhms[1] / beadsKept
+                self._imageAnalyzer._meanFWHM[2] += bead._fitTool.fwhms[2] / beadsKept
+                self._imageAnalyzer._meanUncertainty[0] += bead._fitTool.uncertainties[0] / beadsKept
+                self._imageAnalyzer._meanUncertainty[1] += bead._fitTool.uncertainties[1] / beadsKept
+                self._imageAnalyzer._meanUncertainty[2] += bead._fitTool.uncertainties[2] / beadsKept
 
     def displayFitting(self, outputDir):
         if self._imageAnalyzer is None:

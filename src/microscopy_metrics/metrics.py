@@ -83,6 +83,7 @@ class Metrics(object):
         self._imageAnalyzer._theoreticalResolution = (
             self._TheoreticalResolutionTool.getTheoreticalResolution()
         )
+        self._imageAnalyzer._samplingDistance = self._TheoreticalResolutionTool.getSamplingDistance()
         yield {"desc": "Mesh-based metrics calculation..."}
         self.runMeshMetrics()
 
@@ -162,6 +163,7 @@ class Metrics(object):
                 OrientationValues.append(bead._metricTool._orientation)
                 RMinValues.append(bead._metricTool._RMin)
                 Skeleton2ExtremitiesValues.append(bead._metricTool._skeleton2Extremities)
+                bead._metricTool.generateBeadOrientation(os.path.join(outputDir, f"bead_{bead._id}"))
         self.HeatmapGenerator(outputDir, sbrValues, xCoords, yCoords, MetricName="SBR")
         self.HeatmapGenerator(outputDir, ComaticityValues, xCoords, yCoords, MetricName="Comaticity")
         self.HeatmapGenerator(outputDir, SphericalAberrationValues, xCoords, yCoords, MetricName="SphericalAberration")
