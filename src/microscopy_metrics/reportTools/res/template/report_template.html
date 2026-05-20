@@ -166,6 +166,23 @@
             display: flex;
             align-items: center;
         }
+
+        .hoverable-tooltip {
+            display: none;
+        }
+        .status-dot:hover ~ .hoverable-tooltip {
+            display: block;
+            position: absolute;
+            background-color: #34495e;
+            color: #ecf0f1;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            white-space: nowrap;
+            transform: translate(-50%, -150%);
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
@@ -243,92 +260,108 @@
             </table>
 
             <h2>Metrics</h2>
+            <h3>Standard metrics</h3>
             <div class="metrics-grid">
                 <p><strong>Signal to Background:</strong> 
                     <span class="metric-value">
                         {% set sbr = bead._metricTool._SBR if bead._metricTool._SBR is not none else 0 %}
-                        {% if sbr > 10 %} <span class="status-dot status-good"></span>
-                        {% elif sbr > 5 %} <span class="status-dot status-warn"></span>
-                        {% else %} <span class="status-dot status-bad"></span>{% endif %}
+                        {% if sbr > 10 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">Good : Signal to background ratio is high, the image quality is good.</span>
+                        {% elif sbr > 5 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">Warning : Signal to background is moderate, the analysis may have some limitations</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">Bad : Signal to background is low, the analysis may be unreliable</span>{% endif %}
                         {{ sbr|round(4) if bead._metricTool._SBR is not none else "N/A" }}
                     </span>
-                </p>                
+                </p> 
+                <p><strong>Contrast:</strong> 
+                    <span class="metric-value">
+                        {% set contrast = bead._fitTool.contrast if bead._fitTool.contrast is not none else 0 %}
+                        {% if contrast > 10 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">Good : Contrast is high, the image quality is good.</span>
+                        {% elif contrast > 5 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">Warning : Contrast is moderate, the analysis may have some limitations</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">Bad : Contrast is low, the analysis may be unreliable</span>{% endif %}
+                        {{ "%.4f"|format(bead._fitTool.contrast if bead._fitTool.contrast is not none else 0) }}
+                    </span>
+                </p>
+                <p><strong>EllipsRatio:</strong> 
+                    <span class="metric-value">
+                        {% set ellipsRatio = bead._metricTool._ellipsRatio if bead._metricTool._ellipsRatio is not none else 0 %}
+                        {% if ellipsRatio > 0.9 and ellipsRatio < 1.1 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">Good : Main axis are equivalent, beads are circular.</span>
+                        {% elif ellipsRatio > 0.8 and ellipsRatio < 1.2 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">Warning : Main axis are somewhat different, the bead is somewhat elongated.</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">Bad : Main axis are very different, the bead  very elongated.</span>{% endif %}
+                        {{ "%.4f"|format(bead._metricTool._ellipsRatio if bead._metricTool._ellipsRatio is not none else 0) }}
+                    </span>
+                </p>
+                <p><strong>Orientation:</strong> 
+                    <span>{{ "%.4f"|format(bead._metricTool._orientation if bead._metricTool._orientation is not none else 0) }}</span>
+                </p>
                 <p><strong>Lateral asymmetry ratio (LAR):</strong> 
                     <span class="metric-value">
                         {% set lar = bead._metricTool._LAR if bead._metricTool._LAR is not none else 0 %}
-                        {% if lar > 0.9 %} <span class="status-dot status-good"></span>
-                        {% elif lar > 0.8 %} <span class="status-dot status-warn"></span>
-                        {% else %} <span class="status-dot status-bad"></span>{% endif %}
+                        {% if lar > 0.9 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">Good : LAR is high, the image quality is good.</span>
+                        {% elif lar > 0.8 %} <span class="status-dot status-warn"></span><span class="hoverable-tooltip">Warning : The bead is somewhat elongated.</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">Bad : The bead is very elongated.</span>{% endif %}
                         {{ lar|round(4) if bead._metricTool._LAR is not none else "N/A" }}
                     </span>
                 </p>
                 <p><strong>Sphericity:</strong> 
                     <span class="metric-value">
                         {% set sphericity = bead._metricTool._sphericity if bead._metricTool._sphericity is not none else 0 %}
-                        {% if sphericity > 0.75 %} <span class="status-dot status-good"></span>
-                        {% elif sphericity > 0.7 %} <span class="status-dot status-warn"></span>
-                        {% else %} <span class="status-dot status-bad"></span>{% endif %}
+                        {% if sphericity > 0.75 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">Good : Sphericity is high, the image quality is good.</span>
+                        {% elif sphericity > 0.65 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">Warning : Sphericity is moderate, the bead is somewhat elongated.</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">Bad : Sphericity is low, the bead is very elongated.</span>{% endif %}
                         {{ sphericity|round(4) if bead._metricTool._sphericity is not none else "N/A" }}
                     </span>
                 </p>
+            </div>
+            <h3>Comatic Aberration Metrics</h3>
+            <div class="metrics-grid">
                 <p><strong>Comaticity:</strong> 
                     <span class="metric-value">
                         {% set comaticity = bead._metricTool._comaticity if bead._metricTool._comaticity is not none else 0 %}
-                        {% if comaticity < 0.1 %} <span class="status-dot status-good"></span>
-                        {% elif comaticity < 0.2 %} <span class="status-dot status-warn"></span>
-                        {% else %} <span class="status-dot status-bad"></span>{% endif %}
+                        {% if comaticity < 0.1 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">Good : Comaticity is low, the image quality is good.</span>
+                        {% elif comaticity < 0.2 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">Warning : Comaticity is moderate, you may check if the objective lens is tipped and translated with respect to the optic axis.</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">Bad : Comaticity is high, you have to check if the objective lens is tipped and translated with respect to the optic axis.</span>{% endif %}
                         {{ comaticity|round(4) if bead._metricTool._comaticity is not none else "N/A" }}
                     </span>
                 </p>
-                <p><strong>Spherical aberration:</strong> 
-                    <span class="metric-value">
-                        {% set sa = bead._metricTool._sphericalAberration if bead._metricTool._sphericalAberration is not none else 0 %}
-                        {% if sa < 0.1 %} <span class="status-dot status-good"></span>
-                        {% elif sa < 0.2 %} <span class="status-dot status-warn"></span>
-                        {% else %} <span class="status-dot status-bad"></span>{% endif %}
-                        {{ sa|round(4) if bead._metricTool._sphericalAberration is not none else "N/A" }}
-                    </span>
-                </p>
-                <p><strong>Astigmatism:</strong> 
-                    <span class="metric-value">
-                        {% set astigmatism = bead._metricTool._astigmatism if bead._metricTool._astigmatism is not none else 0 %}
-                        {% if astigmatism < 0.1 %} <span class="status-dot status-good"></span>
-                        {% elif astigmatism < 0.2 %} <span class="status-dot status-warn"></span>
-                        {% else %} <span class="status-dot status-bad"></span>{% endif %}
-                        {{ astigmatism|round(4) if bead._metricTool._astigmatism is not none else "N/A" }}
-                    </span>
-                </p>
-                <p><strong>Contrast:</strong> 
-                    <span class="metric-value">
-                        {% set contrast = bead._fitTool.contrast if bead._fitTool.contrast is not none else 0 %}
-                        {% if contrast > 10 %} <span class="status-dot status-good"></span>
-                        {% elif contrast > 5 %} <span class="status-dot status-warn"></span>
-                        {% else %} <span class="status-dot status-bad"></span>{% endif %}
-                        {{ "%.4f"|format(bead._fitTool.contrast if bead._fitTool.contrast is not none else 0) }}</span></p>
-                <p><strong>EllipsRatio:</strong> 
-                    <span class="metric-value">
-                        {% set ellipsRatio = bead._metricTool._ellipsRatio if bead._metricTool._ellipsRatio is not none else 0 %}
-                        {% if ellipsRatio > 0.9 and ellipsRatio < 1.1 %} <span class="status-dot status-good"></span>
-                        {% elif ellipsRatio > 0.8 and ellipsRatio < 1.2 %} <span class="status-dot status-warn"></span>
-                        {% else %} <span class="status-dot status-bad"></span>{% endif %}
-                        {{ "%.4f"|format(bead._metricTool._ellipsRatio if bead._metricTool._ellipsRatio is not none else 0) }}</span></p>
-                <p><strong>Orientation:</strong> <span>{{ "%.4f"|format(bead._metricTool._orientation if bead._metricTool._orientation is not none else 0) }}</span></p>
                 <p><strong>Skeleton to extremities:</strong> 
                     <span class="metric-value">
                         {% set skeletonToExtremities = bead._metricTool._skeleton2Extremities if bead._metricTool._skeleton2Extremities is not none else 0 %}
-                        {% if skeletonToExtremities > 0.9 and skeletonToExtremities < 1.1 %} <span class="status-dot status-good"></span>
-                        {% elif skeletonToExtremities > 0.8 and skeletonToExtremities < 1.2 %} <span class="status-dot status-warn"></span>
-                        {% else %} <span class="status-dot status-bad"></span>{% endif %}
+                        {% if skeletonToExtremities > 0.9 and skeletonToExtremities < 1.1 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">Good : Skeleton to extremities ratio is high, the image quality is good.</span>
+                        {% elif skeletonToExtremities > 0.8 and skeletonToExtremities < 1.2 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">Warning : Skeleton to extremities ratio is moderate, you may check if the objective lens is tipped and translated with respect to the optic axis.</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">Bad : Skeleton to extremities ratio is far from 1, you have to check if the objective lens is tipped and translated with respect to the optic axis.</span>{% endif %}
                         {{ skeletonToExtremities|round(4) if bead._metricTool._skeleton2Extremities is not none else "N/A" }}
                     </span>
                 </p>
                 <p><strong>Minimum curvature radius centroids path:</strong>
                     <span class="metric-value">
                         {% set minCurvatureRadiusCentroidsPath = bead._metricTool._RMin if bead._metricTool._RMin is not none else 0 %}
-                        {% if minCurvatureRadiusCentroidsPath > 1.5 %} <span class="status-dot status-good"></span>
-                        {% elif minCurvatureRadiusCentroidsPath > 1.0 %} <span class="status-dot status-warn"></span>
-                        {% else %} <span class="status-dot status-bad"></span>{% endif %}
+                        {% if minCurvatureRadiusCentroidsPath > 1.5 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">Good : Minimum curvature radius is high, the image quality is good.</span>
+                        {% elif minCurvatureRadiusCentroidsPath > 1.0 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">Warning : Minimum curvature radius is moderate, you may check if the objective lens is tipped and translated with respect to the optic axis.</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">Bad : Minimum curvature radius is low, you have to check if the objective lens is tipped and translated with respect to the optic axis.</span>{% endif %}
                         {{ minCurvatureRadiusCentroidsPath|round(4) if bead._metricTool._RMin is not none else "N/A" }}
+                    </span>
+                </p>
+            </div>
+            <h3>Astigmatism Metrics</h3>
+            <div class="metrics-grid">
+                <p><strong>Astigmatism:</strong> 
+                    <span class="metric-value">
+                        {% set astigmatism = bead._metricTool._astigmatism if bead._metricTool._astigmatism is not none else 0 %}
+                        {% if astigmatism < 0.1 and astigmatism > -0.1 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">Good : Astigmatism is low, the image quality is good.</span>
+                        {% elif astigmatism < 0.2 and astigmatism > -0.2 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">Warning : Astigmatism is moderate, you may check if the focus is properly adjusted and the objective lens quality.</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">Bad : Astigmatism is high, you have to check if the focus is properly adjusted and the objective lens quality.</span>{% endif %}
+                        {{ astigmatism|round(4) if bead._metricTool._astigmatism is not none else "N/A" }}
+                    </span>
+                </p>
+            </div>
+            <h3>Spherical Aberration Metrics</h3>
+            <div class="metrics-grid">
+                <p><strong>Spherical aberration:</strong> 
+                    <span class="metric-value">
+                        {% set sa = bead._metricTool._sphericalAberration if bead._metricTool._sphericalAberration is not none else 0 %}
+                        {% if sa < 0.1 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">Good : Spherical aberration is low, the image quality is good.</span>
+                        {% elif sa < 0.2 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">Warning : Spherical aberration is moderate, you may check if the sample is properly mounted and the coverslip thickness is correct.</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">Bad : Spherical aberration is high, you have to check if the sample is properly mounted and the coverslip thickness is correct.</span>{% endif %}
+                        {{ sa|round(4) if bead._metricTool._sphericalAberration is not none else "N/A" }}
                     </span>
                 </p>
             </div>

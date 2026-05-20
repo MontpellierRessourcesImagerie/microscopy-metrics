@@ -139,17 +139,17 @@ class Detection(object):
                     if math.dist(bead._centroid, other_bead._centroid) < (
                         math.sqrt(2) * roiSize
                     ):
+                        bead._rejected = True
+                        bead._rejectionDesc = "Too close to bead " + str(other_bead._id)
                         other_bead._rejected = True
-                        other_bead._rejectionDesc = "Overlapped with bead " + str(
-                            other_bead._id
-                        )
+                        other_bead._rejectionDesc = "Too close to bead " + str(bead._id)
             if not bead._rejected and bead._centroid is not None:
                 if self.isRoiOverlapped(bead._id):
                     bead._rejected = True
-                    bead._rejectionDesc = "Overlapped with another bead"
+                    bead._rejectionDesc = "ROI overlapped with another bead's ROI"
                 elif not self.isRoiInImage(bead._roi):
                     bead._rejected = True
-                    bead._rejectionDesc = "ROI not in image"
+                    bead._rejectionDesc = "ROI not within image's shape"
                 elif not self.isRoiNotInRejection(bead._centroid):
                     bead._rejected = True
                     bead._rejectionDesc = "Centroid in rejection zone"
@@ -324,7 +324,7 @@ class Detection(object):
         if beadId is not None:
             pilImg = Image.fromarray(imageRGB)
             draw = ImageDraw.Draw(pilImg)
-            draw.text((roi[0, 2], roi[0, 1]), f"Bead {beadId}", fill=(255, 255, 255))
+            draw.text((roi[0, 2], roi[0, 1] - 15), f"Bead {beadId}", fill=(255, 255, 255))
             imageRGB = np.array(pilImg)
         return imageRGB
 

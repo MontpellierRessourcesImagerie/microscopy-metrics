@@ -135,6 +135,8 @@ class Metrics(object):
         self._imageAnalyzer._meanContrast = np.mean([bead._fitTool.contrast for bead in self._imageAnalyzer._beadAnalyzer if bead._rejected == False])
         self._imageAnalyzer._meanEllipsRatio = np.mean([bead._metricTool._ellipsRatio for bead in self._imageAnalyzer._beadAnalyzer if bead._rejected == False])
         self._imageAnalyzer._meanOrientation = np.mean([bead._metricTool._orientation for bead in self._imageAnalyzer._beadAnalyzer if bead._rejected == False])
+        self._imageAnalyzer._meanSkeleton2Extremities = np.mean([bead._metricTool._skeleton2Extremities for bead in self._imageAnalyzer._beadAnalyzer if bead._rejected == False])
+        self._imageAnalyzer._meanRMin = np.mean([bead._metricTool._RMin for bead in self._imageAnalyzer._beadAnalyzer if bead._rejected == False])
 
 
     def GenerateHeatmap(self, outputDir=None):

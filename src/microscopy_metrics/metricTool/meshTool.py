@@ -101,7 +101,6 @@ class MeshBuilder(object):
         hull = ConvexHull(self._verticesResized)
         hullVolume = hull.volume
         self._concavity = (hullVolume - meshVolume) / hullVolume
-        print(f"Concavity: {self._concavity}")
         return self._concavity
 
     def curvature(self):

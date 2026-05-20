@@ -259,7 +259,6 @@ class Fitting2D(FittingTool):
             self.getCoords(psf[1]),
             self.getCoords(psf[2]),
         ]
-        activePath = self.getActivePath(index)
         self.compute1DParams()
         amp = self.params1D[0]
         bg = self.params1D[1]
@@ -293,6 +292,7 @@ class Fitting2D(FittingTool):
                 params, self._coords[u], psf[u].flatten()
             )
             self.pcovs[u] = pcov
-            outputPath = os.path.join(activePath, f"2D_Gaussian_Image_{axe[u]}.png")
             if self._show:
+                activePath = self.getActivePath(index)
+                outputPath = os.path.join(activePath, f"2D_Gaussian_Image_{axe[u]}.png")
                 self.showFit(psf[u], outputPath, params)

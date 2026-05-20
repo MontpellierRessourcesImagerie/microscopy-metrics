@@ -278,7 +278,6 @@ class Fitting3D(FittingTool):
         """
         psf = self._image.astype(np.float64)
         coords = self.getCoords(psf)
-        activePath = self.getActivePath(index)
         self.compute1DParams()
         bg = self.params1D[1]
         amp = self.params1D[0]
@@ -298,4 +297,5 @@ class Fitting3D(FittingTool):
         self.pcovs = [pcov] * 3
 
         if self._show:
+            activePath = self.getActivePath(index)
             self.showFit(psf, activePath)

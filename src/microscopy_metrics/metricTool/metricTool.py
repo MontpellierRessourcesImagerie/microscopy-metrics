@@ -462,11 +462,9 @@ class MetricTool(object):
         imageAfter = self._image[int(pointAfter[0])]
         fwhmsBefore = self.getFWHM(imageBefore, mu, sigma)
         fwhmsAfter = self.getFWHM(imageAfter, mu, sigma)
-        scoreBefore = (fwhmsBefore[0] - fwhmsBefore[1]) / (
-            fwhmsBefore[0] + fwhmsBefore[1]
-        )
+        scoreBefore = (fwhmsBefore[0] - fwhmsBefore[1]) / (fwhmsBefore[0] + fwhmsBefore[1])
         scoreAfter = (fwhmsAfter[0] - fwhmsAfter[1]) / (fwhmsAfter[0] + fwhmsAfter[1])
-        self._astigmatism = abs(scoreAfter - scoreBefore)
+        self._astigmatism = scoreAfter - scoreBefore
 
     def ellipsRatio(self):
         """Calculates the ellipticity ratio of the object in the microscopy image by analyzing the major and minor axes of the detected contours."""
@@ -512,7 +510,6 @@ class MetricTool(object):
         self._summary = skan.summarize(self._pathSkeleton, separator="_")
         maxDistance = self._summary["euclidean_distance"].values.max()
         self._skeleton2Extremities = (maxLength / maxDistance) ** 2 if maxDistance > 0 else 0
-        print("Skeleton to extremities ratio: ", self._skeleton2Extremities)
 
     def curvaturePath(self):
         if self._centroids is None or len(self._centroids) < 3:
@@ -550,7 +547,6 @@ class MetricTool(object):
             self._RMin = float("inf")
         else:
             self._RMin = 1.0 / k_max
-        print(f"R_min: {self._RMin:.2f} um")
 
 
     def generateBeadOrientation(self, outputPath):

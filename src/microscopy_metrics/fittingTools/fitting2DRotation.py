@@ -294,7 +294,6 @@ class Fitting2DRotation(FittingTool):
             self.getCoords(psf[1]),
             self.getCoords(psf[2]),
         ]
-        activePath = self.getActivePath(index)
         self.compute1DParams()
         visual_angles = []
         amp = self.params1D[0]
@@ -340,6 +339,7 @@ class Fitting2DRotation(FittingTool):
                 params, coords[u], psf[u].flatten()
             )
             self.pcovs[u] = pcov
-            outputPath = os.path.join(activePath, f"2D_Gaussian_Image_{axe[u]}.png")
             if self._show:
+                activePath = self.getActivePath(index)
+                outputPath = os.path.join(activePath, f"2D_Gaussian_Image_{axe[u]}.png")
                 self.showFit(psf[u], params, outputPath)

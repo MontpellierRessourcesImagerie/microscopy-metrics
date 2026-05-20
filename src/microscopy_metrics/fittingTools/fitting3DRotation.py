@@ -389,7 +389,6 @@ class Fitting3DRotation(FittingTool):
         """
         psf = self._image.astype(np.float64)
         self.coords = self.getCoords(psf)
-        activePath = self.getActivePath(index)
         self.compute1DParams()
         bg = self.params1D[1]
         amp = self.params1D[0]
@@ -403,6 +402,7 @@ class Fitting3DRotation(FittingTool):
         self.parameters[5:8] = params[5:8]
         self.pcovs = [pcov] * 3
         if self._show:
+            activePath = self.getActivePath(index)
             self.showFit(activePath)
             thetaX, thetaY, thetaZ = self.thetas
             cx, sx, cy, sy, cz, sz = (

@@ -1,3 +1,10 @@
+import os
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import Paragraph, Table, TableStyle
+
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.metricTool.metricTool import MetricTool
 
@@ -64,3 +71,141 @@ class BeadAnalyzer(object):
         self._metricTool._ringInnerDistance = ringInnerDistance
         self._metricTool._ringThickness = ringThickness
         self._metricTool.processSingleSBRRing()
+
+    def drawParameterTableOnPDF(self, pdf, title, data, y):
+        """Helper to draw a styled parameter table with a title
+        Args:
+           title (str): The section title
+           data (List[List[str]]): The data rows
+           y (int): The y-coordinate to start drawing (top to bottom)
+        Returns:
+           int: The new y-coordinate after drawing the table
+        """
+        pdf.setFont("Helvetica-Bold", 16)
+        pdf.drawCentredString(300, y, title)
+        y -= 10
+    
+        num_cols = len(data[0]) if data else 1
+        if num_cols == 2:
+            col_widths = [200, 200]
+            header_col = True
+            header_row = False
+        elif num_cols == 4:
+            col_widths = [160, 80, 80, 80]
+            header_col = True
+            header_row = True
+        else:
+            col_widths = [400 / max(num_cols, 1)] * num_cols
+            header_col = False
+            header_row = False
+        style_cmds = [
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+            ('TOPPADDING', (0, 0), (-1, -1), 5),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]
+        if header_col and num_cols == 2:
+            style_cmds.extend([
+                ('BACKGROUND', (0, 0), (0, -1), colors.whitesmoke),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+                ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+            ])
+        elif header_row and num_cols == 4:
+             style_cmds.extend([
+                ('BACKGROUND', (0, 0), (0, -1), colors.whitesmoke),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),   
+                ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+                ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+             ])
+        t = Table(data, colWidths=col_widths)
+        t.setStyle(TableStyle(style_cmds))
+        w, h = t.wrapOn(pdf, 0, 0)
+        t.drawOn(pdf, 100, y - h)
+        return y - h - 35
+    
+    def generatePDFReport(self, pdf, inputDir, theoreticalResolution, samplingDistance):
+        """Generates a clean PDF report for the bead analysis results."""
+        beadPath = os.path.join(inputDir, f"bead_{self._id}")
+        current_y = 800
+        pdf.setFont("Helvetica-Bold", 24)
+        pdf.drawCentredString(300, current_y, f"Bead Analysis Report - ID: {self._id}")
+        current_y -= 40
+        centroid_str = ', '.join(f'{c:.2f}' for c in self._centroid) if self._centroid is not None else 'Unknown'
+        pdf.setFont("Helvetica", 12)
+        pdf.drawCentredString(300, current_y, f"Centroid (Z, Y, X) : {centroid_str}")
+        current_y -= 25
+        if os.path.exists(os.path.join(beadPath, "Localisation.png")):
+            img_w, img_h = 160, 160
+            pdf.drawImage(os.path.join(beadPath, "Localisation.png"), 300 - (img_w/2), current_y - img_h, width=img_w, height=img_h, preserveAspectRatio=True)
+            current_y -= (img_h + 35)
+        metrics_data = [
+            ["SBR", f"{self._metricTool._SBR:.2f}"],
+            ["Contrast", f"{self._fitTool.contrast:.2f}"],
+            ["Ellipticity ratio", f"{self._metricTool._ellipsRatio:.2f}"],
+            ["Sphericity", f"{self._metricTool._sphericity:.2f}"],
+            ["Lateral asymmetry", f"{self._metricTool._LAR:.2f}"],
+            ["Orientation", f"{self._metricTool._orientation:.2f}°"],
+            ["Comaticity", f"{self._metricTool._comaticity:.2f}"],
+            ["Skeleton/Extremities ratio", f"{self._metricTool._skeleton2Extremities:.2f}"],
+            ["Concavity", f"{self._metricTool.meshBuilder._concavity:.2f}" if hasattr(self._metricTool, 'meshBuilder') else "N/A"],
+            ["Astigmatism", f"{self._metricTool._astigmatism:.2f}"],
+            ["Spherical aberration", f"{self._metricTool._sphericalAberration:.2f}"],
+        ]
+        rmin_val = "Inf" if getattr(self._metricTool, '_RMin', 0) == float('inf') else f"{getattr(self._metricTool, '_RMin', 0):.2f}"
+        metrics_data.insert(8, ["Minimal Curvature Radius (RMin)", f"{rmin_val} µm"])
+        current_y = self.drawParameterTableOnPDF(pdf, "Quality Metrics", metrics_data, current_y)
+        fittingData = [
+            ["Axis", "Z", "Y", "X"],
+            ["Theoretical res. (µm)", f"{theoreticalResolution[0]:.4f}", f"{theoreticalResolution[1]:.4f}", f"{theoreticalResolution[2]:.4f}"],
+            ["Sampling dist. (µm)",   f"{samplingDistance[0]:.4f}",      f"{samplingDistance[1]:.4f}",      f"{samplingDistance[2]:.4f}"],
+            ["FWHM (µm)",             f"{self._fitTool.fwhms[0]:.4f}",   f"{self._fitTool.fwhms[1]:.4f}",   f"{self._fitTool.fwhms[2]:.4f}"],
+            ["Uncertainty",           f"{self._fitTool.uncertainties[0][3]:.4f}", f"{self._fitTool.uncertainties[1][3]:.4f}", f"{self._fitTool.uncertainties[2][3]:.4f}"],
+            ["Determination (R²)",    f"{self._fitTool.determinations[0]:.4f}", f"{self._fitTool.determinations[1]:.4f}", f"{self._fitTool.determinations[2]:.4f}"],
+        ]
+        current_y = self.drawParameterTableOnPDF(pdf, "Gaussian Fitting Results", fittingData, current_y)
+        pdf.showPage()
+        current_y = 800
+        pdf.setFont("Helvetica-Bold", 18)
+        pdf.drawCentredString(300, current_y, "Intensity Profiles and Projections")
+        current_y -= 40
+        pdf.setFont("Helvetica-Bold", 14)
+        pdf.drawCentredString(300, current_y, "Center Projections (XY, XZ, YZ Planes)")
+        current_y -= 15
+        img_size = 170
+        x_positions = [25, 212, 400] 
+        views = [
+            {"file": "XY_view.png", "title": "XY View"},
+            {"file": "XZ_view.png", "title": "XZ View"},
+            {"file": "YZ_view.png", "title": "YZ View"},
+        ]
+        current_y -= img_size
+        y_images = current_y
+        for i, view in enumerate(views):
+            x = x_positions[i]
+            if os.path.exists(os.path.join(beadPath, view["file"])):
+                pdf.drawImage(os.path.join(beadPath, view["file"]), x, y_images, width=img_size, height=img_size, preserveAspectRatio=True)
+            pdf.setFont("Helvetica", 10)
+            pdf.drawCentredString(x + (img_size / 2), y_images - 15, view["title"])
+        current_y -= 60
+        pdf.setFont("Helvetica-Bold", 14)
+        pdf.drawCentredString(300, current_y, "Gaussian Fits (Z, Y, X Axes)")
+        current_y -= 15
+        current_y -= img_size
+        y_fits = current_y
+        fits = [
+            {"file": "fit_curve_1D_Z.png", "title": "Z-Axis Fit"},
+            {"file": "fit_curve_1D_Y.png", "title": "Y-Axis Fit"},
+            {"file": "fit_curve_1D_X.png", "title": "X-Axis Fit"},
+        ]
+        for i, fit in enumerate(fits):
+            x = x_positions[i]
+            if os.path.exists(os.path.join(beadPath, fit["file"])):
+                pdf.drawImage(os.path.join(beadPath, fit["file"]), x, y_fits, width=img_size, height=img_size, preserveAspectRatio=True)
+            pdf.setFont("Helvetica", 10)
+            pdf.drawCentredString(x + (img_size / 2), y_fits - 15, fit["title"])

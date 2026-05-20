@@ -196,6 +196,35 @@ class ReportPDF(ReportGenerator):
             )
         self.pdf.showPage()
 
+    def drawParameterTableOnPDF(self, title, data, y):
+        """Helper to draw a styled parameter table with a title
+        Args:
+            title (str): The section title
+            data (List[List[str]]): The key-value pairs for the table
+            y (int): The y-coordinate to start drawing (top to bottom)
+        Returns:
+            int: The new y-coordinate after drawing the table
+        """
+        self.pdf.setFont("Helvetica-Bold", 18)
+        self.pdf.drawCentredString(300, y, title)
+        t = Table(data, colWidths=[200, 200])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.whitesmoke),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+            ('TOPPADDING', (0, 0), (-1, -1), 5),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        w, h = t.wrapOn(self.pdf, 0, 0)
+        t.drawOn(self.pdf, 100, y - h - 10)
+        return y - h - 50
+
     def generateReport(self, outputPath=None):
         """Generates a PDF report containing the results of the microscopy image analysis, including bead information, fitting results, and calculated metrics.
         Args:
@@ -206,76 +235,49 @@ class ReportPDF(ReportGenerator):
         pdfPath = os.path.join(outputPath, f"PSF_analysis_result.pdf")
         self.pdf = canvas.Canvas(pdfPath, pagesize=A4)
         self.pdf.setTitle("PSF analysis results")
-        self.pdf.setFont("Helvetica-Bold", 36)
-        self.pdf.drawCentredString(300, 770, "Analysis Results")
-        textLines = [
-            f"Date and time of analysis: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-            f"Image location: {self._imageAnalyzer._path}",
-            f"Identified beads: {len(self._imageAnalyzer._beadAnalyzer)}",
-            f"Signal to background ratio: {self._imageAnalyzer._meanSBR:.2f}",
-            f"Comaticity: {self._imageAnalyzer._meanComaticity:.2f}",
-            f"Spherical aberration: {self._imageAnalyzer._meanSphericalAberration:.2f}",
-            f"Astigmatism: {self._imageAnalyzer._meanAstigmatism:.2f}",
-            f"Contrast: {self._imageAnalyzer._meanContrast:.2f}",
-            f"Ellipticity ratio: {self._imageAnalyzer._meanEllipsRatio:.2f}",
-            f"Orientation: {self._imageAnalyzer._meanOrientation:.2f}",
+        self.pdf.setFont("Helvetica-Bold", 28)
+        self.pdf.drawCentredString(300, 770, "Analysis Parameters Report")
+        self.pdf.setFont("Helvetica", 10)
+        self.pdf.drawCentredString(300, 750, f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        current_y = 700
+        microscope_data = [
+            ["Microscope type", f"{self._microscopeDatas.get('microscopeType', 'N/A')}"],
+            ["Emission wavelength", f"{self._microscopeDatas.get('emissionWavelength', 'N/A')} nm"],
+            ["Excitation wavelength", f"{self._microscopeDatas.get('excitationWavelength', 'N/A')} nm"],
+            ["Refractive index", f"{self._microscopeDatas.get('refractiveIndex', 'N/A')}"],
+            ["Numerical aperture", f"{self._microscopeDatas.get('numericalAperture', 'N/A')}"],
         ]
-        self.drawParagaphOnPDF(textLines, 40, 680)
-        self.pdf.setFont("Helvetica-Bold", 18)
-        self.pdf.drawCentredString(300, 650, "Acquisition parameters")
-        textLines = [
-            f"Pixel size: [{self._imageAnalyzer._pixelSize[0]},{self._imageAnalyzer._pixelSize[1]},{self._imageAnalyzer._pixelSize[2]}]",
-            f"Image shape: [{self._imageAnalyzer._image.shape[0]},{self._imageAnalyzer._image.shape[1]},{self._imageAnalyzer._image.shape[2]}]",
-            f"Microscope type: {self._microscopeDatas['microscopeType'] if 'microscopeType' in self._microscopeDatas else 'N/A'}",
-            f"Emission wavelength: {self._microscopeDatas['emissionWavelength'] if 'emissionWavelength' in self._microscopeDatas else 'N/A'}nm",
-            f"Refractive index: {self._microscopeDatas['refractiveIndex'] if 'refractiveIndex' in self._microscopeDatas else 'N/A'}",
-            f"Numerical aperture: {self._microscopeDatas['numericalAperture'] if 'numericalAperture' in self._microscopeDatas else 'N/A'}",
+        current_y = self.drawParameterTableOnPDF("Microscope parameters", microscope_data, current_y)
+        detection_data = [
+            ["Detection method", f"{self._detectionDatas.get('detectionTool', 'N/A')}"],
+            ["Minimal distance", f"{self._detectionDatas.get('minDist', 'N/A')}"],
+            ["Sigma", f"{self._detectionDatas.get('sigma', 'N/A')}"],
+            ["Threshold tool", f"{self._thresholdDatas.get('thresholdTool', 'N/A')}"],
+            ["Threshold relative", f"{self._thresholdDatas.get('thresholdRel', 'N/A')}"],
         ]
-        self.drawParagaphOnPDF(textLines, 40, 600)
-        self.pdf.setFont("Helvetica-Bold", 18)
-        self.pdf.drawCentredString(300, 500, "Detection parameters")
-        textLines = [
-            f"Detection method: {self._detectionDatas['detectionTool'] if 'detectionTool' in self._detectionDatas else 'N/A'}",
-            f"Minimal distance: {self._detectionDatas['minDist'] if 'minDist' in self._detectionDatas else 'N/A'}",
-            f"Sigma: {self._detectionDatas['sigma'] if 'sigma' in self._detectionDatas else 'N/A'}",
-            f"Threshold tool: {self._thresholdDatas['thresholdTool'] if 'thresholdTool' in self._thresholdDatas else 'N/A'}",
-            f"Threshold relative: {self._thresholdDatas['thresholdRel'] if 'thresholdRel' in self._thresholdDatas and self._thresholdDatas['thresholdTool'] == 'manual' else 'N/A'}",
+        if self._thresholdDatas.get('thresholdTool') == 'manual':
+            detection_data.append(["Threshold relative", f"{self._thresholdDatas.get('thresholdRel', 'N/A')}"])
+        
+        current_y = self.drawParameterTableOnPDF("Detection parameters", detection_data, current_y)
+        extraction_data = [
+            ["Bead size", f"{self._roiDatas.get('beadSize', 'N/A')}"],
+            ["Crop factor", f"{self._roiDatas.get('cropFactor', 'N/A')}"],
+            ["Distance ring-bead", f"{self._roiDatas.get('ringInnerDistance', 'N/A')}"],
+            ["Ring thickness", f"{self._roiDatas.get('ringThickness', 'N/A')}"],
+            ["Rejection distance", f"{self._roiDatas.get('rejectionDistance', 'N/A')}"],
+            ["Intensity threshold", f"{self._roiDatas.get('thresholdIntensity', 'N/A')}"],
         ]
-        self.drawParagaphOnPDF(textLines, 40, 450)
-        self.pdf.setFont("Helvetica-Bold", 18)
-        self.pdf.drawCentredString(300, 350, "Extraction parameters")
-        textLines = [
-            f"Bead size: {self._roiDatas['beadSize'] if 'beadSize' in self._roiDatas else 'N/A'}",
-            f"Crop factor: {self._roiDatas['cropFactor'] if 'cropFactor' in self._roiDatas else 'N/A'}",
-            f"Distance ring-bead: {self._roiDatas['ringInnerDistance'] if 'ringInnerDistance' in self._roiDatas else 'N/A'}",
-            f"Ring thickness: {self._roiDatas['ringThickness'] if 'ringThickness' in self._roiDatas else 'N/A'}",
-            f"Rejection distance: {self._roiDatas['rejectionDistance'] if 'rejectionDistance' in self._roiDatas else 'N/A'}",
-            f"Intensity threshold: {self._roiDatas['thresholdIntensity'] if 'thresholdIntensity' in self._roiDatas else 'N/A'}",
-        ]
-        self.drawParagaphOnPDF(textLines, 40, 300)
-        self.pdf.setFont("Helvetica-Bold", 18)
-        self.pdf.drawCentredString(300, 150, "Fitting parameters")
-        textLines = [
-            f"Fitting type: {self._fittingDatas['fitType'] if 'fitType' in self._fittingDatas else 'N/A'}",
-            f"R² threshold: {self._fittingDatas['thresholdRSquared'] if 'thresholdRSquared' in self._fittingDatas else 'N/A'}",
-            f"Prominence relative: {self._fittingDatas['prominenceRel'] if 'prominenceRel' in self._fittingDatas else 'N/A'}",
-        ]
-        self.drawParagaphOnPDF(textLines, 40, 100)
-        if any(bead._rejected == True for bead in self._imageAnalyzer._beadAnalyzer):
+        current_y = self.drawParameterTableOnPDF("Extraction parameters", extraction_data, current_y)
+        if current_y < 150:
             self.pdf.showPage()
-            self.pdf.setFont("Helvetica-Bold", 36)
-            self.pdf.drawCentredString(150, 770, "REJECTED")
-        for bead in self._imageAnalyzer._beadAnalyzer:
-            if bead._rejected == True:
-                if self.yRejected < 50:
-                    self.pdf.showPage()
-                    self.pdf.setFont("Helvetica-Bold", 36)
-                    self.pdf.drawCentredString(150, 770, "REJECTED")
-                    self.yRejected = 750
-                self.drawSingleBeadRejectedReportPDF(bead)
-                self.yRejected -= 50
+            current_y = 750
+        fitting_data = [
+            ["Fitting type", f"{self._fittingDatas.get('fitType', 'N/A')}"],
+            ["R² threshold", f"{self._fittingDatas.get('thresholdRSquared', 'N/A')}"],
+            ["Prominence relative", f"{self._fittingDatas.get('prominenceRel', 'N/A')}"],
+        ]
+        self.drawParameterTableOnPDF("Fitting parameters", fitting_data, current_y)
         self.pdf.showPage()
-        for bead in self._imageAnalyzer._beadAnalyzer:
-            if bead._rejected == False and bead._roi is not None:
-                self.drawSingleBeadReportPDF(bead)
+        if self._imageAnalyzer is not None :
+            self._imageAnalyzer.generatePDFReport(self.pdf)
         self.pdf.save()

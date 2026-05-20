@@ -179,7 +179,6 @@ class Fitting1D(FittingTool):
             index (int): ID of the psf.
         """
         imageFloat = self._image.astype(np.float64)
-        activePath = self.getActivePath(index)
         physic = self.getLocalCentroid()
         psf = [
             imageFloat[:, physic[1], physic[2]],
