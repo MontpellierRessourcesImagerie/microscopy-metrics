@@ -24,11 +24,11 @@ class CentroidDetector(DetectionTool):
         self.setNormalizedImage()
         self._normalizedImage = ndi.gaussian_filter(self._normalizedImage, sigma=2.0)
         self.gaussianHighPass()
-        binaryImage = self._highPassedImage > self._thresholdTool.getThreshold(
+        self.binaryImage = self._highPassedImage > self._thresholdTool.getThreshold(
             self._highPassedImage
         )
-        labeledImage = label(binaryImage)
-        regionProps = regionprops(labeledImage)
+        self.labeledImage = label(self.binaryImage)
+        regionProps = regionprops(self.labeledImage)
         tmpCentroids = []
         for prop in regionProps:
             tmpCentroids.append(prop.centroid)

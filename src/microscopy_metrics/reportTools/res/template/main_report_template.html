@@ -203,9 +203,9 @@
             color: #ecf0f1;
             padding: 5px 10px;
             border-radius: 4px;
-            font-size: 0.8em;
+            font-size: 0.9em;
             white-space: nowrap;
-            transform: translate(-50%, -150%);
+            transform: translate(-50%, -75%);
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
             z-index: 100;
         }
@@ -266,7 +266,7 @@
                         <td>{{ "%.4f"|format(imageAnalyzer._meanUncertainty[0][3] if imageAnalyzer._meanUncertainty[0] is not none else 0) }}</td>
                     </tr>
                     <tr>
-                        <td><strong>Determination coefficient</strong></td>
+                        <td><strong>Determination coefficient (R²)</strong></td>
                         <td>{{ "%.4f"|format(imageAnalyzer._meanDetermination[2] if imageAnalyzer._meanDetermination[2] is not none else 0) }}</td>
                         <td>{{ "%.4f"|format(imageAnalyzer._meanDetermination[1] if imageAnalyzer._meanDetermination[1] is not none else 0) }}</td>
                         <td>{{ "%.4f"|format(imageAnalyzer._meanDetermination[0] if imageAnalyzer._meanDetermination[0] is not none else 0) }}</td>
@@ -294,11 +294,16 @@
             <h3>Standard Metrics</h3>
             <div class="metrics-grid">
                 <p><strong>Signal to Background:</strong> 
+                    {% set sbr_help %}
+                    SBR > 10 : the signal is much higher than the background, the image quality is good.<br>
+                    SBR > 5 and < 10 : the signal is higher than the background, the image quality is fair.<br>
+                    SBR < 5 : the signal is not much higher than the background, the image quality may be limited.<br><br>
+                    {% endset %}
                     <span class="metric-value">
                         {% set sbr = imageAnalyzer._meanSBR if imageAnalyzer._meanSBR else 0 %}
-                        {% if sbr > 15 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">Good : Signal to background is high, the analysis is reliable</span>
-                        {% elif sbr > 5 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">Warning : Signal to background is moderate, the analysis may have some limitations</span>
-                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">Bad : Signal to background is low, the analysis may be unreliable</span>{% endif %}
+                        {% if sbr > 10 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{sbr_help}}Good : Signal to background is high, the analysis is reliable</span>
+                        {% elif sbr > 5 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">{{sbr_help}}Warning : Signal to background is moderate, the analysis may have some limitations</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">{{sbr_help}}Bad : Signal to background is low, the analysis may be unreliable</span>{% endif %}
                         {{ sbr|round(4) if imageAnalyzer._meanSBR else "N/A" }}
                     </span>
                 </p>
@@ -306,44 +311,106 @@
                     <span class="metric-value">{{ imageAnalyzer._meanContrast|round(4) if imageAnalyzer._meanContrast else "N/A" }}</span>
                 </p>
                 <p><strong>Ellips Ratio:</strong> 
+                    {% set ellipsRatio_help %}
+                    EllipsRatio > 0.9 and < 1.1 : Main axis are equivalent, beads are circular.<br>
+                    EllipsRatio > 0.8 and < 1.2 : Main axis are somewhat different, beads are somewhat elongated.<br>
+                    EllipsRatio < 0.8 or > 1.2 : Main axis are very different, beads are very elongated.<br><br>
+                    {% endset %}
                     <span class="metric-value">
                         {% set er = imageAnalyzer._meanEllipsRatio if imageAnalyzer._meanEllipsRatio else 0 %}
-                        {% if er > 0.8 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">Good : Beads main axis are equivalent, beads are circular.</span>
-                        {% elif er > 0.5 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">Warning : Beads main axis are somewhat different, beads are somewhat elongated.</span>
-                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">Bad : Beads main axis are very different, beads are very elongated.</span>{% endif %}
+                        {% if er > 0.9 and er < 1.1 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{ellipsRatio_help}}Good : Beads main axis are equivalent, beads are circular.</span>
+                        {% elif er > 0.8 and er < 1.2 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">{{ellipsRatio_help}}Warning : Beads main axis are somewhat different, beads are somewhat elongated.</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">{{ellipsRatio_help}}Bad : Beads main axis are very different, beads are very elongated.</span>{% endif %}
                         {{ er|round(4) if imageAnalyzer._meanEllipsRatio else "N/A" }}
                     </span>
                 </p>
                 <p><strong>Orientation:</strong> 
                     <span class="metric-value">{{ imageAnalyzer._meanOrientation|round(2) if imageAnalyzer._meanOrientation else "N/A" }}°</span>
                 </p>
+                <p><strong>Lateral asymmetry ratio (LAR):</strong> 
+                    {% set lar_help %}
+                    LAR > 0.9 : LAR is high, beads are symmetric.<br>
+                    LAR > 0.8 and < 0.9 : LAR is moderate, beads are somewhat elongated.<br>
+                    LAR < 0.8 : LAR is low, beads are very elongated.<br><br>
+                    {% endset %}
+                    <span class="metric-value">
+                        {% set lar = imageAnalyzer._meanLAR if imageAnalyzer._meanLAR is not none else 0 %}
+                        {% if lar > 0.9 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{ lar_help }}Good : LAR is high, beads are symmetric.</span>
+                        {% elif lar > 0.8 %} <span class="status-dot status-warn"></span><span class="hoverable-tooltip">{{ lar_help }}Warning : Beads are somewhat elongated.</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">{{ lar_help }}Bad : Beads are very elongated.</span>{% endif %}
+                        {{ lar|round(4) if imageAnalyzer._meanLAR is not none else "N/A" }}
+                    </span>
+                </p>
+                <p><strong>Sphericity:</strong> 
+                    {% set sphericity_help %}
+                    Sphericity > 0.75 : Sphericity is high, beads are spherical.<br>
+                    Sphericity > 0.65 and < 0.75 : Sphericity is moderate, beads are somewhat elongated.<br>
+                    Sphericity < 0.65 : Sphericity is low, beads are very elongated.<br><br>
+                    {% endset %}
+                    <span class="metric-value">
+                        {% set sphericity = imageAnalyzer._meanSphericity if imageAnalyzer._meanSphericity is not none else 0 %}
+                        {% if sphericity > 0.75 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{ sphericity_help }}Good : Sphericity is high, beads are spherical.</span>
+                        {% elif sphericity > 0.65 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">{{ sphericity_help }}Warning : Sphericity is moderate, beads are somewhat elongated.</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">{{ sphericity_help }}Bad : Sphericity is low, beads are very elongated.</span>{% endif %}
+                        {{ sphericity|round(4) if imageAnalyzer._meanSphericity is not none else "N/A" }}
+                    </span>
+                </p>
             </div>    
             <h3>Comatic Aberration Metrics</h3>
             <div class="metrics-grid">
-                <p><strong>Comaticity:</strong> 
+                <p><strong>Comaticity:</strong>
+                    {% set co_help %}
+                    Comaticity < 0.1 : Comaticity is low, beads are not comatic.<br>
+                    Comaticity < 0.2 : Comaticity is moderate, beads are somewhat comatic.<br>
+                    Comaticity >= 0.2 : Comaticity is high, beads are highly comatic.<br><br>
+                    {% endset %}
                     <span class="metric-value">
                         {% set co = imageAnalyzer._meanComaticity if imageAnalyzer._meanComaticity else 100 %}
-                        {% if co < 0.1 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">Good : Comaticity is low, the image quality is good.</span>
-                        {% elif co < 0.3 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">Warning : Comaticity is moderate, you may check if the objective lens is tipped and translated with respect to the optic axis.</span>
-                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">Bad : Comaticity is high, you have to check if the objective lens is tipped and translated with respect to the optic axis.</span>{% endif %}
+                        {% if co < 0.1 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{co_help}}Good : Comaticity is low, the image quality is good.</span>
+                        {% elif co < 0.2 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">{{co_help}}Warning : Comaticity is moderate, you may check if the objective lens is tipped and translated with respect to the optic axis.</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">{{co_help}}Bad : Comaticity is high, you have to check if the objective lens is tipped and translated with respect to the optic axis.</span>{% endif %}
                         {{ imageAnalyzer._meanComaticity|round(4) if imageAnalyzer._meanComaticity else "N/A" }}
                     </span>
                 </p>
-                <p><strong>Skeleton2Extremities:</strong> 
+                <p><strong>Skeleton2Extremities:</strong>
+                    {% set skeletonToExtremities_help %}
+                    Skeleton to extremities ratio > 0.9 and < 1.1 : Skeleton to extremities ratio is high, beads are not comatic.<br>
+                    Skeleton to extremities ratio > 0.8 and < 1.2 : Skeleton to extremities ratio is moderate, beads are somewhat comatic.<br>
+                    Skeleton to extremities ratio < 0.8 or > 1.2 : Skeleton to extremities ratio is far from 1, beads are highly comatic.<br><br>
+                    {% endset %}
                     <span class="metric-value">
                         {% set s2e = imageAnalyzer._meanSkeleton2Extremities if imageAnalyzer._meanSkeleton2Extremities else 100 %}
-                        {% if s2e > 0.9 and s2e < 1.1 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">Good : Skeleton to extremities ratio is close to 1, the image quality is good.</span>
-                        {% elif s2e > 0.8 and s2e < 1.2 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">Warning : Skeleton to extremities ratio is moderate, you may check if the objective lens is tipped and translated with respect to the optic axis.</span>
-                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">Bad : Skeleton to extremities ratio is far from 1, you have to check if the objective lens is tipped and translated with respect to the optic axis.</span>{% endif %} 
+                        {% if s2e > 0.9 and s2e < 1.1 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{s2e_help}}Good : Skeleton to extremities ratio is close to 1, the image quality is good.</span>
+                        {% elif s2e > 0.8 and s2e < 1.2 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">{{s2e_help}}Warning : Skeleton to extremities ratio is moderate, you may check if the objective lens is tipped and translated with respect to the optic axis.</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">{{s2e_help}}Bad : Skeleton to extremities ratio is far from 1, you have to check if the objective lens is tipped and translated with respect to the optic axis.</span>{% endif %} 
                         {{ imageAnalyzer._meanSkeleton2Extremities|round(4) if imageAnalyzer._meanSkeleton2Extremities else "N/A" }}
                     </span>
                 </p>
-                <p><strong>RMin:</strong> 
+                <p><strong>Concavity:</strong>
+                    {% set concavity_help %}
+                    Concavity < 0.15 : Concavity is low, beads are not comatic.<br>
+                    Concavity < 0.25 : Concavity is moderate, beads are somewhat comatic.<br>
+                    Concavity >= 0.25 : Concavity is high, beads are highly comatic.<br><br>
+                    {% endset %}
+                    <span class="metric-value">
+                        {% set concavity = imageAnalyzer._meanConcavity if imageAnalyzer._meanConcavity else 0 %}
+                        {% if concavity < 0.15 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{concavity_help}}Good : Concavity is low, the image quality is good.</span>
+                        {% elif concavity < 0.25 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">{{concavity_help}}Warning : Concavity is moderate, you may check if the objective lens is tipped and translated with respect to the optic axis.</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">{{concavity_help}}Bad : Concavity is high, you have to check if the objective lens is tipped and translated with respect to the optic axis.</span>{% endif %}
+                        {{ concavity|round(4) if imageAnalyzer._meanConcavity else "N/A" }}
+                    </span>
+                </p>
+                <p><strong>Minimum curvature radius centroids path:</strong> 
+                    {% set minCurvatureRadiusCentroidsPath_help %}
+                    Minimum curvature radius > 1.5 : Minimum curvature radius is high, beads are not comatic.<br>
+                    Minimum curvature radius > 1.0 and < 1.5 : Minimum curvature radius is moderate, beads are somewhat comatic.<br>
+                    Minimum curvature radius < 1.0 : Minimum curvature radius is low, beads are highly comatic.<br><br>
+                    {% endset %}
                     <span class="metric-value">
                         {% set rmin = imageAnalyzer._meanRMin if imageAnalyzer._meanRMin else 100 %}
-                        {% if rmin > 1.5 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">Good : RMin is high, the image quality is good.</span>
-                        {% elif rmin > 1.0 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">Warning : RMin is moderate, you may check if the objective lens is tipped and translated with respect to the optic axis.</span>
-                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">Bad : RMin is low, you have to check if the objective lens is tipped and translated with respect to the optic axis.</span>{% endif %}
+                        {% if rmin > 1.5 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{minCurvatureRadiusCentroidsPath_help}}Good : RMin is high, the image quality is good.</span>
+                        {% elif rmin > 1.0 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">{{minCurvatureRadiusCentroidsPath_help}}Warning : RMin is moderate, you may check if the objective lens is tipped and translated with respect to the optic axis.</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">{{minCurvatureRadiusCentroidsPath_help}}Bad : RMin is low, you have to check if the objective lens is tipped and translated with respect to the optic axis.</span>{% endif %}
                         {{ imageAnalyzer._meanRMin|round(4) if imageAnalyzer._meanRMin else "N/A" }}
                     </span>
                 </p>
@@ -351,11 +418,16 @@
             <h3>Astigmatism Metrics</h3>
             <div class="metrics-grid">
                 <p><strong>Astigmatism:</strong> 
+                    {% set ast_help %}
+                    Astigmatism < 0.1 and > -0.1 : Astigmatism is low, beads are not astigmatic.<br>
+                    Astigmatism < 0.2 and > -0.2 : Astigmatism is moderate, beads are somewhat astigmatic.<br>
+                    Astigmatism >= 0.2 or <= -0.2 : Astigmatism is high, beads are highly astigmatic.<br><br>
+                    {% endset %}
                     <span class="metric-value">
                         {% set ast = imageAnalyzer._meanAstigmatism if imageAnalyzer._meanAstigmatism else 100 %}
-                        {% if ast < 0.1 and ast > -0.1 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">Good : Astigmatism is low, the image quality is good.</span>
-                        {% elif ast < 0.2 and ast > -0.2 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">Warning : Astigmatism is moderate, you may check if the focus is properly adjusted and the objective lens quality.</span>
-                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">Bad : Astigmatism is high, you have to check if the focus is properly adjusted and the objective lens quality.</span>{% endif %}
+                        {% if ast < 0.1 and ast > -0.1 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{ast_help}}Good : Astigmatism is low, the image quality is good.</span>
+                        {% elif ast < 0.2 and ast > -0.2 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">{{ast_help}}Warning : Astigmatism is moderate, you may check if the focus is properly adjusted and the objective lens quality.</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">{{ast_help}}Bad : Astigmatism is high, you have to check if the focus is properly adjusted and the objective lens quality.</span>{% endif %}
                         {{ imageAnalyzer._meanAstigmatism|round(4) if imageAnalyzer._meanAstigmatism else "N/A" }}
                     </span>
                 </p>
@@ -363,11 +435,16 @@
             <h3>Spherical Aberration Metrics</h3>
             <div class="metrics-grid">
                 <p><strong>Spherical Aberration:</strong> 
+                    {% set sa_help %}
+                    Spherical aberration < 0.2 : Spherical aberration is low, beads are not spherical.<br>
+                    Spherical aberration < 0.5 : Spherical aberration is moderate, beads are somewhat spherical.<br>
+                    Spherical aberration >= 0.5 : Spherical aberration is high, beads are highly spherical.<br><br>
+                    {% endset %}
                     <span class="metric-value">
                         {% set sa = imageAnalyzer._meanSphericalAberration if imageAnalyzer._meanSphericalAberration else 100 %}
-                        {% if sa < 0.2 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">Good : Spherical aberration is low, the image quality is good.</span>
-                        {% elif sa < 0.5 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">Warning : Spherical aberration is moderate, you may check if the sample is properly mounted and the coverslip thickness is correct.</span>
-                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">Bad : Spherical aberration is high, you have to check if the sample is properly mounted and the coverslip thickness is correct.</span>{% endif %}
+                        {% if sa < 0.2 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{sa_help}}Good : Spherical aberration is low, the image quality is good.</span>
+                        {% elif sa < 0.5 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">{{sa_help}}Warning : Spherical aberration is moderate, you may check if the sample is properly mounted and the coverslip thickness is correct.</span>
+                        {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">{{sa_help}}Bad : Spherical aberration is high, you have to check if the sample is properly mounted and the coverslip thickness is correct.</span>{% endif %}
                         {{ imageAnalyzer._meanSphericalAberration|round(4) if imageAnalyzer._meanSphericalAberration else "N/A" }}
                     </span>
                 </p>
@@ -377,26 +454,31 @@
             <h2>Heat Maps</h2>
             <div class="corpus">
                 <h3><strong>Standard metrics</strong></h3>
-                <img src="{{ imageAnalyzer._path }}/SBR_Heatmap.png" alt="SBR_Heatmap.png">
+                <img src="SBR_Heatmap.png" alt="SBR_Heatmap.png">
                 
-                <img src="{{ imageAnalyzer._path }}/Contrast_Heatmap.png" alt="Contrast_Heatmap.png">
+                <img src="Contrast_Heatmap.png" alt="Contrast_Heatmap.png">
     
-                <img src="{{ imageAnalyzer._path }}/EllipsRatio_Heatmap.png" alt="EllipsRatio_Heatmap.png">
+                <img src="EllipsRatio_Heatmap.png" alt="EllipsRatio_Heatmap.png">
     
-                <img src="{{ imageAnalyzer._path }}/Orientation_Heatmap.png" alt="Orientation_Heatmap.png">
-    
+                <img src="Orientation_Heatmap.png" alt="Orientation_Heatmap.png">
+                
+                <img src="LAR_Heatmap.png" alt="LAR_Heatmap.png">
+
+                <img src="Sphericity_Heatmap.png" alt="Sphericity_Heatmap.png">
+
                 <h3><strong>Comatic aberration metrics</strong></h3>
-                <img src="{{ imageAnalyzer._path }}/Comaticity_Heatmap.png" alt="Comaticity_Heatmap.png">
+                <img src="Comaticity_Heatmap.png" alt="Comaticity_Heatmap.png">
     
-                <img src="{{ imageAnalyzer._path }}/Skeleton2Extremities_Heatmap.png" alt="Skeleton2Extremities_Heatmap.png">
+                <img src="Skeleton2Extremities_Heatmap.png" alt="Skeleton2Extremities_Heatmap.png">
     
-                <img src="{{ imageAnalyzer._path }}/RMin_Heatmap.png" alt="RMin_Heatmap.png">
+                <img src="RMin_Heatmap.png" alt="RMin_Heatmap.png">
     
                 <h3><strong>Astigmatism metrics</strong></h3>
-                <img src="{{ imageAnalyzer._path }}/Astigmatism_Heatmap.png" alt="Astigmatism_Heatmap.png">
+                <img src="Astigmatism_Heatmap.png" alt="Astigmatism_Heatmap.png">
     
                 <h3><strong>Spherical aberration metrics</strong></h3>
-                <img src="{{ imageAnalyzer._path }}/SphericalAberration_Heatmap.png" alt="SphericalAberration_Heatmap.png">
+                <img src="SphericalAberration_Heatmap.png" alt="SphericalAberration_Heatmap.png">
+
             </div>
         </div>
         

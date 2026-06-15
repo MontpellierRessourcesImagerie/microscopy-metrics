@@ -35,7 +35,7 @@ TRUE_SIGMA_Z = PSF_SIZE / 10
 
 
 def show2DPsf(psf, center):
-    plt.imshow(psf[center], cmap="viridis")
+    plt.imshow(psf[:,center,:], cmap="viridis")
     plt.colorbar()
     plt.title("2D Image of a Gaussian")
     plt.xlabel("X")
@@ -155,6 +155,7 @@ def generateOrientedPSF(params, seed=None):
     thetas = [0.0, 0.0, 0.0]
     thetas[index] = np.deg2rad(45)
     fitTool = Fitting3DRotation()
+    params[5] *= 1.5
     psf = fitTool.gauss(*params, *thetas)(coords)
     fwhm = [fitTool.fwhm(params[7]), fitTool.fwhm(params[6]), fitTool.fwhm(params[5])]
     return psf, coords, fwhm, thetas
@@ -377,7 +378,7 @@ if __name__ == "__main__":
     meanDuration = [0 for _ in range(len(FIT_METHODS))]
     meanCorrOrientation = [0.0 for _ in range(len(FIT_METHODS))]
 
-    n_tests = 30
+    n_tests = 100
 
     pbar = tqdm(total=n_tests, desc="Evaluating PSF Fitting", unit="test")
     workers = int(os.cpu_count() * 0.75)

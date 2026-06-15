@@ -194,6 +194,8 @@ class Fitting2D(FittingTool):
         ax1.set_ylim(yLim)
         ax1.set_title(f"{self.axes[index]} Profile")
         ax1.legend()
+        ax1.set_xlabel("pixel")
+        ax1.set_ylabel("Intensity")
         fig1.savefig(
             os.path.join(outputPath, f"fit_curve_1D_{self.axes[index]}.png"),
             dpi=300,

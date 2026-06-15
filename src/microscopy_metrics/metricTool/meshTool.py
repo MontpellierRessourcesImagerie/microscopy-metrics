@@ -9,6 +9,7 @@ import pyvista as pv
 from scipy.ndimage import gaussian_filter
 
 
+
 class MeshBuilder(object):
     def __init__(self, image=None):
         self._image = image
@@ -24,6 +25,7 @@ class MeshBuilder(object):
         self._sphericity = None
         self._largestRegionMask = None
         self._segArray = None
+
 
     def BuildMesh(self):
         if self._image is None:

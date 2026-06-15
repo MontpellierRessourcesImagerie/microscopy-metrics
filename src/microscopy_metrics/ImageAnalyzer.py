@@ -18,15 +18,19 @@ class ImageAnalyzer(object):
         self._image = image
         self._theoreticalResolution = [0.0, 0.0, 0.0]
         self._samplingDistance = [0.0, 0.0, 0.0]
+        self._density = 0.0
         
         self._meanSBR = 0.0
         self._meanContrast = 0.0
         self._meanEllipsRatio = 0.0
         self._meanOrientation = 0.0
+        self._meanLAR = 0.0
+        self._meanSphericity = 0.0
         
         self._meanComaticity = 0.0
         self._meanSkeleton2Extremities = 0.0
         self._meanRMin = 0.0
+        self._meanConcavity = 0.0
         
         self._meanAstigmatism = 0.0
         
@@ -57,6 +61,8 @@ class ImageAnalyzer(object):
             "meanDetermination": self._meanDetermination,
             "meanFWHM": self._meanFWHM,
             "meanUncertainty": self._meanUncertainty,
+            "meanLAR": self._meanLAR,
+            "meanSphericity": self._meanSphericity,
         }
     
     def drawParameterTableOnPDF(self,pdf, title, data, y):
@@ -127,6 +133,8 @@ class ImageAnalyzer(object):
             ["Mean Contrast", f"{self._meanContrast:.2f}"],
             ["Mean Ellips Ratio", f"{self._meanEllipsRatio:.2f}"],
             ["Mean Orientation", f"{self._meanOrientation:.2f}°"],
+            ["Mean Lateral Asymmetry Ratio", f"{self._meanLAR:.2f}"],
+            ["Mean Sphericity", f"{self._meanSphericity:.2f}"]
         ]
         current_y = self.drawParameterTableOnPDF(pdf, "Standard metrics", standardMetrics, current_y)
         if current_y < 300:
@@ -151,7 +159,7 @@ class ImageAnalyzer(object):
         current_y = self.drawParameterTableOnPDF(pdf, "Spherical aberration metrics", SphericalMetrics, current_y)
         FittingMetrics = [
             ["Axis order", f"{', '.join(['Z', 'Y', 'X'])}"],
-            ["Mean Determination", f"{', '.join(f'{x:.4f}' for x in self._meanDetermination)}"],
+            ["Mean Determination (R²)", f"{', '.join(f'{x:.4f}' for x in self._meanDetermination)}"],
             ["Mean FWHM", f"{', '.join(f'{x:.4f}' for x in self._meanFWHM)}"],
             ["Mean Uncertainty", f"{', '.join(f'{x[3]:.4f}' for x in self._meanUncertainty)}"],
             ["Theoretical resolution", f"{', '.join(f'{x:.4f}' for x in self._theoreticalResolution)} µm"],
@@ -165,12 +173,14 @@ class ImageAnalyzer(object):
             "SBR_Heatmap.png",
             "Contrast_Heatmap.png",
             "EllipsRatio_Heatmap.png",
+            "LAR_Heatmap.png",
+            "Sphericity_Heatmap.png",
             "Orientation_Heatmap.png",
             "Comaticity_Heatmap.png",
             "Skeleton2Extremities_Heatmap.png",
             "RMin_Heatmap.png",
             "Astigmatism_Heatmap.png",
-            "SphericalAberration_Heatmap.png"
+            "SphericalAberration_Heatmap.png",
         ]
         existing_heatmaps = [f for f in heatmap_files if os.path.exists(os.path.join(self._path, f))]
         img_width = 250

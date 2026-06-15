@@ -137,10 +137,29 @@ class Metrics(object):
         self._imageAnalyzer._meanOrientation = np.mean([bead._metricTool._orientation for bead in self._imageAnalyzer._beadAnalyzer if bead._rejected == False])
         self._imageAnalyzer._meanSkeleton2Extremities = np.mean([bead._metricTool._skeleton2Extremities for bead in self._imageAnalyzer._beadAnalyzer if bead._rejected == False])
         self._imageAnalyzer._meanRMin = np.mean([bead._metricTool._RMin for bead in self._imageAnalyzer._beadAnalyzer if bead._rejected == False])
+        self._imageAnalyzer._meanLAR = np.mean([bead._metricTool._LAR for bead in self._imageAnalyzer._beadAnalyzer if bead._rejected == False])
+        self._imageAnalyzer._meanSphericity = np.mean([bead._metricTool._sphericity for bead in self._imageAnalyzer._beadAnalyzer if bead._rejected == False])
 
+    def calculateDensity(self):
+        """Calculates the density of beads in the microscopy images based on their centroid coordinates."""
+        if len(self._imageAnalyzer._beadAnalyzer) == 0:
+            raise ValueError("You must have at least one PSF")
+        YProjImage = np.zeros(self._imageAnalyzer._image.shape[1])
+        XProjImage = np.zeros(self._imageAnalyzer._image.shape[2])
+        for bead in self._imageAnalyzer._beadAnalyzer:
+            if bead._rejected == False and bead._roi is not None:
+                for y in range(bead._roi[0][1], bead._roi[2][1]):
+                    YProjImage[y] = 1
+                for x in range(bead._roi[0][2], bead._roi[2][2]):
+                    XProjImage[x] = 1
+        densityY = np.sum(YProjImage) / self._imageAnalyzer._image.shape[1]
+        densityX = np.sum(XProjImage) / self._imageAnalyzer._image.shape[2]
+        density = (densityY + densityX) / 2 if (densityY > 0 and densityX > 0) else 0
+        self._imageAnalyzer._density = density
 
     def GenerateHeatmap(self, outputDir=None):
         """Generates a heatmap visualization of the signal-to-background ratio (SBR) for the microscopy images, providing insights into the spatial distribution of SBR across the images."""
+        self.calculateDensity()
         xCoords = []
         yCoords = []
         sbrValues = []
@@ -152,6 +171,8 @@ class Metrics(object):
         OrientationValues = []
         RMinValues = []
         Skeleton2ExtremitiesValues = []
+        LARValues = []
+        SphericityValues = []
         for bead in self._imageAnalyzer._beadAnalyzer:
             if bead._rejected == False and bead._roi is not None:
                 yCoords.append(bead._centroid[1])
@@ -165,6 +186,8 @@ class Metrics(object):
                 OrientationValues.append(bead._metricTool._orientation)
                 RMinValues.append(bead._metricTool._RMin)
                 Skeleton2ExtremitiesValues.append(bead._metricTool._skeleton2Extremities)
+                LARValues.append(bead._metricTool._LAR)
+                SphericityValues.append(bead._metricTool._sphericity)
                 bead._metricTool.generateBeadOrientation(os.path.join(outputDir, f"bead_{bead._id}"))
         self.HeatmapGenerator(outputDir, sbrValues, xCoords, yCoords, MetricName="SBR")
         self.HeatmapGenerator(outputDir, ComaticityValues, xCoords, yCoords, MetricName="Comaticity")
@@ -175,11 +198,47 @@ class Metrics(object):
         self.HeatmapGenerator(outputDir, OrientationValues, xCoords, yCoords, MetricName="Orientation")
         self.HeatmapGenerator(outputDir, RMinValues, xCoords, yCoords, MetricName="RMin")
         self.HeatmapGenerator(outputDir, Skeleton2ExtremitiesValues, xCoords, yCoords, MetricName="Skeleton2Extremities")
+        self.HeatmapGenerator(outputDir, LARValues, xCoords, yCoords, MetricName="LAR")
+        self.HeatmapGenerator(outputDir, SphericityValues, xCoords, yCoords, MetricName="Sphericity")
+        
 
+    def HeatmapPlaceholder(self, outputDir=None, MetricName="SBR"):
+        """Returns a white placeholder image with centered text."""
+        image = self._imageAnalyzer._image
+        if image.ndim == 3:
+            image = np.max(image, axis=0)
+        height, width = image.shape
+        text = f"{MetricName} Heatmap is not available : not enough beads."
+        fig, ax = plt.subplots(figsize=(10, 8))
+        grey_image = np.full((height, width), 0.5, dtype=float)
+        ax.imshow(grey_image, cmap="gray", vmin=0, vmax=1)
+        ax.text(
+            width / 2,
+            height / 2,
+            text,
+            ha="center",
+            va="center",
+            fontsize=14,
+            color="black",
+            wrap=True,
+        )
+        ax.set_title(f"Interpolated {MetricName} Heatmap", fontsize=14)
+        ax.axis("off")
+        if outputDir is not None:
+            plt.savefig(
+                os.path.join(outputDir, f"{MetricName}_Heatmap.png"),
+                bbox_inches="tight",
+                dpi=300,
+            )
+        plt.close()
+        return fig
     
     def HeatmapGenerator(self,outputDir,Values,xCoords,yCoords,MetricName="SBR"):
         if len(Values) == 0:
             raise ValueError("No valid beads found for " + MetricName + " heatmap generation.")
+        if self._imageAnalyzer._density < 0.5:
+            print(f"Density of beads is too low ({self._imageAnalyzer._density:.4f}) for {MetricName} heatmap generation. Generating placeholder image.")
+            return self.HeatmapPlaceholder(outputDir, MetricName)
         image = self._imageAnalyzer._image
         if image.ndim == 3:
             image = np.max(image, axis=0)

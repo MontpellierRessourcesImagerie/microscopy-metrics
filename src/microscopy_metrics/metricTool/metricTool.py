@@ -42,6 +42,7 @@ class MetricTool(object):
         self._skeleton2Extremities = 0
         self._centroids = []
         self._summary = None
+        self.meshBuilder = None
 
     def setNormalizedImage(self, image: np.ndarray) -> np.ndarray:
         """Normalizes the input image to a range of [0, 1] and ensures that all values are non-negative.
