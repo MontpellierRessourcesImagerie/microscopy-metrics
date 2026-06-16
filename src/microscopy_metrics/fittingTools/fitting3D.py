@@ -157,12 +157,13 @@ class Fitting3D(FittingTool):
             ("XZ", psf[:, center[1], :], fit[:, centerFitY, :]),
             ("ZY", psf[:, :, center[2]], fit[:, :, centerFitX]),
         ]
-        for name, psf_slice, fit_slice in slices:
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
-            ax1.imshow(psf_slice, cmap="viridis")
-            ax1.set_title("PSF Data")
-            ax2.imshow(fit_slice, cmap="viridis")
-            ax2.set_title("Fit")
+        for name, _, fit_slice in slices:
+            fig, ax = plt.subplots(figsize=(6, 6))
+            ax.imshow(fit_slice, cmap="viridis", origin="lower")
+            ax.set_title("Fitted 2D Gaussian - " + name)
+            ax.axis("off")
+            ax.axhline(y=fit_slice.shape[0] / 2, color="k", alpha=0.5, linestyle="--")
+            ax.axvline(x=fit_slice.shape[1] / 2, color="k", alpha=0.5, linestyle="--")
             plt.tight_layout()
             fig.savefig(
                 os.path.join(outputPath, f"2D_Gaussian_Image_{name}.png"),

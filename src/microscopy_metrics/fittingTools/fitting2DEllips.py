@@ -132,42 +132,44 @@ class Fitting2DEllips(FittingTool):
         theta = ((math.pi / 2) - theta) * thetaSign
         return theta, sx, sy
 
-    def showFit(self, psf: np.ndarray, outputPath: str, params: list, theta: float):
-        """Generates and saves a plot comparing the original PSF data with the fitted 2D Ellipse Gaussian curve, including the angle of rotation (theta) and the center of the Gaussian.
-        Args:
-            psf (np.ndarray): The original PSF data.
-            outputPath (str): The path where the visualization will be saved.
-            params (List(float)): The fitted parameters for the 2D Ellipse Gaussian.
-            theta (float): The angle of rotation for the ellipse.
-        """
-        yyFine = np.linspace(0, psf.shape[0] - 1, psf.shape[0] * 10)
-        xxFine = np.linspace(0, psf.shape[1] - 1, psf.shape[1] * 10)
+
+    def showFit(self, outputPath: str):
+            fitShapeZ = min(self._image.shape[0] * 5, 256)
+            fitShapeY = min(self._image.shape[1] * 5, 128)
+            fitShapeX = min(self._image.shape[2] * 5, 128)
+            self.showSingleFit(self.psf[1], os.path.join(outputPath, "2D_Gaussian_Image_YX.png"), self.params2D[1], self.thetas[1], f"Fit YX - angle {self.thetas[0]:.2f} rad", fitPSFShape=(fitShapeY, fitShapeX))
+            self.showSingleFit(self.psf[2], os.path.join(outputPath, "2D_Gaussian_Image_XZ.png"), self.params2D[2], self.thetas[2], f"Fit XZ - angle {self.thetas[1]:.2f} rad", fitPSFShape=(fitShapeZ, fitShapeX))
+            self.showSingleFit(self.psf[0], os.path.join(outputPath, "2D_Gaussian_Image_ZY.png"), self.params2D[0], self.thetas[0], f"Fit ZY - angle {self.thetas[2]:.2f} rad", fitPSFShape=(fitShapeZ, fitShapeY))
+
+
+    def showSingleFit(self, psf: np.ndarray, outputPath: str, params, theta, title: str, fitPSFShape = None):
+        if fitPSFShape is None:
+            fitPSFShape = psf.shape
+        yyFine = np.linspace(0, psf.shape[0], fitPSFShape[0])
+        xxFine = np.linspace(0, psf.shape[1], fitPSFShape[1])
         yFine, xFine = np.meshgrid(yyFine, xxFine, indexing="ij")
-        fineCoordsyx = np.stack([yFine.ravel(), xFine.ravel()], -1)
-        y0 = params[2] * 10
-        x0 = params[3] * 10
-        L = min(max(psf.shape) * 10 / 4, 30)
+        fineCoords = np.stack([yFine.ravel(), xFine.ravel()], -1)
+
+        fit = self.gauss(*params)(fineCoords).reshape(fitPSFShape[0], fitPSFShape[1])
+
+        y0 = params[2] * fitPSFShape[0] / psf.shape[0]
+        x0 = params[3] * fitPSFShape[1] / psf.shape[1]
+        L = min(max(fitPSFShape) * 5 / 4, 30)
+
         if params[4] > params[5]:
             dy = L * np.cos(theta)
             dx = -L * np.sin(theta)
         else:
             dy = L * np.sin(theta)
             dx = L * np.cos(theta)
-        x1 = x0 + dx
-        y1 = y0 + dy
-        fit = self.gauss(*params)(fineCoordsyx)
-        fit = fit.reshape((psf.shape[0] * 10, psf.shape[1] * 10))
-        fig = plt.figure(figsize=(10, 5))
-        ax1 = fig.add_subplot(1, 2, 1)
-        ax1.imshow(psf, cmap="viridis")
-        ax1.set_title("PSF Data")
-        ax2 = fig.add_subplot(1, 2, 2)
-        ax2.imshow(fit, cmap="viridis")
-        ax2.set_title("Fit")
-        ax2.plot([x0, x1], [y0, y1], color="red", linewidth=2)
-        ax2.scatter([x0], [y0], color="red", alpha=0.7)
-        ax2.axhline(y=psf.shape[0] * 10 / 2, color="k", alpha=0.5, linestyle="--")
-        ax2.axvline(x=psf.shape[1] * 10 / 2, color="k", alpha=0.5, linestyle="--")
+        fig, ax = plt.subplots(figsize=(5, 5))
+        ax.imshow(fit, cmap="viridis", origin="lower")
+        ax.plot([x0 - dx, x0 + dx], [y0 - dy, y0 + dy], color="red", linewidth=2)
+        ax.scatter([x0], [y0], color="red", alpha=0.7)
+        ax.axhline(y=fitPSFShape[0] / 2, color="k", alpha=0.5, linestyle="--")
+        ax.axvline(x=fitPSFShape[1] / 2, color="k", alpha=0.5, linestyle="--")
+        ax.axis("off")
+        ax.set_title(title)
         plt.tight_layout()
         fig.savefig(outputPath, dpi=300, bbox_inches="tight")
         plt.close(fig)
@@ -283,16 +285,16 @@ class Fitting2DEllips(FittingTool):
         """
         imageFloat = self._image.astype(np.float64)
         physic = self.getLocalCentroid()
-        psf = [
+        self.psf = [
             imageFloat[:, :, physic[2]],
             imageFloat[physic[0], :, :],
             imageFloat[:, physic[1], :],
         ]
         axe = ["ZY", "YX", "XZ"]
         coords = [
-            self.getCoords(psf[0]),
-            self.getCoords(psf[1]),
-            self.getCoords(psf[2]),
+            self.getCoords(self.psf[0]),
+            self.getCoords(self.psf[1]),
+            self.getCoords(self.psf[2]),
         ]
         self.compute1DParams()
         self.params2D = []
@@ -307,7 +309,7 @@ class Fitting2DEllips(FittingTool):
                 mu = [self.params1D[u2 + 2], self.params1D[u + 2]]
             sigma = [1, 0, 1]
 
-            params, pcov = self.fitCurve(amp, bg, mu, sigma, coords[u], psf[u])
+            params, pcov = self.fitCurve(amp, bg, mu, sigma, coords[u], self.psf[u])
 
             self.params2D.append(params)
             theta, s1, s2 = self.ellipseParmConversion(params[4], params[5], params[6])
@@ -332,11 +334,10 @@ class Fitting2DEllips(FittingTool):
 
             self.uncertainties[u] = self.uncertainty(pcov)
             self.determinations[u] = self.determination(
-                params, coords[u], psf[u].flatten()
+                params, coords[u], self.psf[u].flatten()
             )
             self.pcovs[u] = pcov
-            if self._show:
-                activePath = self.getActivePath(index)
-                outputPath = os.path.join(activePath, f"2D_Gaussian_Image_{axe[u]}.png")
-                self.showFit(psf[u], outputPath, params, theta)
+        self.activePath = self.getActivePath(index)
+        if self._show:
+            self.showFit(self.activePath)
 

@@ -209,3 +209,26 @@ class BeadAnalyzer(object):
                 pdf.drawImage(os.path.join(beadPath, fit["file"]), x, y_fits, width=img_size, height=img_size, preserveAspectRatio=True)
             pdf.setFont("Helvetica", 10)
             pdf.drawCentredString(x + (img_size / 2), y_fits - 15, fit["title"])
+        
+        current_y -= 60
+        
+        pdf.setFont("Helvetica-Bold", 14)
+        pdf.drawCentredString(300, current_y, "Tilted Gaussian Fits (XZ, ZY Planes)")
+        current_y -= 30
+        current_y -= img_size * 1.3
+        img_size = img_size * 1.2
+        y_tilted_fits = current_y
+        tilted_fits = [
+            {"file": "2D_Gaussian_Image_XZ.png", "title": "Tilted XZ Fit"},
+            {"file": "2D_Gaussian_Image_ZY.png", "title": "Tilted ZY Fit"},
+        ]
+        x_positions_tilted = [75, 350]
+        for i, fit in enumerate(tilted_fits):
+            x = x_positions_tilted[i]
+            if os.path.exists(os.path.join(beadPath, fit["file"])):
+                pdf.drawImage(os.path.join(beadPath, fit["file"]), x, y_tilted_fits, width=img_size, height=img_size, preserveAspectRatio=True)
+                pdf.setFont("Helvetica", 10)
+                pdf.drawCentredString(x + (img_size / 2), y_tilted_fits - 15, fit["title"])
+            else :
+                pdf.setFont("Helvetica", 10)
+                pdf.drawCentredString(x + (img_size / 2), y_tilted_fits - 15, f"{fit['title']} (Not Available)")

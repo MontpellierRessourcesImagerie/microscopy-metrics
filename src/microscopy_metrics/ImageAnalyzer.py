@@ -63,6 +63,7 @@ class ImageAnalyzer(object):
             "meanUncertainty": self._meanUncertainty,
             "meanLAR": self._meanLAR,
             "meanSphericity": self._meanSphericity,
+            "meanConcavity": self._meanConcavity,
         }
     
     def drawParameterTableOnPDF(self,pdf, title, data, y):

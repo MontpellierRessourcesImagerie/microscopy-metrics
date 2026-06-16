@@ -139,6 +139,7 @@ class Metrics(object):
         self._imageAnalyzer._meanRMin = np.mean([bead._metricTool._RMin for bead in self._imageAnalyzer._beadAnalyzer if bead._rejected == False])
         self._imageAnalyzer._meanLAR = np.mean([bead._metricTool._LAR for bead in self._imageAnalyzer._beadAnalyzer if bead._rejected == False])
         self._imageAnalyzer._meanSphericity = np.mean([bead._metricTool._sphericity for bead in self._imageAnalyzer._beadAnalyzer if bead._rejected == False])
+        self._imageAnalyzer._meanConcavity = np.mean([bead._metricTool.meshBuilder._concavity for bead in self._imageAnalyzer._beadAnalyzer if bead._rejected == False])
 
     def calculateDensity(self):
         """Calculates the density of beads in the microscopy images based on their centroid coordinates."""

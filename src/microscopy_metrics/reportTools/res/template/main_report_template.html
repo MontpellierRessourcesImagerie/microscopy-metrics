@@ -402,13 +402,13 @@
                 </p>
                 <p><strong>Minimum curvature radius centroids path:</strong> 
                     {% set minCurvatureRadiusCentroidsPath_help %}
-                    Minimum curvature radius > 1.5 : Minimum curvature radius is high, beads are not comatic.<br>
-                    Minimum curvature radius > 1.0 and < 1.5 : Minimum curvature radius is moderate, beads are somewhat comatic.<br>
+                    Minimum curvature radius > 5.0 : Minimum curvature radius is high, beads are not comatic.<br>
+                    Minimum curvature radius > 1.0 and < 5.0 : Minimum curvature radius is moderate, beads are somewhat comatic.<br>
                     Minimum curvature radius < 1.0 : Minimum curvature radius is low, beads are highly comatic.<br><br>
                     {% endset %}
                     <span class="metric-value">
                         {% set rmin = imageAnalyzer._meanRMin if imageAnalyzer._meanRMin else 100 %}
-                        {% if rmin > 1.5 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{minCurvatureRadiusCentroidsPath_help}}Good : RMin is high, the image quality is good.</span>
+                        {% if rmin > 5.0 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{minCurvatureRadiusCentroidsPath_help}}Good : RMin is high, the image quality is good.</span>
                         {% elif rmin > 1.0 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">{{minCurvatureRadiusCentroidsPath_help}}Warning : RMin is moderate, you may check if the objective lens is tipped and translated with respect to the optic axis.</span>
                         {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">{{minCurvatureRadiusCentroidsPath_help}}Bad : RMin is low, you have to check if the objective lens is tipped and translated with respect to the optic axis.</span>{% endif %}
                         {{ imageAnalyzer._meanRMin|round(4) if imageAnalyzer._meanRMin else "N/A" }}

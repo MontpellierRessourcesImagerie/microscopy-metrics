@@ -216,6 +216,12 @@
             <h3>X view</h3>
             <img src="YZ_view.png" alt="YZ_view.png" style="width: 200px;">
 
+            <h3>Tilt XZ</h3>
+            <img src="2D_Gaussian_Image_XZ.png" alt="Tilt XZ not available" style="width: 200px;">
+
+            <h3>Tilt ZY</h3>
+            <img src="2D_Gaussian_Image_ZY.png" alt="Tilt ZY not available" style="width: 200px;">
+
             <h2>Resolution & Fitting Quality</h2>
             <table>
                 <thead>
@@ -382,13 +388,13 @@
                 </p>
                 <p><strong>Minimum curvature radius centroids path:</strong>
                     {% set minCurvatureRadiusCentroidsPath_help %}
-                    Minimum curvature radius > 1.5 : Minimum curvature radius is high, the bead is not comatic.<br>
-                    Minimum curvature radius > 1.0 and < 1.5 : Minimum curvature radius is moderate, the bead is somewhat comatic.<br>
+                    Minimum curvature radius > 5.0 : Minimum curvature radius is high, the bead is not comatic.<br>
+                    Minimum curvature radius > 1.0 and < 5.0 : Minimum curvature radius is moderate, the bead is somewhat comatic.<br>
                     Minimum curvature radius < 1.0 : Minimum curvature radius is low, the bead is highly comatic.<br><br>
                     {% endset %}
                     <span class="metric-value">
                         {% set minCurvatureRadiusCentroidsPath = bead._metricTool._RMin if bead._metricTool._RMin is not none else 0 %}
-                        {% if minCurvatureRadiusCentroidsPath > 1.5 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{minCurvatureRadiusCentroidsPath_help}}Good : Minimum curvature radius is high, the image quality is good.</span>
+                        {% if minCurvatureRadiusCentroidsPath > 5.0 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{minCurvatureRadiusCentroidsPath_help}}Good : Minimum curvature radius is high, the image quality is good.</span>
                         {% elif minCurvatureRadiusCentroidsPath > 1.0 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">{{minCurvatureRadiusCentroidsPath_help}}Warning : Minimum curvature radius is moderate, you may check if the objective lens is tipped and translated with respect to the optic axis.</span>
                         {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">{{minCurvatureRadiusCentroidsPath_help}}Bad : Minimum curvature radius is low, you have to check if the objective lens is tipped and translated with respect to the optic axis.</span>{% endif %}
                         {{ minCurvatureRadiusCentroidsPath|round(4) if bead._metricTool._RMin is not none else "N/A" }}

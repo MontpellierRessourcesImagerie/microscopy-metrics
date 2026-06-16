@@ -121,19 +121,25 @@ class Fitting2D(FittingTool):
             outputPath (str): The path where the visualization will be saved.
             params (List(float)): The fitted parameters for the 2D Gaussian.
         """
-        yy_fine = np.linspace(0, psf.shape[0] - 1, psf.shape[0] * 10)
-        xx_fine = np.linspace(0, psf.shape[1] - 1, psf.shape[1] * 10)
+        if psf.shape[0] > psf.shape[1]:
+            fitShape1 = min(psf.shape[0] * 5, 256)
+            fitShape2 = min(psf.shape[1] * 5, 128)
+        else:
+            fitShape1 = min(psf.shape[0] * 5, 128)
+            fitShape2 = min(psf.shape[1] * 5, 128)
+        yy_fine = np.linspace(0, psf.shape[0], fitShape1)
+        xx_fine = np.linspace(0, psf.shape[1], fitShape2)
         y_fine, x_fine = np.meshgrid(yy_fine, xx_fine, indexing="ij")
         fine_coords_yx = np.stack([y_fine.ravel(), x_fine.ravel()], -1)
         fit = self.gauss(*params)(fine_coords_yx)
-        fit = fit.reshape((psf.shape[0] * 10, psf.shape[1] * 10))
+        fit = fit.reshape((fitShape1, fitShape2))
         fig = plt.figure(figsize=(10, 5))
-        ax1 = fig.add_subplot(1, 2, 1)
-        ax1.imshow(psf, cmap="viridis")
-        ax1.set_title("PSF Data")
         ax2 = fig.add_subplot(1, 2, 2)
         ax2.imshow(fit, cmap="viridis")
-        ax2.set_title("Fit")
+        ax2.set_title("Fitted 2D Gaussian")
+        ax2.axis("off")
+        ax2.axhline(y=fitShape1 / 2, color="k", alpha=0.5, linestyle="--")
+        ax2.axvline(x=fitShape2 / 2, color="k", alpha=0.5, linestyle="--")
         plt.tight_layout()
         fig.savefig(outputPath, dpi=300, bbox_inches="tight")
         plt.close(fig)

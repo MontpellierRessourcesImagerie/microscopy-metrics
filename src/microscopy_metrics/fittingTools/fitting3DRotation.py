@@ -7,6 +7,7 @@ matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 
 from scipy.optimize import curve_fit
+from scipy.spatial.transform import Rotation as SciRot
 
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.fittingTools.fitting1D import Fitting1D
@@ -29,31 +30,31 @@ class Fitting3DRotation(FittingTool):
         self,
         amp: float,
         bg: float,
-        muX: float,
-        muY: float,
         muZ: float,
-        sigmaX: float,
-        sigmaY: float,
+        muY: float,
+        muX: float,
         sigmaZ: float,
-        thetaX: float,
-        thetaY: float,
+        sigmaY: float,
+        sigmaX: float,
         thetaZ: float,
+        thetaY: float,
+        thetaX: float,
     ):
         """Generates a 3D Gaussian function with rotation based on the provided parameters.
         Args:
             amp (float): amplitude of the curve
             bg (float): background intensity
-            muX,muY,muZ (float): center coordinates of the Gaussian
-            sigmaX,sigmaY,sigmaZ (float): standard deviation of the Gaussian
-            thetaX,thetaY,thetaZ (float): rotation angles around each axis
+            muZ,muY,muX (float): center coordinates of the Gaussian
+            sigmaZ,sigmaY,sigmaX (float): standard deviation of the Gaussian
+            thetaZ,thetaY,thetaX (float): rotation angles around each axis
         Returns:
             float: Intensity value at (x,y,z) following the curve
         """
 
         def fun(coords: np.ndarray):
-            x = coords[:, 0] - muX
+            z = coords[:, 0] - muZ
             y = coords[:, 1] - muY
-            z = coords[:, 2] - muZ
+            x = coords[:, 2] - muX
             cx, sx = np.cos(thetaX), np.sin(thetaX)
             cy, sy = np.cos(thetaY), np.sin(thetaY)
             cz, sz = np.cos(thetaZ), np.sin(thetaZ)
@@ -69,7 +70,7 @@ class Fitting3DRotation(FittingTool):
             )
             z_rot = (-sy) * x + (cy * sx) * y + (cy * cx) * z
             exponent = (
-                -(x_rot**2) / (2 * sigmaX**2)
+                - (x_rot**2) / (2 * sigmaX**2)
                 - (y_rot**2) / (2 * sigmaY**2)
                 - (z_rot**2) / (2 * sigmaZ**2)
             )
@@ -82,38 +83,38 @@ class Fitting3DRotation(FittingTool):
         x: np.ndarray,
         amp: float,
         bg: float,
-        muX: float,
-        muY: float,
         muZ: float,
-        sigmaX: float,
-        sigmaY: float,
+        muY: float,
+        muX: float,
         sigmaZ: float,
-        thetaX: float,
-        thetaY: float,
+        sigmaY: float,
+        sigmaX: float,
         thetaZ: float,
+        thetaY: float,
+        thetaX: float,
     ):
         """Evaluates the 3D Gaussian function with rotation at the given x values.
         Args:
             amp (float): amplitude of the curve
             bg (float): background intensity
-            muX,muY,muZ (float): center coordinates of the Gaussian
-            sigmaX,sigmaY,sigmaZ (float): standard deviation of the Gaussian
-            thetaX,thetaY,thetaZ (float): rotation angles around each axis
+            muZ,muY,muX (float): center coordinates of the Gaussian
+            sigmaZ,sigmaY,sigmaX (float): standard deviation of the Gaussian
+            thetaZ,thetaY,thetaX (float): rotation angles around each axis
         Returns:
             float: Intensity value at (x,y,z) following the curve
         """
         return self.gauss(
             amp=amp,
             bg=bg,
-            muX=muX,
-            muY=muY,
             muZ=muZ,
-            sigmaX=sigmaX,
-            sigmaY=sigmaY,
+            muY=muY,
+            muX=muX,
             sigmaZ=sigmaZ,
-            thetaX=thetaX,
-            thetaY=thetaY,
+            sigmaY=sigmaY,
+            sigmaX=sigmaX,
             thetaZ=thetaZ,
+            thetaY=thetaY,
+            thetaX=thetaX,
         )(x)
 
     def fitCurve(
@@ -182,43 +183,35 @@ class Fitting3DRotation(FittingTool):
         y0 = self.parameters[3] * (fitShapeY / psf.shape[1])
         x0 = self.parameters[4] * (fitShapeX / psf.shape[2])
         L = min(max(psf.shape) * 5 / 4, 30)
-        thetaX = self.thetas[0]
+        thetaX = self.thetas[2]
         thetaY = self.thetas[1]
-        thetaZ = self.thetas[2]
-        cx, sx = np.cos(thetaX), np.sin(thetaX)
-        cy, sy = np.cos(thetaY), np.sin(thetaY)
-        cz, sz = np.cos(thetaZ), np.sin(thetaZ)
-        R = np.array(
-            [
-                [cy * cz, cz * sx * sy - cx * sz, cx * cz * sy + sx * sz],
-                [cy * sz, cx * cz + sx * sy * sz, -cz * sx + cx * sy * sz],
-                [-sy, cy * sx, cy * cx],
-            ]
-        ).T
-        idx_major = np.argmax(
-            [self.parameters[5], self.parameters[6], self.parameters[7]]
-        )
-        v_major = R[:, idx_major]
-        vz, vy, vx = v_major
+        thetaZ = self.thetas[0]
+        rot = SciRot.from_euler("zyx", [thetaZ, thetaY, thetaX])
+        R = rot.as_matrix()
+        sigma2 = np.diag([self.parameters[7] ** 2, self.parameters[6] ** 2, self.parameters[5] ** 2])
+        cov = R @ sigma2 @ R.T
+        eigvals, eigvecs = np.linalg.eigh(cov)
+        majorIDX = np.argmax(eigvals)
+        majorAxis = eigvecs[:, majorIDX]
+        anisotropy = np.sqrt(eigvals[majorIDX] / np.min(eigvals))
+        hasMajorAxis = anisotropy > 1.15
         L = min(max(psf.shape) * 5 / 4, 30)
         params = [*self.parameters, *self.thetas]
         fit = self.gauss(*params)(fine_coords_zyx)
         fit = fit.reshape((fitShapeZ, fitShapeY, fitShapeX))
-        angle_yx = np.degrees(np.arctan2(vy, vx))
-        dx_yx = L * np.cos(np.arctan2(vy, vx))
-        dy_yx = L * np.sin(np.arctan2(vy, vx))
-        x1_yx = x0 + dx_yx
-        y1_yx = y0 + dy_yx
         fig = plt.figure(figsize=(10, 5))
-        ax1 = fig.add_subplot(1, 2, 1)
-        ax1.imshow(psf[center[0]], cmap="viridis")
-        ax1.set_title("PSF Data")
         ax2 = fig.add_subplot(1, 2, 2)
         centerFit = int(fitShapeZ * (center[0] / psf.shape[0]))
-        ax2.imshow(fit[centerFit], cmap="viridis")
-        ax2.set_title(f"Fit (YX angle: {angle_yx:.1f}°)")
-        ax2.plot([x0 - dx_yx, x1_yx], [y0 - dy_yx, y1_yx], color="red", linewidth=2)
-        ax2.scatter([x0], [y0], color="red", alpha=0.7)
+        ax2.imshow(fit[centerFit], cmap="viridis", origin="lower")
+        ax2.set_title(f"Fit YX - angle {self.thetas[0]:.2f} rad")
+        ax2.axis("off")
+        proj_yx = np.array([majorAxis[0], majorAxis[1]])
+        norm_yx = np.linalg.norm(proj_yx)
+        if hasMajorAxis and norm_yx > 1e-6:
+            dir_yx = proj_yx / norm_yx
+            dx_yx, dy_yx = L * dir_yx
+            ax2.plot([x0 - dx_yx, x0 + dx_yx], [y0 + dy_yx, y0 - dy_yx], color="red", linewidth=2)
+            ax2.scatter([x0], [y0], color="red", alpha=0.7)
         ax2.axhline(y=fitShapeY / 2, color="k", alpha=0.5, linestyle="--")
         ax2.axvline(x=fitShapeX / 2, color="k", alpha=0.5, linestyle="--")
         plt.tight_layout()
@@ -228,23 +221,21 @@ class Fitting3DRotation(FittingTool):
             bbox_inches="tight",
         )
         plt.close(fig)
-        angle_xz = np.degrees(np.arctan2(vz, vx))
-        dx_xz = L * np.cos(np.arctan2(vz, vx))
-        dz_xz = L * np.sin(np.arctan2(vz, vx))
-        z1_xz = z0 + dz_xz
-        x1_xz = x0 + dx_xz
         fig2 = plt.figure(figsize=(10, 5))
-        ax1 = fig2.add_subplot(1, 2, 1)
-        ax1.imshow(psf[:, center[1], :], cmap="viridis")
-        ax1.set_title("PSF Data")
         ax2 = fig2.add_subplot(1, 2, 2)
         centerFit = int(fitShapeY * (center[1] / psf.shape[1]))
-        ax2.imshow(fit[:, centerFit, :], cmap="viridis")
-        ax2.set_title(f"Fit (XZ angle: {angle_xz:.1f}°)")
-        ax2.plot([x0 - dx_xz, x1_xz], [z0 - dz_xz, z1_xz], color="red", linewidth=2)
+        ax2.imshow(fit[:, centerFit, :], cmap="viridis", origin="lower")
+        ax2.set_title(f"Fit XZ - Pitch: {self.thetas[1]:.2f} rad")
+        proj_xz = np.array([majorAxis[0], majorAxis[2]])
+        norm_xz = np.linalg.norm(proj_xz)
+        if hasMajorAxis and norm_xz > 1e-6:
+            dir_xz = proj_xz / norm_xz
+            dx_xz, dz_xz = L * dir_xz
+            ax2.plot([x0 - dx_xz, x0 + dx_xz], [z0 + dz_xz, z0 - dz_xz], color="red", linewidth=2)
         ax2.scatter([x0], [z0], color="red", alpha=0.7)
         ax2.axhline(y=fitShapeZ / 2, color="k", alpha=0.5, linestyle="--")
         ax2.axvline(x=fitShapeX / 2, color="k", alpha=0.5, linestyle="--")
+        ax2.axis("off")
         plt.tight_layout()
         fig2.savefig(
             os.path.join(outputPath, "2D_Gaussian_Image_XZ.png"),
@@ -252,23 +243,21 @@ class Fitting3DRotation(FittingTool):
             bbox_inches="tight",
         )
         plt.close(fig2)
-        angle_zy = np.degrees(np.arctan2(vz, vy))
-        dy_zy = L * np.cos(np.arctan2(vz, vy))
-        dz_zy = L * np.sin(np.arctan2(vz, vy))
-        z1_zy = z0 + dz_zy
-        y1_zy = y0 + dy_zy
         fig3 = plt.figure(figsize=(10, 5))
-        ax1 = fig3.add_subplot(1, 2, 1)
-        ax1.imshow(psf[:, :, center[2]], cmap="viridis")
-        ax1.set_title("PSF Data")
         ax2 = fig3.add_subplot(1, 2, 2)
         centerFit = int(fitShapeX * (center[2] / psf.shape[2]))
-        ax2.imshow(fit[:, :, centerFit], cmap="viridis")
-        ax2.set_title(f"Fit (ZY angle: {angle_zy:.1f}°)")
-        ax2.plot([y0 - dy_zy, y1_zy], [z0 - dz_zy, z1_zy], color="red", linewidth=2)
+        ax2.imshow(fit[:, :, centerFit], cmap="viridis", origin="lower")
+        ax2.set_title(f"Fit ZY - Roll: {self.thetas[2]:.2f} rad")
+        proj_zy = np.array([majorAxis[1], majorAxis[2]])
+        norm_zy = np.linalg.norm(proj_zy)
+        if hasMajorAxis and norm_zy > 1e-6:
+            dir_zy = proj_zy / norm_zy
+            dy_zy, dz_zy = L * dir_zy
+            ax2.plot([y0 - dy_zy, y0 + dy_zy], [z0 + dz_zy, z0 - dz_zy], color="red", linewidth=2)
         ax2.scatter([y0], [z0], color="red", alpha=0.7)
         ax2.axhline(y=fitShapeZ / 2, color="k", alpha=0.5, linestyle="--")
         ax2.axvline(x=fitShapeY / 2, color="k", alpha=0.5, linestyle="--")
+        ax2.axis("off")
         plt.tight_layout()
         fig3.savefig(
             os.path.join(outputPath, "2D_Gaussian_Image_ZY.png"),
@@ -403,41 +392,9 @@ class Fitting3DRotation(FittingTool):
         self.parameters[2:5] = params[2:5]
         self.parameters[5:8] = params[5:8]
         self.pcovs = [pcov] * 3
+        self.activePath = self.getActivePath(index)
         if self._show:
-            activePath = self.getActivePath(index)
-            self.showFit(activePath)
-            thetaX, thetaY, thetaZ = self.thetas
-            cx, sx, cy, sy, cz, sz = (
-                np.cos(thetaX),
-                np.sin(thetaX),
-                np.cos(thetaY),
-                np.sin(thetaY),
-                np.cos(thetaZ),
-                np.sin(thetaZ),
-            )
-            R = np.array(
-                [
-                    [cy * cz, cz * sx * sy - cx * sz, cx * cz * sy + sx * sz],
-                    [cy * sz, cx * cz + sx * sy * sz, -cz * sx + cx * sy * sz],
-                    [-sy, cy * sx, cy * cx],
-                ]
-            ).T
-            idx_major = np.argmax(
-                [self.parameters[5], self.parameters[6], self.parameters[7]]
-            )
-            major_axis = self.axes[idx_major]
-            vz, vy, vx = R[:, idx_major]
-            print("---")
-            print(
-                f"Thetas : X={math.degrees(thetaX):.2f}°, Y={math.degrees(thetaY):.2f}°, Z={math.degrees(thetaZ):.2f}°"
-            )
-            print(
-                f"Major axis  : {major_axis} (sigma = {self.parameters[5+idx_major]:.2f} px)"
-            )
-            print(
-                f"Angles of major axis : YX={np.degrees(np.arctan2(vy, vx)):.2f}°, XZ={np.degrees(np.arctan2(vz, vx)):.2f}°, ZY={np.degrees(np.arctan2(vz, vy)):.2f}°"
-            )
-            print("---")
+            self.showFit(self.activePath)
         self.fwhms = [
             pxToUm(self.fwhm(self.parameters[5]), self._spacing[0]),
             pxToUm(self.fwhm(self.parameters[6]), self._spacing[1]),
