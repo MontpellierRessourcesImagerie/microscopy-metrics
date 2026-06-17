@@ -112,9 +112,9 @@ class Fitting2DRotation(FittingTool):
             coords,
             psf.ravel(),
             p0=params,
-            maxfev=5000,
+            maxfev=200000,
             bounds=(
-                [0, -np.inf, 0, 0, 1e-6, 1e-6, -np.pi],
+                [0, -np.inf, 0, 0, 1e-6, 1e-6, -np.pi - 1e-6],
                 [
                     np.inf,
                     np.inf,
@@ -122,7 +122,7 @@ class Fitting2DRotation(FittingTool):
                     psf.shape[1],
                     psf.shape[0],
                     psf.shape[1],
-                    np.pi,
+                    np.pi + 1e-6,
                 ],
             ),
         )

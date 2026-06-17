@@ -99,7 +99,7 @@ class Fitting2D(FittingTool):
             coords,
             psf.ravel(),
             p0=params,
-            maxfev=5000,
+            maxfev=200000,
             bounds=(
                 [0, -np.inf, 0, 0, 1e-6, 1e-6],
                 [

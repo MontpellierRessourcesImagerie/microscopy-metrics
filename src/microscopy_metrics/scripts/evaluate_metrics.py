@@ -16,7 +16,7 @@ def showPSF(psf, title="PSF"):
     import matplotlib
     import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
-    matplotlib.use('QtAgg')  # Use TkAgg backend for interactive plotting
+    matplotlib.use('QtAgg') 
     if not PSFSHOW:
         fig = plt.figure()
         ax = fig.add_subplot(111)

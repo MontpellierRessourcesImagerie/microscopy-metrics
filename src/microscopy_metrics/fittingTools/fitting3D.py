@@ -126,7 +126,7 @@ class Fitting3D(FittingTool):
             coords,
             psf.ravel(),
             p0=params,
-            maxfev=5000,
+            maxfev=200000,
             bounds=bounds,
         )
         return popt, pcov

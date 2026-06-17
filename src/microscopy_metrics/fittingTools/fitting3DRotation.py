@@ -159,7 +159,7 @@ class Fitting3DRotation(FittingTool):
             coords,
             psf.ravel(),
             p0=params,
-            maxfev=5000,
+            maxfev=200000,
             bounds=bounds,
         )
         return popt, pcov

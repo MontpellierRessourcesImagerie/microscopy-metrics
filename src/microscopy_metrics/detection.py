@@ -144,9 +144,12 @@ class Detection(object):
                         other_bead._rejected = True
                         other_bead._rejectionDesc = "Too close to bead " + str(bead._id)
             if not bead._rejected and bead._centroid is not None:
-                if self.isRoiOverlapped(bead._id):
+                isOverlapped, overlappedBead = self.isRoiOverlapped(bead._id)
+                if isOverlapped:
                     bead._rejected = True
-                    bead._rejectionDesc = "ROI overlapped with another bead's ROI"
+                    bead._rejectionDesc = "ROI overlapped with bead " + str(overlappedBead._id) + "'s ROI"
+                    overlappedBead._rejected = True
+                    overlappedBead._rejectionDesc = "ROI overlapped with bead " + str(bead._id) + "'s ROI"
                 elif not self.isRoiInImage(bead._roi):
                     bead._rejected = True
                     bead._rejectionDesc = "ROI not within image's shape"
@@ -215,8 +218,8 @@ class Detection(object):
                 noOverlapX = (newXMax < xMin) or (xMax < newXMin)
                 noOverlapY = (newYMax < yMin) or (yMax < newYMin)
                 if not (noOverlapX or noOverlapY):
-                    return True
-        return False
+                    return True, bead
+        return False, None
 
     def isRoiNotInRejection(self, centroid):
         """Checks if the given centroid is located within the rejection zone near the top or bottom of the image.

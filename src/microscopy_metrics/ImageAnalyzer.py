@@ -226,4 +226,76 @@ class ImageAnalyzer(object):
             if not bead._rejected:
                 bead.generatePDFReport(pdf, self._path, self._theoreticalResolution, self._samplingDistance)
                 pdf.showPage()
-        
+
+    def generateSimplifiedPDFReport(self, pdf):
+        """Generates a simplified PDF report for the image analysis results, focusing on key metrics and bead analysis.
+        Args:
+            pdf (PDFReport, optional): An instance of the PDFReport class to generate the report. Defaults to None.
+        """
+        pdf.setFont("Helvetica-Bold", 28)
+        pdf.drawCentredString(300, 770, "Analysis Parameters Report")
+        pdf.setFont("Helvetica", 10)
+        current_y = 700
+        if os.path.exists(os.path.join(self._path, "Localisation.png")):
+            pdf.drawImage(
+                os.path.join(self._path, "Localisation.png"),
+                172,
+                current_y - 300,
+                width=300,
+                height=300,
+                preserveAspectRatio=True,
+            )
+        current_y -= 350
+        styles = getSampleStyleSheet()
+        styleN = styles["Normal"]
+        styleN.wordWrap = 'CJK' 
+        imgData = [
+            ["Image path", Paragraph(f"{self._path}", styleN)],
+            ["Image shape", f"{self._image.shape if self._image is not None else 'N/A'}"],
+            ["Bead size", f"{self._beadSize} µm"],
+            ["Pixel size", f"{', '.join(f'{x:.4f}' for x in self._pixelSize)} µm"],
+            ["Number of beads analyzed", f"{len([bead for bead in self._beadAnalyzer if not bead._rejected])}"],
+            ["Number of beads rejected", f"{len([bead for bead in self._beadAnalyzer if bead._rejected])}"]
+        ]
+        current_y = self.drawParameterTableOnPDF(pdf, "Image parameters", imgData, current_y)
+        if current_y < 300:
+            pdf.showPage()
+            current_y = 700
+        standardMetrics = [
+            ["Mean SBR", f"{self._meanSBR:.2f}"],
+            ["Mean Contrast", f"{self._meanContrast:.2f}"],
+            ["Mean Ellips Ratio", f"{self._meanEllipsRatio:.2f}"],
+            ["Mean Orientation", f"{self._meanOrientation:.2f}°"],
+            ["Mean Lateral Asymmetry Ratio", f"{self._meanLAR:.2f}"],
+            ["Mean Sphericity", f"{self._meanSphericity:.2f}"]
+        ]
+        current_y = self.drawParameterTableOnPDF(pdf, "Standard metrics", standardMetrics, current_y)
+        if current_y < 300:
+            pdf.showPage()
+            current_y = 700
+        ComaticMetrics = [
+            ["Mean Comaticity", f"{self._meanComaticity:.2f}"],
+            ["Mean Skeleton to Extremities", f"{self._meanSkeleton2Extremities:.2f}"],
+            ["Mean RMin", f"{self._meanRMin:.2f} µm"]
+        ]
+        current_y = self.drawParameterTableOnPDF(pdf, "Comaticity metrics", ComaticMetrics, current_y)
+        if current_y < 300:
+            pdf.showPage()
+            current_y = 700
+        AstitmatismMetrics = [
+            ["Mean Astigmatism", f"{self._meanAstigmatism:.2f}"],
+        ]
+        current_y = self.drawParameterTableOnPDF(pdf, "Astigmatism metrics", AstitmatismMetrics, current_y)
+        SphericalMetrics = [
+            ["Mean Spherical Aberration", f"{self._meanSphericalAberration:.2f}"],
+        ]
+        current_y = self.drawParameterTableOnPDF(pdf, "Spherical aberration metrics", SphericalMetrics, current_y)
+        FittingMetrics = [
+            ["Axis order", f"{', '.join(['Z', 'Y', 'X'])}"],
+            ["Mean Determination (R²)", f"{', '.join(f'{x:.4f}' for x in self._meanDetermination)}"],
+            ["Mean FWHM", f"{', '.join(f'{x:.4f}' for x in self._meanFWHM)}"],
+            ["Mean Uncertainty", f"{', '.join(f'{x[3]:.4f}' for x in self._meanUncertainty)}"],
+            ["Theoretical resolution", f"{', '.join(f'{x:.4f}' for x in self._theoreticalResolution)} µm"],
+            ["Sampling distance", f"{', '.join(f'{x:.4f}' for x in self._samplingDistance)} µm"],
+        ]
+        current_y = self.drawParameterTableOnPDF(pdf, "Fitting metrics", FittingMetrics, current_y)

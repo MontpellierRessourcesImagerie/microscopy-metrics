@@ -72,7 +72,7 @@ class Metrics(object):
             if bead._rejected == False and bead._roi is not None:
                 self._imageAnalyzer._meanSBR += bead._metricTool._SBR
                 total += 1
-        self._imageAnalyzer._meanSBR = self._imageAnalyzer._meanSBR / total
+        self._imageAnalyzer._meanSBR = self._imageAnalyzer._meanSBR / total if total > 0 else 0
 
     def runPrefittingMetrics(self):
         """Runs the pre-fitting metrics calculations, including signal-to-background ratio (SBR) calculation and theoretical resolution estimation."""

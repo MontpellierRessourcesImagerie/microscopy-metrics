@@ -112,13 +112,9 @@ class MetricTool(object):
                         if innerDistance <= distance <= outerDistance:
                             nBackground += 1
                             background += self._image[z, y, x]
-        if nBackground == 0:
-            raise ValueError("There are no background pixel detected")
-        meanBackground = background / nBackground
-        if nSignal == 0:
-            raise ValueError("There are no signal pixel detected")
-        meanSignal = signal / nSignal
-        self._SBR = float(meanSignal / meanBackground)
+        meanBackground = background / nBackground if nBackground > 0 else 0
+        meanSignal = signal / nSignal if nSignal > 0 else 0
+        self._SBR = float(meanSignal / meanBackground) if meanBackground != 0 else 0
 
     def lateralAsymmetryRatio(self, FWHM: list):
         """Calculates the lateral asymmetry ratio (LAR) for a PSF based on the full width at half maximum (FWHM) values.

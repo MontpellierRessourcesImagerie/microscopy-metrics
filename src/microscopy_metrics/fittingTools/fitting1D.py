@@ -85,7 +85,7 @@ class Fitting1D(FittingTool):
             coords,
             psf,
             p0=params,
-            maxfev=5000,
+            maxfev=200000,
             bounds=([0, -np.inf, 0, 1e-6], [np.inf, np.inf, len(coords), np.inf]),
         )
         return popt, pcov

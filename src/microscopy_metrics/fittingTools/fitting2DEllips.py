@@ -103,7 +103,7 @@ class Fitting2DEllips(FittingTool):
             coords,
             psf.ravel(),
             p0=params,
-            maxfev=5000,
+            maxfev=200000,
             bounds=(
                 [0, -np.inf, 0, 0, 1e-6, -np.inf, 1e-6],
                 [np.inf, np.inf, psf.shape[0], psf.shape[1], np.inf, np.inf, np.inf],

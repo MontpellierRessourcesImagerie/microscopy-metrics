@@ -422,14 +422,14 @@
             <div class="metrics-grid">
                 <p><strong>Spherical aberration:</strong> 
                     {% set sa_help %}
-                    Spherical aberration < 0.2 : Spherical aberration is low, the bead is not spherical.<br>
-                    Spherical aberration < 0.5 : Spherical aberration is moderate, the bead is somewhat spherical.<br>
-                    Spherical aberration >= 0.5 : Spherical aberration is high, the bead is highly spherical.<br><br>
+                    Spherical aberration < 0.05 : Spherical aberration is low, the bead is not spherical.<br>
+                    Spherical aberration < 0.1 : Spherical aberration is moderate, the bead is somewhat spherical.<br>
+                    Spherical aberration >= 0.2 : Spherical aberration is high, the bead is highly spherical.<br><br>
                     {% endset %}
                     <span class="metric-value">
                         {% set sa = bead._metricTool._sphericalAberration if bead._metricTool._sphericalAberration is not none else 0 %}
-                        {% if sa < 0.2 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{sa_help}}Good : Spherical aberration is low, the image quality is good.</span>
-                        {% elif sa < 0.5 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">{{sa_help}}Warning : Spherical aberration is moderate, you may check if the sample is properly mounted and the coverslip thickness is correct.</span>
+                        {% if sa < 0.05 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{sa_help}}Good : Spherical aberration is low, the image quality is good.</span>
+                        {% elif sa < 0.1 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">{{sa_help}}Warning : Spherical aberration is moderate, you may check if the sample is properly mounted and the coverslip thickness is correct.</span>
                         {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">{{sa_help}}Bad : Spherical aberration is high, you have to check if the sample is properly mounted and the coverslip thickness is correct.</span>{% endif %}
                         {{ sa|round(4) if bead._metricTool._sphericalAberration is not none else "N/A" }}
                     </span>
