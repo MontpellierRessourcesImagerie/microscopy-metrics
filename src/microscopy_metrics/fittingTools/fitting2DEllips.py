@@ -2,16 +2,18 @@ import os
 import numpy as np
 import math
 import matplotlib
+import warnings
 
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, OptimizeWarning
 
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.fittingTools.fitting1D import Fitting1D
 from microscopy_metrics.utils import pxToUm
 
+warnings.filterwarnings("error", category=OptimizeWarning)
 
 class Fitting2DEllips(FittingTool):
     """Class for fitting a 2D Ellipse Gaussian curve to the PSF profile of a microscopy image.
@@ -98,17 +100,22 @@ class Fitting2DEllips(FittingTool):
             List(float),Matrix(float): List of fitted parameters and covariance matrix
         """
         params = [amp, bg, *mu, *sigma]
-        popt, pcov = curve_fit(
-            self.evalFun,
-            coords,
-            psf.ravel(),
-            p0=params,
-            maxfev=200000,
-            bounds=(
-                [0, -np.inf, 0, 0, 1e-6, -np.inf, 1e-6],
-                [np.inf, np.inf, psf.shape[0], psf.shape[1], np.inf, np.inf, np.inf],
-            ),
-        )
+        try:
+            popt, pcov = curve_fit(
+                self.evalFun,
+                coords,
+                psf.ravel(),
+                p0=params,
+                maxfev=20000,
+                bounds=(
+                    [0, -np.inf, 0, 0, 1e-6, 1e-6, -np.pi - 1e-6],
+                    [np.inf, np.inf, psf.shape[0], psf.shape[1], np.inf, np.inf, np.pi],
+                ),
+            )
+        except Exception as e:
+            print(f"Fitting2DEllips Optimization warning: {e}. Returning initial parameters.")
+            popt = params
+            pcov = np.zeros((len(params), len(params)))
         return popt, pcov
 
     def ellipseParmConversion(self, a: float, b: float, c: float):
@@ -124,9 +131,9 @@ class Fitting2DEllips(FittingTool):
         s = math.sqrt(abs((b**2) - (a * c)))
         sx = math.sqrt(abs(-a + t - c)) / 2.0 / s
         sy = math.sqrt(abs(-a - t - c)) / 2.0 / s
-        theta = math.sqrt(1.0 + ((a - c) / t)) / math.sqrt(2.0)
+        theta = (math.sqrt(1.0 + ((a - c) / t)) if t != 0 else 0) / math.sqrt(2.0)
         theta = math.acos(theta)
-        thetaSign = 4 * b * (sx**2) * (sy**2) / ((sx**2) - (sy**2))
+        thetaSign = (4 * b * (sx**2) * (sy**2) / ((sx**2) - (sy**2))) if (sx**2) != (sy**2) else 0
         thetaSign = max(-1.0, min(1.0, thetaSign))
         thetaSign = np.sign(-0.5 * math.asin(thetaSign))
         theta = ((math.pi / 2) - theta) * thetaSign

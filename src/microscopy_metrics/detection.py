@@ -173,13 +173,13 @@ class Detection(object):
                 y = bead._image[physic[0], :, physic[2]]
                 x = bead._image[physic[0], physic[1], :]
                 peaksX, _ = find_peaks(
-                    x, height=np.min(x) + (np.max(x) - np.min(x)) * 0.5, distance=3
+                    x, prominence=np.min(x) + (np.max(x) - np.min(x)) * 0.5, distance=3
                 )
                 peaksY, _ = find_peaks(
-                    y, height=np.min(y) + (np.max(y) - np.min(y)) * 0.5, distance=3
+                    y, prominence=np.min(y) + (np.max(y) - np.min(y)) * 0.5, distance=3
                 )
                 peaksZ, _ = find_peaks(
-                    z, height=np.min(z) + (np.max(z) - np.min(z)) * 0.5, distance=3
+                    z, prominence=np.min(z) + (np.max(z) - np.min(z)) * 0.5, distance=3
                 )
                 if bead._image[int(physic[0]), int(physic[1]), int(physic[2])] < (
                     self._thresholdIntensity * meanIntensity
@@ -188,7 +188,7 @@ class Detection(object):
                 ):
                     bead._rejected = True
                     bead._rejectionDesc = "Intensity criteria not met"
-                if len(peaksX) > 1 or len(peaksY) > 1 or len(peaksZ) > 1:
+                if len(peaksX) > 1 or len(peaksY) > 1 or len(peaksZ) > 1 :
                     bead._rejected = True
                     bead._rejectionDesc = "Multiple peaks detected in ROI"
 
@@ -374,6 +374,7 @@ class Detection(object):
                     canvasRGB = self.addRoiOnImage(roi, image=None, beadId=bead._id)
                 else:
                     canvasRGB = self.addRoiOnImage(roi, image=canvasRGB, beadId=bead._id)
-        imageRoi = Image.fromarray(canvasRGB)
-        imageRoi.save(os.path.join(outputDir, "Localisation.png"))
+        if canvasRGB is not None:
+            imageRoi = Image.fromarray(canvasRGB)
+            imageRoi.save(os.path.join(outputDir, "Localisation.png"))
 

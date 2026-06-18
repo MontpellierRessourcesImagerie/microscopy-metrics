@@ -2,11 +2,12 @@ import os
 import math
 import numpy as np
 import matplotlib
+import warnings
 
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, OptimizeWarning
 from scipy.spatial.transform import Rotation as SciRot
 
 
@@ -14,6 +15,8 @@ from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.fittingTools.fitting3DRotation import Fitting3DRotation
 from microscopy_metrics.fittingTools.fitting1D import Fitting1D
 from microscopy_metrics.utils import pxToUm
+
+warnings.filterwarnings("error", category=OptimizeWarning)
 
 
 class Fitting2DRotation(FittingTool):
@@ -107,25 +110,30 @@ class Fitting2DRotation(FittingTool):
             List(float),Matrix(float): List of fitted parameters and covariance matrix
         """
         params = [amp, bg, *mu, *sigma, theta]
-        popt, pcov = curve_fit(
-            self.evalFun,
-            coords,
-            psf.ravel(),
-            p0=params,
-            maxfev=200000,
-            bounds=(
-                [0, -np.inf, 0, 0, 1e-6, 1e-6, -np.pi - 1e-6],
-                [
-                    np.inf,
-                    np.inf,
-                    psf.shape[0],
-                    psf.shape[1],
-                    psf.shape[0],
-                    psf.shape[1],
-                    np.pi + 1e-6,
-                ],
-            ),
-        )
+        try:
+            popt, pcov = curve_fit(
+                self.evalFun,
+                coords,
+                psf.ravel(),
+                p0=params,
+                maxfev=20000,
+                bounds=(
+                    [0, -np.inf, 0, 0, 1e-6, 1e-6, -np.pi - 1e-6],
+                    [
+                        np.inf,
+                        np.inf,
+                        psf.shape[0],
+                        psf.shape[1],
+                        psf.shape[0],
+                        psf.shape[1],
+                        np.pi + 1e-6,
+                    ],
+                ),
+            )
+        except Exception as e:
+            print(f"Fitting2DRotation Optimization warning: {e}. Returning initial parameters.")
+            popt = params
+            pcov = np.zeros((len(params), len(params)))  
         return popt, pcov
 
     def showFit(self, outputPath: str):

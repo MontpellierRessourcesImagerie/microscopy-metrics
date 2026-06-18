@@ -161,6 +161,8 @@ class Metrics(object):
     def GenerateHeatmap(self, outputDir=None):
         """Generates a heatmap visualization of the signal-to-background ratio (SBR) for the microscopy images, providing insights into the spatial distribution of SBR across the images."""
         self.calculateDensity()
+        if self._imageAnalyzer._density < 0.5:
+            print(f"Density of beads is too low for heatmap generation. Generating placeholder image...")
         xCoords = []
         yCoords = []
         sbrValues = []
@@ -236,7 +238,8 @@ class Metrics(object):
     
     def HeatmapGenerator(self,outputDir,Values,xCoords,yCoords,MetricName="SBR"):
         if len(Values) == 0:
-            raise ValueError("No valid beads found for " + MetricName + " heatmap generation.")
+            print(f"No values for {MetricName} heatmap generation. Generating placeholder image.")
+            return self.HeatmapPlaceholder(outputDir, MetricName)
         if self._imageAnalyzer._density < 0.5:
             print(f"Density of beads is too low ({self._imageAnalyzer._density:.4f}) for {MetricName} heatmap generation. Generating placeholder image.")
             return self.HeatmapPlaceholder(outputDir, MetricName)

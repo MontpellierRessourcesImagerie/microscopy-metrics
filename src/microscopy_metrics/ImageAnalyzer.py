@@ -162,7 +162,7 @@ class ImageAnalyzer(object):
             ["Axis order", f"{', '.join(['Z', 'Y', 'X'])}"],
             ["Mean Determination (R²)", f"{', '.join(f'{x:.4f}' for x in self._meanDetermination)}"],
             ["Mean FWHM", f"{', '.join(f'{x:.4f}' for x in self._meanFWHM)}"],
-            ["Mean Uncertainty", f"{', '.join(f'{x[3]:.4f}' for x in self._meanUncertainty)}"],
+            ["Mean Uncertainty", f"{', '.join(f'{(x[3] if isinstance(x, (list, tuple)) else 0.0):.4f}' for x in self._meanUncertainty)}"],
             ["Theoretical resolution", f"{', '.join(f'{x:.4f}' for x in self._theoreticalResolution)} µm"],
             ["Sampling distance", f"{', '.join(f'{x:.4f}' for x in self._samplingDistance)} µm"],
         ]

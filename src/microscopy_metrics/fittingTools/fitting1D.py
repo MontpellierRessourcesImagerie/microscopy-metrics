@@ -1,13 +1,16 @@
 import os
 import numpy as np
 import matplotlib
+import warnings
 
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, OptimizeWarning
 
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.utils import pxToUm
+
+warnings.filterwarnings("error", category=OptimizeWarning)
 
 
 class Fitting1D(FittingTool):
@@ -80,14 +83,19 @@ class Fitting1D(FittingTool):
             tuple: Optimal parameters and covariance matrix.
         """
         params = [amp, bg, mu, sigma]
-        popt, pcov = curve_fit(
-            self.evalFun,
-            coords,
-            psf,
-            p0=params,
-            maxfev=200000,
-            bounds=([0, -np.inf, 0, 1e-6], [np.inf, np.inf, len(coords), np.inf]),
-        )
+        try:
+            popt, pcov = curve_fit(
+                self.evalFun,
+                coords,
+                psf,
+                p0=params,
+                maxfev=20000,
+                bounds=([0, -np.inf, 0, 1e-6], [np.inf, np.inf, len(coords), np.inf]),
+            )
+        except Exception as e:
+            print(f"Fitting1D Optimization warning: {e}. Returning initial parameters.")
+            popt = params
+            pcov = np.zeros((len(params), len(params)))
         return popt, pcov
 
     def plotSingleFit(

@@ -52,18 +52,18 @@ class PSFGenerator(object):
 
 class PSFWithComaticAberration(PSFGenerator):
     def __init__(
-        self, size=100, dxy=0.05, dz=0.05, ni0=1.515, ni=1.515, wvl=0.5, NA=1.4
+        self, size=100, dxy=0.05, dz=0.05, ni0=1.515, ni=1.515, wvl=0.5, NA=1.4, Intensity=None
     ):
         super(PSFWithComaticAberration, self).__init__(size, dxy, dz, ni0, ni, wvl, NA)
+        self.intensity = Intensity if Intensity is not None else np.random.uniform(0.02, 0.08)
         self.psf = self.generate_comatic_aberration()
 
     def generate_comatic_aberration(self):
-        randomIntensity = np.random.uniform(0.02, 0.08)
         shape = (self.size, self.size, self.size)
         z, y, x = np.mgrid[0 : shape[0], 0 : shape[1], 0 : shape[2]]
         zC, _, _ = np.array(shape) // 2
         psf_base = np.asarray(self.psf)
-        xShift = ((z - zC) ** 2) * randomIntensity
+        xShift = ((z - zC) ** 2) * self.intensity
         xRenseigne = x - xShift
         psf_banane = map_coordinates(psf_base, [z, y, xRenseigne], order=1)
         return psf_banane

@@ -19,6 +19,16 @@ from microscopy_metrics.thresholdTools.legacy import ThresholdLegacy
 from microscopy_metrics.thresholdTools.otsu import ThresholdOtsu
 from microscopy_metrics.fittingTools.fitting2D import Fitting2D
 from microscopy_metrics.metricTool.meshTool import MeshBuilder
+import warnings
+warnings.filterwarnings("error")
+warnings.filterwarnings(
+    "ignore",
+    message="Calling the getitem method from a UnitRegistry",
+    category=DeprecationWarning
+)
+
+
+
 
 
 class MetricTool(object):
@@ -68,11 +78,11 @@ class MetricTool(object):
         Raises:
             ValueError: If the input image is not 2D or 3D, if there are no background pixels detected, or if there are no signal pixels detected in the image.
         """
+        if self._image is None or self._image.size == 0:
+            print("Image is empty")
+            return -1
         if self._image.ndim not in (2, 3):
             print("Incorrect picture format")
-            return -1
-        if self._image.size == 0:
-            print("Image is empty")
             return -1
         imageFloat = self.setNormalizedImage(self._image)
         imageFloat = median_filter(imageFloat, size=5)
@@ -123,7 +133,7 @@ class MetricTool(object):
         Raises:
            ValueError: If the FWHM values are not available or if there are not enough FWHM values to calculate the LAR.
         """
-        if FWHM == []:
+        if FWHM == [] or FWHM is None or len(FWHM) < 3:
             raise ValueError(
                 "FWHM values are not available or insufficient to calculate LAR."
             )
@@ -478,9 +488,6 @@ class MetricTool(object):
             largestRegion.axis_major_length / largestRegion.axis_minor_length
         )
         self._orientation = np.rad2deg(largestRegion.orientation) % 180
-
-    def distance2D(self, point1, point2):
-        return np.sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2)
 
     def meshMetrics(self):
         self.meshBuilder = MeshBuilder()

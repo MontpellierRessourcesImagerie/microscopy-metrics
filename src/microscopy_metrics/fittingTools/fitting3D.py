@@ -1,15 +1,18 @@
 import os
 import numpy as np
 import matplotlib
+import warnings
 
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, OptimizeWarning
 
 from microscopy_metrics.utils import pxToUm
 from microscopy_metrics.fittingTools.fitting1D import Fitting1D
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
+
+warnings.filterwarnings("error", category=OptimizeWarning)
 
 
 class Fitting3D(FittingTool):
@@ -121,14 +124,19 @@ class Fitting3D(FittingTool):
                 np.inf,
             ],
         )
-        popt, pcov = curve_fit(
-            self.evalFun,
-            coords,
-            psf.ravel(),
-            p0=params,
-            maxfev=200000,
+        try:
+            popt, pcov = curve_fit(
+                self.evalFun,
+                coords,
+                psf.ravel(),
+                p0=params,
+                maxfev=20000,
             bounds=bounds,
         )
+        except Exception as e:
+            print(f"Fitting3D Optimization warning: {e}. Returning initial parameters.")
+            popt = params
+            pcov = np.zeros((len(params), len(params)))
         return popt, pcov
 
     def showFit(self, psf: np.ndarray, outputPath: str):
