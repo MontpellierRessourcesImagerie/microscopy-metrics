@@ -10,6 +10,7 @@ from scipy.optimize import curve_fit, OptimizeWarning
 
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.fittingTools.fitting1D import Fitting1D
+from microscopy_metrics.fittingTools.fitting3D import Fitting3D
 from microscopy_metrics.utils import pxToUm
 
 warnings.filterwarnings("error", category=OptimizeWarning)
@@ -122,35 +123,78 @@ class Fitting2D(FittingTool):
             pcov = np.zeros((len(params), len(params)))
         return popt, pcov
 
-    def showFit(self, psf: np.ndarray, outputPath: str, params: list):
-        """Generates and saves a visualization of the 2D Gaussian fit compared to the original PSF data.
+    def showFit(self, outputPath: str):
+        """Plots the fitted 3D Gaussian curve with rotation against the original PSF data for all three axes.
         Args:
-            psf (np.ndarray): The original PSF data.
-            outputPath (str): The path where the visualization will be saved.
-            params (List(float)): The fitted parameters for the 2D Gaussian.
+            outputPath (str): Directory where the plots will be saved.
         """
-        if psf.shape[0] > psf.shape[1]:
-            fitShape1 = min(psf.shape[0] * 5, 256)
-            fitShape2 = min(psf.shape[1] * 5, 128)
-        else:
-            fitShape1 = min(psf.shape[0] * 5, 128)
-            fitShape2 = min(psf.shape[1] * 5, 128)
-        yy_fine = np.linspace(0, psf.shape[0], fitShape1)
-        xx_fine = np.linspace(0, psf.shape[1], fitShape2)
+        psf = self._image.astype(np.float64)
+        fitShapeZ = min(psf.shape[0] * 5, 256)
+        fitShapeY = min(psf.shape[1] * 5, 128)
+        fitShapeX = min(psf.shape[2] * 5, 128)
+        yy_fine = np.linspace(0, psf.shape[1], fitShapeY)
+        xx_fine = np.linspace(0, psf.shape[2], fitShapeX)
         y_fine, x_fine = np.meshgrid(yy_fine, xx_fine, indexing="ij")
         fine_coords_yx = np.stack([y_fine.ravel(), x_fine.ravel()], -1)
-        fit = self.gauss(*params)(fine_coords_yx)
-        fit = fit.reshape((fitShape1, fitShape2))
+        paramsYX = [ self.parameters[0], self.parameters[1], self.parameters[3], self.parameters[4], self.parameters[6], self.parameters[7]]
+        fit = self.gauss(*paramsYX)(fine_coords_yx)
+        fit = fit.reshape((fitShapeY, fitShapeX))
         fig = plt.figure(figsize=(10, 5))
         ax2 = fig.add_subplot(1, 2, 2)
-        ax2.imshow(fit, cmap="viridis")
-        ax2.set_title("Fitted 2D Gaussian")
+        ax2.imshow(fit, cmap="viridis", origin="lower")
+        ax2.set_title(f"Fit YX")
         ax2.axis("off")
-        ax2.axhline(y=fitShape1 / 2, color="k", alpha=0.5, linestyle="--")
-        ax2.axvline(x=fitShape2 / 2, color="k", alpha=0.5, linestyle="--")
+        ax2.axhline(y=fitShapeY / 2, color="k", alpha=0.5, linestyle="--")
+        ax2.axvline(x=fitShapeX / 2, color="k", alpha=0.5, linestyle="--")
         plt.tight_layout()
-        fig.savefig(outputPath, dpi=300, bbox_inches="tight")
+        fig.savefig(
+            os.path.join(outputPath, "2D_Gaussian_Image_YX.png"),
+            dpi=300,
+            bbox_inches="tight",
+        )
         plt.close(fig)
+        fig2 = plt.figure(figsize=(10, 5))
+        zz_fine = np.linspace(0, psf.shape[0], fitShapeZ)
+        xx_fine = np.linspace(0, psf.shape[2], fitShapeX)
+        z_fine, x_fine = np.meshgrid(zz_fine, xx_fine, indexing="ij")
+        fine_coords_xz = np.stack([z_fine.ravel(), x_fine.ravel()], -1)
+        paramsXZ = [ self.parameters[0], self.parameters[1], self.parameters[2], self.parameters[4], self.parameters[5], self.parameters[7]]
+        fit = self.gauss(*paramsXZ)(fine_coords_xz)
+        fit = fit.reshape((fitShapeZ, fitShapeX))
+        ax2 = fig2.add_subplot(1, 2, 2)
+        ax2.imshow(fit, cmap="viridis", origin="lower")
+        ax2.set_title(f"Fit XZ")
+        ax2.axhline(y=fitShapeZ / 2, color="k", alpha=0.5, linestyle="--")
+        ax2.axvline(x=fitShapeX / 2, color="k", alpha=0.5, linestyle="--")
+        ax2.axis("off")
+        plt.tight_layout()
+        fig2.savefig(
+            os.path.join(outputPath, "2D_Gaussian_Image_XZ.png"),
+            dpi=300,
+            bbox_inches="tight",
+        )
+        plt.close(fig2)
+        fig3 = plt.figure(figsize=(10, 5))
+        zz_fine = np.linspace(0, psf.shape[0], fitShapeZ)
+        yy_fine = np.linspace(0, psf.shape[1], fitShapeY)
+        z_fine, y_fine = np.meshgrid(zz_fine, yy_fine, indexing="ij")
+        fine_coords_zy = np.stack([z_fine.ravel(), y_fine.ravel()], -1)
+        paramsZY = [ self.parameters[0], self.parameters[1], self.parameters[2], self.parameters[3], self.parameters[5], self.parameters[6]]
+        fit = self.gauss(*paramsZY)(fine_coords_zy)
+        fit = fit.reshape((fitShapeZ, fitShapeY))
+        ax2 = fig3.add_subplot(1, 2, 2)
+        ax2.imshow(fit, cmap="viridis", origin="lower")
+        ax2.set_title(f"Fit ZY")
+        ax2.axhline(y=fitShapeZ / 2, color="k", alpha=0.5, linestyle="--")
+        ax2.axvline(x=fitShapeY / 2, color="k", alpha=0.5, linestyle="--")
+        ax2.axis("off")
+        plt.tight_layout()
+        fig3.savefig(
+            os.path.join(outputPath, "2D_Gaussian_Image_ZY.png"),
+            dpi=300,
+            bbox_inches="tight",
+        )
+        plt.close(fig3)
 
     def plotSingleFit(
         self,
@@ -308,7 +352,3 @@ class Fitting2D(FittingTool):
                 params, self._coords[u], psf[u].flatten()
             )
             self.pcovs[u] = pcov
-            if self._show:
-                activePath = self.getActivePath(index)
-                outputPath = os.path.join(activePath, f"2D_Gaussian_Image_{axe[u]}.png")
-                self.showFit(psf[u], outputPath, params)

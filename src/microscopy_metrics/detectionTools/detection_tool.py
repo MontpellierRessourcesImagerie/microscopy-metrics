@@ -2,6 +2,10 @@ import numpy as np
 
 from abc import abstractmethod
 from scipy import ndimage as ndi
+from skimage.feature import blob_log
+from skimage.feature import blob_dog
+from skimage.feature import peak_local_max
+from skimage.measure import regionprops, label
 
 
 class DetectionTool(object):
@@ -72,3 +76,108 @@ class DetectionTool(object):
     @abstractmethod
     def detect(self):
         pass
+
+
+class PeakLocalMaxDetector(DetectionTool):
+    """Class for detecting local maxima using the peak_local_max function from scikit-image.
+    This class inherits from the DetectionTool base class and implements the detect method to identify local maxima in the input image.
+    """
+
+    name = "peak local maxima"
+
+    def __init__(self):
+        super().__init__()
+        self._minDistance = 1
+
+    def detect(self):
+        """Detects local maxima in the input image using the peak_local_max function from scikit-image.
+        The method applies a Gaussian filter to smooth the image, performs a high-pass filtering, and then uses the peak_local_max function to find local maxima based on the specified parameters (e.g., min_distance, threshold_abs).
+        The detected local maxima are stored in the _centroids attribute for further processing.
+        """
+        self.setNormalizedImage()
+        ndi.gaussian_filter(
+            self._normalizedImage, sigma=2.0, output=self._normalizedImage
+        )
+        self.gaussianHighPass()
+        self._centroids = peak_local_max(
+            self._highPassedImage,
+            min_distance=self._minDistance,
+            threshold_abs=self._thresholdTool.getThreshold(self._highPassedImage),
+        )
+
+
+class CentroidDetector(DetectionTool):
+    """Class for detecting blobs using a centroid method.
+    This class inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using a centroid algorithm.
+    """
+
+    name = "Centroids"
+
+    def __init__(self):
+        super().__init__()
+
+    def detect(self):
+        """Detects centroids in the input image using a simple thresholding and region properties approach.
+        The method applies a Gaussian filter to smooth the image, performs a high-pass filtering, and then uses a threshold to create a binary image.
+        The connected components in the binary image are labeled, and the centroids of these components are calculated and stored in the _centroids attribute for further processing.
+        """
+        self.setNormalizedImage()
+        self._normalizedImage = ndi.gaussian_filter(self._normalizedImage, sigma=2.0)
+        self.gaussianHighPass()
+        self.binaryImage = self._highPassedImage > self._thresholdTool.getThreshold(
+            self._highPassedImage
+        )
+        self.labeledImage = label(self.binaryImage)
+        regionProps = regionprops(self.labeledImage)
+        tmpCentroids = []
+        for prop in regionProps:
+            tmpCentroids.append(prop.centroid)
+        self._centroids = np.array(tmpCentroids)
+
+
+class BlobLogDetector(DetectionTool):
+    """Class for detecting blobs using the Laplacian of Gaussian (LoG) method.
+    This class inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using the LoG algorithm.
+    """
+
+    name = "Laplacian of Gaussian"
+
+    def __init__(self):
+        super().__init__()
+
+    def detect(self):
+        """Detects blobs in the input image using the Laplacian of Gaussian (LoG) method.
+        The method applies the LoG algorithm to the normalized image and identifies blob centroids based on the specified parameters (e.g., max_sigma, threshold).
+        The detected centroids are stored in the _centroids attribute for further processing.
+        """
+        self.setNormalizedImage()
+        blobs = blob_log(
+            self._normalizedImage,
+            max_sigma=self._sigma,
+            threshold=self._thresholdTool.getThreshold(self._normalizedImage),
+        )
+        self._centroids = np.array([[blob[0], blob[1], blob[2]] for blob in blobs])
+
+
+class BlobDogDetector(DetectionTool):
+    """Class for detecting blobs using the Difference of Gaussian (DoG) method.
+    This class inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using the DoG algorithm.
+    """
+
+    name = "Difference of Gaussian"
+
+    def __init__(self):
+        super().__init__()
+
+    def detect(self):
+        """Detects blobs in the input image using the Difference of Gaussian (DoG) method.
+        The method applies the DoG algorithm to the normalized image and identifies blob centroids based on the specified parameters (e.g., max_sigma, threshold).
+        The detected centroids are stored in the _centroids attribute for further processing.
+        """
+        self.setNormalizedImage()
+        blobs = blob_dog(
+            self._normalizedImage,
+            max_sigma=self._sigma,
+            threshold=self._thresholdTool.getThreshold(self._normalizedImage),
+        )
+        self._centroids = np.array([[blob[0], blob[1], blob[2]] for blob in blobs])

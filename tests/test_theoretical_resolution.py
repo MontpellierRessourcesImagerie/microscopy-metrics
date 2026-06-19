@@ -71,3 +71,24 @@ def test_MultiphotonSamplingDistance():
     results = multiphoton.getSamplingDistance()
     assert np.isclose(results[1], 31.25, rtol=0.000001)
     assert np.isclose(results[0], 187.5, rtol=0.0001)
+
+
+def test_UnknownMicroscopyType():
+    """Unit test of unknown microscopy type"""
+    unknown = TheoreticalResolution()
+    results = unknown.getTheoreticalResolution()
+    assert results == [0,0,0]
+    unknown.angularAperture()
+    assert np.isclose(unknown._angularAperture, 0.64, atol=0.01)
+
+def test_theoreticalResolution_GetterSetter():
+    """Unit test of theoretical resolution getter and setter"""
+    theoreticalResolution = TheoreticalResolution()
+    theoreticalResolution.numericalAperture = 0.5
+    assert np.isclose(theoreticalResolution.numericalAperture, 0.5, rtol=0.000001)
+    theoreticalResolution.refractiveIndex = 1.33
+    assert np.isclose(theoreticalResolution.refractiveIndex, 1.33, rtol=0.000001)
+    theoreticalResolution.emissionWavelength = 500
+    assert np.isclose(theoreticalResolution.emissionWavelength, 0.5, rtol=0.000001)
+    theoreticalResolution.excitationWavelength = 400
+    assert np.isclose(theoreticalResolution.excitationWavelength, 0.4, rtol=0.000001)

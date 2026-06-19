@@ -46,3 +46,17 @@ def test_triangle_threshold_uniform():
     thresholder = Threshold.getInstance("triangle")
     threshold = thresholder.getThreshold(image)
     assert threshold is not None and threshold > 0
+
+def test_manual_threshold_uniform():
+    """Unit test of manual threshold on uniform image"""
+    image = create_uniform_image(low=0, high=1)
+    thresholder = Threshold.getInstance("manual")
+    threshold = thresholder.getThreshold(image)
+    assert np.isclose(threshold, 0.5, rtol=0.1)
+
+def test_threshold_tool_uniform():
+    """Unit test of threshold tool on uniform image"""
+    image = create_uniform_image(low=0, high=1)
+    thresholder = Threshold()
+    threshold = thresholder.getThreshold(image)
+    assert np.isclose(threshold, 0.5, rtol=0.1)

@@ -401,8 +401,6 @@ class Fitting3DRotation(FittingTool):
         self.parameters[5:8] = params[5:8]
         self.pcovs = [pcov] * 3
         self.activePath = self.getActivePath(index)
-        if self._show:
-            self.showFit(self.activePath)
         self.fwhms = [
             pxToUm(self.fwhm(self.parameters[5]), self._spacing[0]),
             pxToUm(self.fwhm(self.parameters[6]), self._spacing[1]),

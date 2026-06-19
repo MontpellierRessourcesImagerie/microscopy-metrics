@@ -413,6 +413,3 @@ class Fitting2DRotation(FittingTool):
                 params, coords[u], psf[u].flatten()
             )
             self.pcovs[u] = pcov
-        if self._show:
-            activePath = self.getActivePath(index)
-            self.showFit(activePath)

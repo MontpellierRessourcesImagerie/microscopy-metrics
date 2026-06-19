@@ -153,7 +153,7 @@ class BeadAnalyzer(object):
             ["Orientation", f"{self._metricTool._orientation:.2f}°"],
             ["Comaticity", f"{self._metricTool._comaticity:.2f}"],
             ["Skeleton/Extremities ratio", f"{self._metricTool._skeleton2Extremities:.2f}"],
-            ["Concavity", f"{self._metricTool.meshBuilder._concavity:.2f}" if hasattr(self._metricTool, 'meshBuilder') else "N/A"],
+            ["Concavity", f"{self._metricTool.meshBuilder._concavity:.2f}" if hasattr(self._metricTool, 'meshBuilder') and self._metricTool.meshBuilder is not None and self._metricTool.meshBuilder._concavity is not None else "N/A"],
             ["Astigmatism", f"{self._metricTool._astigmatism:.2f}"],
             ["Spherical aberration", f"{self._metricTool._sphericalAberration:.2f}"],
         ]

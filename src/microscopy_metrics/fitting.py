@@ -75,3 +75,4 @@ class Fitting(object):
         for bead in self._imageAnalyzer._beadAnalyzer:
             if bead._rejected == False and bead._roi is not None:
                 bead._fitTool.plotFit(os.path.join(outputDir, f"bead_{bead._id}"))
+                bead._fitTool.showFit(os.path.join(outputDir, f"bead_{bead._id}"))

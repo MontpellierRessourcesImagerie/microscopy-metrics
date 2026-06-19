@@ -345,6 +345,4 @@ class Fitting2DEllips(FittingTool):
             )
             self.pcovs[u] = pcov
         self.activePath = self.getActivePath(index)
-        if self._show:
-            self.showFit(self.activePath)
 

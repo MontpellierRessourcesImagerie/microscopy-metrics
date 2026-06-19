@@ -15,8 +15,8 @@ from skimage.measure import find_contours
 from skimage.morphology import skeletonize
 
 from microscopy_metrics.utils import umToPx, pxToUm
-from microscopy_metrics.thresholdTools.legacy import ThresholdLegacy
-from microscopy_metrics.thresholdTools.otsu import ThresholdOtsu
+from microscopy_metrics.thresholdTools.threshold_tool import ThresholdLegacy
+from microscopy_metrics.thresholdTools.threshold_tool import ThresholdOtsu
 from microscopy_metrics.fittingTools.fitting2D import Fitting2D
 from microscopy_metrics.metricTool.meshTool import MeshBuilder
 import warnings
@@ -26,10 +26,6 @@ warnings.filterwarnings(
     message="Calling the getitem method from a UnitRegistry",
     category=DeprecationWarning
 )
-
-
-
-
 
 class MetricTool(object):
     """Class for calculating various metrics related to microscopy images, such as signal-to-background ratio (SBR), lateral asymmetry ratio (LAR), and sphericity ratio."""
@@ -47,9 +43,12 @@ class MetricTool(object):
         self._surface = 0
         self._comaticity = 0
         self._sphericalAberration = 0
+        self._astigmatism = 0
         self._pathSkeleton = None
         self._RMin = 0
         self._skeleton2Extremities = 0
+        self._ellipsRatio = 0
+        self._orientation = 0
         self._centroids = []
         self._summary = None
         self.meshBuilder = None

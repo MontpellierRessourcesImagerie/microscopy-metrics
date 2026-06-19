@@ -26,7 +26,7 @@ class Prominence(FittingTool):
         fig1, axs = plt.subplots(1, 3, figsize=(15, 5))
         axes = ["Z", "Y", "X"]
         for idx in range(3):
-            profile = self._image[:, :, :][:, :, :][idx]
+            profile = self._image[:, :, :].mean(axis=(0, 1)) if idx == 0 else (self._image[:, :, :].mean(axis=(0, 2)) if idx == 1 else self._image[:, :, :].mean(axis=(1, 2)))
             amp = float(np.max(profile) - np.min(profile))
             prominenceMin = amp * float(self._prominenceRel)
             peaks, props = find_peaks(profile, prominence=prominenceMin)

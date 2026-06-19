@@ -139,12 +139,13 @@ class Fitting3D(FittingTool):
             pcov = np.zeros((len(params), len(params)))
         return popt, pcov
 
-    def showFit(self, psf: np.ndarray, outputPath: str):
+    def showFit(self,outputPath: str):
         """Plots the 2D slices of the PSF data and the corresponding fitted Gaussian curves, and saves the plots to the specified output path.
         Args:
             psf (np.ndarray): 3D image of the PSF data
             outputPath (str): Path to the folder where the plots will be saved
         """
+        psf = self._image.astype(np.float64)
         center = self.getLocalCentroid()
         fitShapeZ = max(psf.shape[0] * 5, 256)
         fitShapeY = max(psf.shape[1] * 5, 128)
@@ -306,7 +307,3 @@ class Fitting3D(FittingTool):
         self.uncertainties = [self.uncertainty(pcov)] * 3
         self.determinations = [self.determination(params, coords, psf.flatten())] * 3
         self.pcovs = [pcov] * 3
-
-        if self._show:
-            activePath = self.getActivePath(index)
-            self.showFit(psf, activePath)

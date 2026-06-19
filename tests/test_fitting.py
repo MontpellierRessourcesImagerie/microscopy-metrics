@@ -38,29 +38,6 @@ def psf():
     yield psf, FWHM
 
 @pytest.fixture
-def psfEllips():
-    fitTool = Fitting3D()
-    fitTool._show = False
-    params = [
-        255,
-        0,
-        PSF_SIZE / 2,
-        PSF_SIZE / 2,
-        PSF_SIZE / 2,
-        PSF_SIZE / 3,
-        PSF_SIZE / 10,
-        PSF_SIZE / 10,
-    ]
-    zz = np.arange(PSF_SIZE)
-    yy = np.arange(PSF_SIZE)
-    xx = np.arange(PSF_SIZE)
-    x, y, z = np.meshgrid(xx, yy, zz, indexing="ij")
-    coords = np.stack([x.ravel(), y.ravel(), z.ravel()], -1)
-    psf = fitTool.gauss(*params)(coords)
-    FWHM = [fitTool.fwhm(params[5]), fitTool.fwhm(params[6]), fitTool.fwhm(params[7])]
-    yield psf, FWHM
-
-@pytest.fixture
 def comaticPsf():
     psf = PSFWithComaticAberration(PSF_SIZE, Intensity=0.08).psf
     return psf
@@ -73,7 +50,29 @@ def test_contrast_calculation():
     fitTool = FittingTool()
     fitTool.parameters = [255, 0, PSF_SIZE / 2, PSF_SIZE / 2, PSF_SIZE / 2, PSF_SIZE / 10, PSF_SIZE / 10, PSF_SIZE / 10]
     fitTool.computeContrast()
-    assert fitTool.contrast == 0.0
+    assert fitTool.contrast == 255.0
+
+def test_computeContrast():
+    fitTool = FittingTool()
+    fitTool.parameters = [255, 1, PSF_SIZE / 2, PSF_SIZE / 2, PSF_SIZE / 2, PSF_SIZE / 10, PSF_SIZE / 10, PSF_SIZE / 10]
+    fitTool.computeContrast()
+    assert fitTool.contrast == 254.0
+
+def test_getMu():
+    fitTool = FittingTool()
+    fitTool.parameters = [255, 0, PSF_SIZE / 2, PSF_SIZE / 2, PSF_SIZE / 2, PSF_SIZE / 10, PSF_SIZE / 10, PSF_SIZE / 10]
+    mu = fitTool.getMu()
+    assert mu[0] == PSF_SIZE / 2
+    assert mu[1] == PSF_SIZE / 2
+    assert mu[2] == PSF_SIZE / 2
+
+def test_getSigma():
+    fitTool = FittingTool()
+    fitTool.parameters = [255, 0, PSF_SIZE / 2, PSF_SIZE / 2, PSF_SIZE / 2, PSF_SIZE / 10, PSF_SIZE / 10, PSF_SIZE / 10]
+    sigma = fitTool.getSigma()
+    assert sigma[0] == PSF_SIZE / 10
+    assert sigma[1] == PSF_SIZE / 10
+    assert sigma[2] == PSF_SIZE / 10
 
 def test_mip_calculation(psf):
     psf, FWHM = psf
@@ -180,6 +179,18 @@ def test_2D_Plotting(psf, tmp_path):
     fitTool2D.plotFit(tmp_path)
     assert os.path.exists(tmp_path / "fit_curve_1D_Z.png")
 
+def test_2D_showing(psf, tmp_path):
+    psf, FWHM = psf
+    psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    fitTool2D = Fitting2D()
+    fitTool2D._image = psfReshape
+    fitTool2D._show = False
+    fitTool2D._centroid = [int(PSF_SIZE / 2), int(PSF_SIZE / 2), int(PSF_SIZE / 2)]
+    fitTool2D._roi = [np.array([0, 0, 0])]
+    fitTool2D.processSingleFit(0)
+    fitTool2D.showFit(tmp_path)
+    assert os.path.exists(tmp_path / "2D_Gaussian_Image_ZY.png")
+
 def test_3D_Fitting(psf):
     psf, FWHM = psf
     psfReshape = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
@@ -231,7 +242,7 @@ def test_3D_showing(psf, tmp_path):
     fitTool3D._centroid = [int(PSF_SIZE / 2), int(PSF_SIZE / 2), int(PSF_SIZE / 2)]
     fitTool3D._roi = [np.array([0, 0, 0])]
     fitTool3D.processSingleFit(0)
-    fitTool3D.showFit(fitTool3D._image, tmp_path)
+    fitTool3D.showFit(tmp_path)
     assert os.path.exists(tmp_path / "2D_Gaussian_Image_ZY.png")
 
 def test_2D_Rotation_Fitting(psf):
@@ -441,3 +452,32 @@ def test_2D_Ellips_showing(comaticPsf, tmp_path):
     fitTool2DEllips.processSingleFit(0)
     fitTool2DEllips.showFit(tmp_path)
     assert os.path.exists(tmp_path / "2D_Gaussian_Image_ZY.png")
+
+
+def test_prominence_calculation(psf):
+    psf, FWHM = psf
+    fitTool = Prominence()
+    fitTool._image = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    fitTool._centroid = [int(PSF_SIZE / 2), int(PSF_SIZE / 2), int(PSF_SIZE / 2)]
+    fitTool._roi = [np.array([0, 0, 0])]
+    fitTool.processSingleFit(0)
+    assert np.isclose(fitTool.parameters[0], 255, rtol=20)
+    assert np.isclose(fitTool.parameters[1], 0, atol=1)
+    assert np.isclose(fitTool.parameters[2], PSF_SIZE / 2, rtol=10)
+    assert np.isclose(fitTool.parameters[3], PSF_SIZE / 2, rtol=10)
+    assert np.isclose(fitTool.parameters[4], PSF_SIZE / 2, rtol=10)
+    assert np.isclose(fitTool.parameters[5], PSF_SIZE / 10, rtol=10)
+    assert np.isclose(fitTool.parameters[6], PSF_SIZE / 10, rtol=10)
+    assert np.isclose(fitTool.parameters[7], PSF_SIZE / 10, rtol=10)
+
+def test_prominence_plotting(psf, tmp_path):
+    psf, FWHM = psf
+    fitTool = Prominence()
+    fitTool._image = psf.reshape((PSF_SIZE, PSF_SIZE, PSF_SIZE))
+    fitTool._centroid = [int(PSF_SIZE / 2), int(PSF_SIZE / 2), int(PSF_SIZE / 2)]
+    fitTool._roi = [np.array([0, 0, 0])]
+    fitTool.processSingleFit(0)
+    fitTool.plotFit(tmp_path /"fit_curve_1D_Z.png")
+    assert os.path.exists(tmp_path / "fit_curve_1D_Z.png")
+
+
