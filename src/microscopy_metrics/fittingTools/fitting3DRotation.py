@@ -44,7 +44,7 @@ class Fitting3DRotation(FittingTool):
         thetaX: float,
     ):
         """Generates a 3D Gaussian function with rotation based on the provided parameters.
-        Args:
+        Arguments:
             amp (float): amplitude of the curve
             bg (float): background intensity
             muZ,muY,muX (float): center coordinates of the Gaussian
@@ -73,7 +73,7 @@ class Fitting3DRotation(FittingTool):
             )
             z_rot = (-sy) * x + (cy * sx) * y + (cy * cx) * z
             exponent = (
-                - (x_rot**2) / (2 * sigmaX**2)
+                -(x_rot**2) / (2 * sigmaX**2)
                 - (y_rot**2) / (2 * sigmaY**2)
                 - (z_rot**2) / (2 * sigmaZ**2)
             )
@@ -97,7 +97,7 @@ class Fitting3DRotation(FittingTool):
         thetaX: float,
     ):
         """Evaluates the 3D Gaussian function with rotation at the given x values.
-        Args:
+        Arguments:
             amp (float): amplitude of the curve
             bg (float): background intensity
             muZ,muY,muX (float): center coordinates of the Gaussian
@@ -130,13 +130,15 @@ class Fitting3DRotation(FittingTool):
         psf: np.ndarray,
     ):
         """Fits a 3D Gaussian curve with rotation to the provided PSF data.
-        Args:
+        Arguments:
             amp (float): amplitude of the Gaussian
             bg (float): background intensity
             mu (list): center of the Gaussian
             sigma (list): standard deviation of the Gaussian
             coords (np.array(float)): List of X,Y,Z coordinates
             psf (np.ndarray): 1D image of the flatten 2D psf
+        Raises:
+            RuntimeError: If the optimization fails to converge
         Returns:
             list,Matrix(float): List of fitted parameters and covariance matrix
         """
@@ -167,14 +169,17 @@ class Fitting3DRotation(FittingTool):
                 bounds=bounds,
             )
         except Exception as e:
-            print(f"Fitting3DRotation Optimization warning: {e}. Returning initial parameters.")
+            print(
+                f"Fitting3DRotation Optimization warning: {e}. Returning initial parameters."
+            )
             popt = params
             pcov = np.zeros((len(params), len(params)))
+            self._commentary += f"Fitting3DRotation Optimization warning. Returning initial parameters (Fitting1D).\n"
         return popt, pcov
 
     def showFit(self, outputPath: str):
         """Plots the fitted 3D Gaussian curve with rotation against the original PSF data for all three axes.
-        Args:
+        Arguments:
             outputPath (str): Directory where the plots will be saved.
         """
         center = self.getLocalCentroid()
@@ -196,7 +201,9 @@ class Fitting3DRotation(FittingTool):
         thetaZ = self.thetas[0]
         rot = SciRot.from_euler("zyx", [thetaZ, thetaY, thetaX])
         R = rot.as_matrix()
-        sigma2 = np.diag([self.parameters[7] ** 2, self.parameters[6] ** 2, self.parameters[5] ** 2])
+        sigma2 = np.diag(
+            [self.parameters[7] ** 2, self.parameters[6] ** 2, self.parameters[5] ** 2]
+        )
         cov = R @ sigma2 @ R.T
         eigvals, eigvecs = np.linalg.eigh(cov)
         majorIDX = np.argmax(eigvals)
@@ -218,7 +225,12 @@ class Fitting3DRotation(FittingTool):
         if hasMajorAxis and norm_yx > 1e-6:
             dir_yx = proj_yx / norm_yx
             dx_yx, dy_yx = L * dir_yx
-            ax2.plot([x0 - dx_yx, x0 + dx_yx], [y0 + dy_yx, y0 - dy_yx], color="red", linewidth=2)
+            ax2.plot(
+                [x0 - dx_yx, x0 + dx_yx],
+                [y0 + dy_yx, y0 - dy_yx],
+                color="red",
+                linewidth=2,
+            )
             ax2.scatter([x0], [y0], color="red", alpha=0.7)
         ax2.axhline(y=fitShapeY / 2, color="k", alpha=0.5, linestyle="--")
         ax2.axvline(x=fitShapeX / 2, color="k", alpha=0.5, linestyle="--")
@@ -239,7 +251,12 @@ class Fitting3DRotation(FittingTool):
         if hasMajorAxis and norm_xz > 1e-6:
             dir_xz = proj_xz / norm_xz
             dx_xz, dz_xz = L * dir_xz
-            ax2.plot([x0 - dx_xz, x0 + dx_xz], [z0 + dz_xz, z0 - dz_xz], color="red", linewidth=2)
+            ax2.plot(
+                [x0 - dx_xz, x0 + dx_xz],
+                [z0 + dz_xz, z0 - dz_xz],
+                color="red",
+                linewidth=2,
+            )
         ax2.scatter([x0], [z0], color="red", alpha=0.7)
         ax2.axhline(y=fitShapeZ / 2, color="k", alpha=0.5, linestyle="--")
         ax2.axvline(x=fitShapeX / 2, color="k", alpha=0.5, linestyle="--")
@@ -261,7 +278,12 @@ class Fitting3DRotation(FittingTool):
         if hasMajorAxis and norm_zy > 1e-6:
             dir_zy = proj_zy / norm_zy
             dy_zy, dz_zy = L * dir_zy
-            ax2.plot([y0 - dy_zy, y0 + dy_zy], [z0 + dz_zy, z0 - dz_zy], color="red", linewidth=2)
+            ax2.plot(
+                [y0 - dy_zy, y0 + dy_zy],
+                [z0 + dz_zy, z0 - dz_zy],
+                color="red",
+                linewidth=2,
+            )
         ax2.scatter([y0], [z0], color="red", alpha=0.7)
         ax2.axhline(y=fitShapeZ / 2, color="k", alpha=0.5, linestyle="--")
         ax2.axvline(x=fitShapeY / 2, color="k", alpha=0.5, linestyle="--")
@@ -284,7 +306,7 @@ class Fitting3DRotation(FittingTool):
         index: int,
     ):
         """Plots the fitted 3D Gaussian curve with rotation against the original PSF data for a single axis.
-        Args:
+        Arguments:
             coords (np.ndarray): Coordinates of the data points along the axis being plotted.
             psf (np.ndarray): Intensity values at the data points along the axis being plotted.
             fineCoords (np.ndarray): Coordinates for plotting the fitted curve along the axis being plotted.
@@ -342,7 +364,7 @@ class Fitting3DRotation(FittingTool):
 
     def plotFit(self, outputPath: str):
         """Plots the fitted 3D Gaussian curve with rotation against the original PSF data for all three axes.
-        Args:
+        Arguments:
             outputPath (str): Directory where the plots will be saved.
         """
         psf = self._image.astype(np.float64)
@@ -371,7 +393,7 @@ class Fitting3DRotation(FittingTool):
 
     def getCoords(self, psf: np.ndarray):
         """Generates an array of coordinates corresponding to the length of the PSF profile for 3D fitting.
-        Args:
+        Arguments:
             psf (np.ndarray): 3D image to process
         Returns:
             np.ndarray: Coordinates for the 3D fit
@@ -381,7 +403,7 @@ class Fitting3DRotation(FittingTool):
 
     def processSingleFit(self, index: int):
         """Processes a single fit for the given index, performing fitting, plotting, and calculating metrics.
-        Args:
+        Arguments:
             index (int): ID of the PSF and position in lists for which to perform the fit.
         Returns:
             List(parameters): A list containing metrics, fwhm, parameters and covariance matrix of the fit.

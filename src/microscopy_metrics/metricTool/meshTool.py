@@ -11,6 +11,24 @@ from scipy.ndimage import gaussian_filter
 
 
 class MeshBuilder(object):
+    """Class for building a 3D mesh from a microscopy image using segmentation and surface extraction techniques.
+    This class provides methods for constructing a mesh representation of the largest region in a 3D microscopy image, calculating concavity and curvature metrics, and saving the mesh to a file.
+    Attributes:
+        _image (np.ndarray): The input 3D microscopy image for mesh construction.
+        _pixelSize (list): The pixel size in micrometers for each dimension of the image.
+        _RMSMaxError (float): The maximum root mean square error for the Chan-Vese segmentation algorithm.
+        _numIterations (int): The number of iterations for the Chan-Vese segmentation algorithm.
+        _curvatureScaling (float): The scaling factor for curvature in the Chan-Vese segmentation algorithm.
+        _vertices (np.ndarray): The vertices of the constructed mesh.
+        _verticesResized (np.ndarray): The resized vertices of the constructed mesh, scaled by the pixel size.
+        _faces (np.ndarray): The faces of the constructed mesh.
+        _concavity (float): The concavity metric of the constructed mesh.
+        _curvature (list): The curvature values of the constructed mesh.
+        _sphericity (float): The sphericity metric of the constructed mesh.
+        _largestRegionMask (np.ndarray): The binary mask of the largest region in the image.
+        _segArray (np.ndarray): The segmented array of the image after applying the Chan-Vese algorithm.  
+        
+    """
     def __init__(self, image=None):
         self._image = image
         self._pixelSize = [1.0, 1.0, 1.0]
@@ -28,6 +46,17 @@ class MeshBuilder(object):
 
 
     def BuildMesh(self):
+        """Builds a 3D mesh from the input microscopy image using segmentation and surface extraction techniques.
+        The method normalizes the input image, applies Gaussian filtering, and performs Otsu thresholding to create a binary mask. It then applies the Chan-Vese segmentation algorithm to extract the largest region in the image. 
+        The method uses the marching cubes algorithm to generate a mesh representation of the largest region, and computes the vertices and faces of the mesh. 
+        The vertices are resized based on the pixel size, and the mesh is smoothed and cleaned to remove duplicates. 
+        The resulting mesh can be used for further analysis and visualization.
+        Raises:
+            ValueError: If the input image is not set or no regions are found in the image.
+            ValueError: If the largest region cannot be extracted.
+        Returns:
+            o3d.geometry.TriangleMesh: The constructed 3D mesh.
+        """
         if self._image is None:
             raise ValueError(
                 "Image is not set. Please set the image before building the mesh."
@@ -82,6 +111,12 @@ class MeshBuilder(object):
         return self._verticesResized, self._faces
 
     def saveMesh(self, filename):
+        """Saves the constructed 3D mesh to a file in the specified format.
+        Arguments:
+            filename (str): The path to the file where the mesh will be saved. The file format is determined by the file extension (e.g., .ply, .obj, .stl).
+        Raises:
+            ValueError: If the mesh has not been built before saving.
+        """
         if self._verticesResized is None or self._faces is None:
             raise ValueError(
                 "Mesh has not been built. Please build the mesh before saving."
@@ -92,6 +127,15 @@ class MeshBuilder(object):
         o3d.io.write_triangle_mesh(filename, mesh)
 
     def concavity(self):
+        """Calculates the concavity metric of the constructed 3D mesh.
+        The concavity is defined as the ratio of the difference between the volume of the convex hull and the volume of the mesh to the volume of the convex hull.
+        A higher concavity value indicates a more concave shape, while a lower value indicates a more convex shape.
+        Raises:
+            ValueError: If the mesh has not been built before calculating concavity.
+
+        Returns:
+            float: The calculated concavity metric of the mesh.
+        """
         if self._verticesResized is None or self._faces is None:
             raise ValueError(
                 "Mesh has not been built. Please build the mesh before calculating concavity."
@@ -106,6 +150,12 @@ class MeshBuilder(object):
         return self._concavity
 
     def curvature(self):
+        """Calculates the curvature metric of the constructed 3D mesh.
+        Raises:
+            ValueError: If the mesh has not been built before calculating curvature.
+        Returns:
+            np.ndarray: The calculated curvature metric of the mesh.
+        """
         if self._verticesResized is None or self._faces is None:
             raise ValueError(
                 "Mesh has not been built. Please build the mesh before calculating curvature."
@@ -117,6 +167,7 @@ class MeshBuilder(object):
         return self._curvature
 
     def computeMeshMetrics(self):
+        """Computes the mesh metrics, including construction, concavity and curvature."""
         self.BuildMesh()
         self.concavity()
         self.curvature()

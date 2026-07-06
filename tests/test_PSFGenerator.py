@@ -19,7 +19,10 @@ def test_AddNoise():
     psfNoise.addNoise(0.1)
     assert not np.array_equal(psfNoise.psf, psf.psf)
 
-def test_ShowPSF():
+def test_ShowPSF(monkeypatch):
+    import matplotlib.pyplot as plt
+    monkeypatch.setattr(plt, "show", lambda: None)
+
     psf = PSFGenerator(PSF_SIZE)
     psf.showPSF()
 

@@ -10,21 +10,27 @@ from skimage.measure import regionprops, label
 
 class DetectionTool(object):
     """Abstract base class for bead detection tools in microscopy images.
-    This class provides a common interface and shared functionality for various detection algorithms.
     It includes methods for normalizing images, applying Gaussian high-pass filtering, and an abstract method for detecting features in the image.
-    Subclasses must implement the detect method to specify the detection algorithm they use.
     The class also maintains a registry of detection classes for easy instantiation based on method names.
+    Attributes:
+        _detectionClasses (dict): A dictionary to store registered detection classes.
+        _image (np.ndarray): The input image for detection.
+        _sigma (float): The standard deviation for Gaussian filtering.
+        _thresholdTool (ThresholdTool): An instance of a thresholding tool used for image processing.
+        _normalizedImage (np.ndarray): The normalized version of the input image.
+        _highPassedImage (np.ndarray): The high-pass filtered version of the normalized image.
+        _centroids (list): A list to store detected centroids in the image.
     """
 
     _detectionClasses = {}
 
     def __init__(self):
-        self._image = None
-        self._sigma = 2.0
+        self._image : np.ndarray = None
+        self._sigma : float = 2.0
         self._thresholdTool = None
-        self._normalizedImage = None
-        self._highPassedImage = None
-        self._centroids = []
+        self._normalizedImage : np.ndarray = None
+        self._highPassedImage : np.ndarray = None
+        self._centroids : list = []
 
     def __init_subclass__(cls):
         name = cls.name
@@ -36,7 +42,7 @@ class DetectionTool(object):
     def getInstance(cls, methodName: str):
         """Factory method to create an instance of a detection class based on the provided method name.
         Args:
-            methodName (str): Name of the detection method (e.g., "Laplacian of Gaussian", "Difference of Gaussian", "Centroids").
+            methodName (str): Name of the detection method (e.g., 'peak local maxima', 'Laplacian of Gaussian', 'Difference of Gaussian', 'Centroids').
         Returns:
             DetectionTool: An instance of the detection class corresponding to the method name.
         """
@@ -49,14 +55,16 @@ class DetectionTool(object):
         pass
 
     def setNormalizedImage(self):
-        """Normalizes the input image for processing by the detection algorithms.
-        This method checks if the input image is 2D or 3D, converts it to a float64 type, and normalizes its pixel values to the range [0, 1].
-        It also ensures that any negative pixel values are set to zero.
+        """Normalize the input image for processing by the detection algorithms.
+        Converts the original image to a float64 type and normalizes pixel values to the range [0, 1].
+        Negative pixel values are set to zero.
         Raises:
-            ValueError: This function only operate on 2D or 3D images
+            ValueError: If the image is not 2D or 3D
+        Note:
+            Call this method before detection to ensure the image is normalized.
         """
         if self._image.ndim not in (2, 3):
-            raise ValueError("Image have to be in 2D or 3D.")
+            raise ValueError("Image must be in 2D or 3D.")
         self._normalizedImage = self._image.astype(np.float64)
         self._normalizedImage = (
             self._normalizedImage - np.min(self._normalizedImage)
@@ -65,34 +73,42 @@ class DetectionTool(object):
 
     def gaussianHighPass(self):
         """Applies a Gaussian high-pass filter to the normalized image.
-        This method applies a Gaussian filter to the normalized image to create a low-pass filtered version, and then subtracts this low-pass image from the original normalized image to obtain the high-pass filtered image.
-        The resulting high-pass image emphasizes features in the original image that are smaller than the specified sigma value.
-        """
+        Raises:
+            ValueError: If the normalized image is not set before calling this method.
+        Note:
+            This method should be called after setNormalizedImage()"""
         if self._normalizedImage is None:
-            raise ValueError("Normalized image is not set. Call setNormalizedImage() first.")
+            raise ValueError(
+                "Normalized image is not set. Call setNormalizedImage() first."
+            )
         lowPass = ndi.gaussian_filter(self._normalizedImage, self._sigma)
         self._highPassedImage = self._normalizedImage - lowPass
 
     @abstractmethod
     def detect(self):
+        """Detect features in the image.
+        Subclasses must implement this method to specify the detection algorithm they use.
+        """
         pass
 
 
 class PeakLocalMaxDetector(DetectionTool):
-    """Class for detecting local maxima using the peak_local_max function from scikit-image.
-    This class inherits from the DetectionTool base class and implements the detect method to identify local maxima in the input image.
+    """Inherits from the DetectionTool base class and implements the detect method to identify local maxima in the input image.
+    Attributes:
+        name (str): The name of the detection method, set to 'peak local maxima'.
+        _minDistance (int): The minimum distance between detected peaks, used to filter out closely spaced maxima.
     """
 
     name = "peak local maxima"
 
     def __init__(self):
         super().__init__()
-        self._minDistance = 1
+        self._minDistance : int = 1
 
     def detect(self):
-        """Detects local maxima in the input image using the peak_local_max function from scikit-image.
-        The method applies a Gaussian filter to smooth the image, performs a high-pass filtering, and then uses the peak_local_max function to find local maxima based on the specified parameters (e.g., min_distance, threshold_abs).
-        The detected local maxima are stored in the _centroids attribute for further processing.
+        """Detects local maxima in the input image.
+        Uses a difference of Gaussian to enhance the image and identifies local maxima based on the specified minimum distance and threshold.
+        Detected maxima are stored in 'self._centroids'.
         """
         self.setNormalizedImage()
         ndi.gaussian_filter(
@@ -107,8 +123,9 @@ class PeakLocalMaxDetector(DetectionTool):
 
 
 class CentroidDetector(DetectionTool):
-    """Class for detecting blobs using a centroid method.
-    This class inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using a centroid algorithm.
+    """Inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using a centroid algorithm.
+    Attributes:
+        name (str): The name of the detection method, set to 'Centroids'.
     """
 
     name = "Centroids"
@@ -117,9 +134,9 @@ class CentroidDetector(DetectionTool):
         super().__init__()
 
     def detect(self):
-        """Detects centroids in the input image using a simple thresholding and region properties approach.
-        The method applies a Gaussian filter to smooth the image, performs a high-pass filtering, and then uses a threshold to create a binary image.
-        The connected components in the binary image are labeled, and the centroids of these components are calculated and stored in the _centroids attribute for further processing.
+        """Detects centroids in the input image.
+        Applies a difference of Gaussian to enhance the image, thresholds the high-passed image to create a binary image, and then labels the connected components in the binary image.
+        Centroids are stored in 'self._centroids'.
         """
         self.setNormalizedImage()
         self._normalizedImage = ndi.gaussian_filter(self._normalizedImage, sigma=2.0)
@@ -136,8 +153,9 @@ class CentroidDetector(DetectionTool):
 
 
 class BlobLogDetector(DetectionTool):
-    """Class for detecting blobs using the Laplacian of Gaussian (LoG) method.
-    This class inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using the LoG algorithm.
+    """Inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using the LoG algorithm.
+    Attributes:
+        name (str): The name of the detection method, set to 'Laplacian of Gaussian'.
     """
 
     name = "Laplacian of Gaussian"
@@ -147,8 +165,8 @@ class BlobLogDetector(DetectionTool):
 
     def detect(self):
         """Detects blobs in the input image using the Laplacian of Gaussian (LoG) method.
-        The method applies the LoG algorithm to the normalized image and identifies blob centroids based on the specified parameters (e.g., max_sigma, threshold).
-        The detected centroids are stored in the _centroids attribute for further processing.
+        Applies the LoG algorithm to the normalized image and identifies blob centroids based on the specified parameters (e.g., max_sigma, threshold).
+        Detected centroids are stored in 'self._centroids'.
         """
         self.setNormalizedImage()
         blobs = blob_log(
@@ -160,8 +178,9 @@ class BlobLogDetector(DetectionTool):
 
 
 class BlobDogDetector(DetectionTool):
-    """Class for detecting blobs using the Difference of Gaussian (DoG) method.
-    This class inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using the DoG algorithm.
+    """Inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using the DoG algorithm.
+    Attributes:
+        name (str): The name of the detection method, set to 'Difference of Gaussian'.
     """
 
     name = "Difference of Gaussian"
@@ -171,8 +190,8 @@ class BlobDogDetector(DetectionTool):
 
     def detect(self):
         """Detects blobs in the input image using the Difference of Gaussian (DoG) method.
-        The method applies the DoG algorithm to the normalized image and identifies blob centroids based on the specified parameters (e.g., max_sigma, threshold).
-        The detected centroids are stored in the _centroids attribute for further processing.
+        Applies the DoG algorithm to the normalized image and identifies blob centroids based on the specified parameters (e.g., max_sigma, threshold).
+        Detected centroids are stored in 'self._centroids' for further processing.
         """
         self.setNormalizedImage()
         blobs = blob_dog(

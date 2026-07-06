@@ -32,6 +32,7 @@ class ReportHTML(ReportGenerator):
                     "theoretical_resolution": self._imageAnalyzer._theoreticalResolution,
                     "sampling_distance": self._imageAnalyzer._samplingDistance,
                     "path": beadPath,
+
                 }
                 htmlContent = template.render(data)
                 with open(activePath, "w") as f:
@@ -41,6 +42,7 @@ class ReportHTML(ReportGenerator):
             "title": f"Microscopy Metrics Report - {os.path.basename(self._imageAnalyzer._path)}",
             "imageAnalyzer": self._imageAnalyzer,
             "beads": self._imageAnalyzer._beadAnalyzer,
+            "fitting_type": f"{self._fittingDatas.get('fitType', 'N/A')}"
         }
         mainHtmlContent = mainTemplate.render(data)
         mainReportPath = os.path.join(outputPath, "index.html")

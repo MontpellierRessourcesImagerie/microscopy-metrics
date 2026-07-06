@@ -15,8 +15,9 @@ from microscopy_metrics.utils import pxToUm
 
 warnings.filterwarnings("error", category=OptimizeWarning)
 
+
 class Fitting2DEllips(FittingTool):
-    """Class for fitting a 2D Ellipse Gaussian curve to the PSF profile of a microscopy image.
+    """Class for fitting a 2D Ellipse Gaussian to the PSF profile of a microscopy image.
     This class inherits from the FittingTool base class and implements methods specific to 2D Ellipse Gaussian fitting.
     It includes methods for evaluating the 2D Ellipse Gaussian function, fitting the curve to the data, and plotting the results.
     """
@@ -38,7 +39,7 @@ class Fitting2DEllips(FittingTool):
         c: float,
     ):
         """Generates a 2D Ellipse Gaussian function based on the provided parameters.
-        Args:
+        Arguments:
             amp (float): amplitude of the curve
             bg (float): background intensity
             muX,muY (float): center coordinates of the Gaussian
@@ -69,7 +70,7 @@ class Fitting2DEllips(FittingTool):
         c: float,
     ):
         """calculates the 2D Ellipse Gaussian function at the given x values.
-        Args:
+        Arguments:
             amp (float): amplitude of the curve
             bg (float): background intensity
             muX,muY (float): center coordinates of the Gaussian
@@ -89,13 +90,15 @@ class Fitting2DEllips(FittingTool):
         psf: np.ndarray,
     ):
         """Fits a 2D Ellipse Gaussian curve to the provided PSF data using the given initial parameters and coordinates.
-        Args:
+        Arguments:
             amp (float): amplitude of the Gaussian
             bg (float): background intensity
             mu (List(float)): center of the Gaussian
             sigma (List(float)): standard deviation of the Gaussian
             coords (np.array(float)): List of X,Y coordinates
             psf (np.ndarray): 1D image of the flatten 2D psf
+        Raises:
+            RuntimeError: If the optimization fails to converge.
         Returns:
             List(float),Matrix(float): List of fitted parameters and covariance matrix
         """
@@ -113,14 +116,17 @@ class Fitting2DEllips(FittingTool):
                 ),
             )
         except Exception as e:
-            print(f"Fitting2DEllips Optimization warning: {e}. Returning initial parameters.")
+            print(
+                f"Fitting2DEllips Optimization warning: {e}. Returning initial parameters."
+            )
             popt = params
             pcov = np.zeros((len(params), len(params)))
+            self._commentary += f"Fitting2DEllips Optimization warning. Returning initial parameters (Fitting1D).\n"
         return popt, pcov
 
     def ellipseParmConversion(self, a: float, b: float, c: float):
         """Converts the parameters of a 2D Ellipse Gaussian fit (a, b, c) into the angle of rotation (theta) and the standard deviations along the major and minor axes (sx, sy).
-        Args:
+        Arguments:
             a (float): coefficient for the ellipse linked to the x-axis
             b (float): coefficient for the ellipse linked to the interaction between x and y
             c (float): coefficient for the ellipse linked to the y-axis
@@ -133,23 +139,67 @@ class Fitting2DEllips(FittingTool):
         sy = math.sqrt(abs(-a - t - c)) / 2.0 / s
         theta = (math.sqrt(1.0 + ((a - c) / t)) if t != 0 else 0) / math.sqrt(2.0)
         theta = math.acos(theta)
-        thetaSign = (4 * b * (sx**2) * (sy**2) / ((sx**2) - (sy**2))) if (sx**2) != (sy**2) else 0
+        thetaSign = (
+            (4 * b * (sx**2) * (sy**2) / ((sx**2) - (sy**2)))
+            if (sx**2) != (sy**2)
+            else 0
+        )
         thetaSign = max(-1.0, min(1.0, thetaSign))
         thetaSign = np.sign(-0.5 * math.asin(thetaSign))
         theta = ((math.pi / 2) - theta) * thetaSign
         return theta, sx, sy
 
-
     def showFit(self, outputPath: str):
-            fitShapeZ = min(self._image.shape[0] * 5, 256)
-            fitShapeY = min(self._image.shape[1] * 5, 128)
-            fitShapeX = min(self._image.shape[2] * 5, 128)
-            self.showSingleFit(self.psf[1], os.path.join(outputPath, "2D_Gaussian_Image_YX.png"), self.params2D[1], self.thetas[1], f"Fit YX - angle {self.thetas[0]:.2f} rad", fitPSFShape=(fitShapeY, fitShapeX))
-            self.showSingleFit(self.psf[2], os.path.join(outputPath, "2D_Gaussian_Image_XZ.png"), self.params2D[2], self.thetas[2], f"Fit XZ - angle {self.thetas[1]:.2f} rad", fitPSFShape=(fitShapeZ, fitShapeX))
-            self.showSingleFit(self.psf[0], os.path.join(outputPath, "2D_Gaussian_Image_ZY.png"), self.params2D[0], self.thetas[0], f"Fit ZY - angle {self.thetas[2]:.2f} rad", fitPSFShape=(fitShapeZ, fitShapeY))
+        """Plots the fitted 2D Ellipse Gaussian curve against the original PSF data for all three axes.
+        Arguments:
+            outputPath (str): Directory where the plots will be saved.
+        """
+        fitShapeZ = min(self._image.shape[0] * 5, 256)
+        fitShapeY = min(self._image.shape[1] * 5, 128)
+        fitShapeX = min(self._image.shape[2] * 5, 128)
+        self.showSingleFit(
+            self.psf[1],
+            os.path.join(outputPath, "2D_Gaussian_Image_YX.png"),
+            self.params2D[1],
+            self.thetas[1],
+            f"Fit YX - angle {self.thetas[0]:.2f} rad",
+            fitPSFShape=(fitShapeY, fitShapeX),
+        )
+        self.showSingleFit(
+            self.psf[2],
+            os.path.join(outputPath, "2D_Gaussian_Image_XZ.png"),
+            self.params2D[2],
+            self.thetas[2],
+            f"Fit XZ - angle {self.thetas[1]:.2f} rad",
+            fitPSFShape=(fitShapeZ, fitShapeX),
+        )
+        self.showSingleFit(
+            self.psf[0],
+            os.path.join(outputPath, "2D_Gaussian_Image_ZY.png"),
+            self.params2D[0],
+            self.thetas[0],
+            f"Fit ZY - angle {self.thetas[2]:.2f} rad",
+            fitPSFShape=(fitShapeZ, fitShapeY),
+        )
 
-
-    def showSingleFit(self, psf: np.ndarray, outputPath: str, params, theta, title: str, fitPSFShape = None):
+    def showSingleFit(
+        self,
+        psf: np.ndarray,
+        outputPath: str,
+        params,
+        theta,
+        title: str,
+        fitPSFShape=None,
+    ):
+        """Generates and saves a plot comparing the original PSF data with the fitted 2D Ellipse Gaussian curve, including the center of the Gaussian (mu) and the angle of rotation (theta).
+        Arguments:
+            psf (np.ndarray): The original PSF data.
+            outputPath (str): The path where the plot will be saved.
+            params: The parameters for the 2D Ellipse Gaussian curve.
+            theta: The angle of rotation.
+            title (str): The title for the plot.
+            fitPSFShape (tuple, optional): The shape of the fitted PSF data. Defaults to None.
+        """
         if fitPSFShape is None:
             fitPSFShape = psf.shape
         yyFine = np.linspace(0, psf.shape[0], fitPSFShape[0])
@@ -191,7 +241,7 @@ class Fitting2DEllips(FittingTool):
         index: int,
     ):
         """Generates and saves a plot comparing the original PSF data with the fitted 1D Gaussian curve and the 2D Ellipse Gaussian curve, including the center of the Gaussian (mu) and the FWHM for both fits.
-        Args:
+        Arguments:
             psf (np.ndarray): The original PSF data.
             fineCoords (np.ndarray): The coordinates for the fine grid.
             fit2D (np.ndarray): The 2D Ellipse Gaussian fit.
@@ -250,8 +300,7 @@ class Fitting2DEllips(FittingTool):
 
     def plotFit(self, outputPath: str):
         """Generates and saves a 3D plot comparing the original PSF data with the fitted 2D Ellipse Gaussian curve, including the center of the Gaussian (mu) and the angle of rotation (theta).
-        Args:
-            popt (List(List(float))): The fitted parameters for the 2D Ellipse Gaussian.
+        Arguments:
             outputPath (str): The path where the visualization will be saved.
         """
         psf = self._image.astype(np.float64)
@@ -272,12 +321,17 @@ class Fitting2DEllips(FittingTool):
                 fineCoords = np.column_stack((np.full_like(fine, center[index]), fine))
                 mu = self.params2D[i][3]
             self.plotSingleFit(
-                psfs[i], fine, self.gauss(*self.params2D[i])(fineCoords), outputPath, mu, i
+                psfs[i],
+                fine,
+                self.gauss(*self.params2D[i])(fineCoords),
+                outputPath,
+                mu,
+                i,
             )
 
     def getCoords(self, psf: np.ndarray):
         """Generates a list of coordinates for the 2D fit based on the shape of the provided PSF image.
-        Args:
+        Arguments:
             psf (np.ndarray): The PSF image for which to generate the coordinates.
         Returns:
             np.ndarray: A list of coordinates corresponding to the shape of the PSF image, suitable for use in the 2D fitting process.
@@ -287,7 +341,7 @@ class Fitting2DEllips(FittingTool):
 
     def processSingleFit(self, index: int):
         """Processes a single fit for the given index, performing fitting, and plotting.
-        Args:
+        Arguments:
             index (int): ID of the PSF.
         """
         imageFloat = self._image.astype(np.float64)
@@ -345,4 +399,3 @@ class Fitting2DEllips(FittingTool):
             )
             self.pcovs[u] = pcov
         self.activePath = self.getActivePath(index)
-

@@ -3,6 +3,8 @@ import math
 import skan
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('QtAgg')
 
 from scipy import ndimage as ndi
 from scipy.signal import find_peaks
@@ -28,34 +30,56 @@ warnings.filterwarnings(
 )
 
 class MetricTool(object):
-    """Class for calculating various metrics related to microscopy images, such as signal-to-background ratio (SBR), lateral asymmetry ratio (LAR), and sphericity ratio."""
+    """Class for calculating various metrics related to microscopy images, such as signal-to-background ratio (SBR), lateral asymmetry ratio (LAR), and sphericity ratio.
+    Attributes:
+        _image (np.ndarray): The input microscopy image for metric calculations.
+        _ringInnerDistance (float): The inner distance of the ring used for SBR calculation.
+        _ringThickness (float): The thickness of the ring used for SBR calculation.
+        _pixelSize (list): The pixel size in micrometers for each dimension of the image.
+        _SBR (float): The calculated signal-to-background ratio.
+        _LAR (float): The calculated lateral asymmetry ratio.
+        _sphericity (float): The calculated sphericity ratio.
+        _volume (float): The calculated volume of the object in the image.
+        _surface (float): The calculated surface area of the object in the image.
+        _comaticity (float): The calculated comaticity metric of the object in the image.
+        _sphericalAberration (float): The calculated spherical aberration metric of the object in the image.
+        _astigmatism (float): The calculated astigmatism metric of the object in the image.
+        _pathSkeleton (np.ndarray): The skeletonized path of the object in the image.
+        _RMin (float): The minimum radius of the object in the image.
+        _skeleton2Extremities (float): The distance from the skeleton to the extremities of the object in the image.
+        _ellipsRatio (float): The calculated ellipsoid ratio of the object in the image.
+        _orientation (float): The calculated orientation of the object in the image.
+        _centroids (list): A list of centroids detected in the image.
+        _summary (dict): A summary of the calculated metrics for the image.
+        _commentary (str): A string containing commentary or notes related to the metric calculations."""
 
     def __init__(self):
-        self._image = None
-        self._ringInnerDistance = 1.0
-        self._ringThickness = 2.0
-        self._pixelSize = [1, 1, 1]
+        self._image : np.ndarray = None
+        self._ringInnerDistance : float = 1.0
+        self._ringThickness : float = 2.0
+        self._pixelSize : list = [1, 1, 1]
 
-        self._SBR = 0
-        self._LAR = 0
-        self._sphericity = 0
-        self._volume = 0
-        self._surface = 0
-        self._comaticity = 0
-        self._sphericalAberration = 0
-        self._astigmatism = 0
-        self._pathSkeleton = None
-        self._RMin = 0
-        self._skeleton2Extremities = 0
-        self._ellipsRatio = 0
-        self._orientation = 0
-        self._centroids = []
-        self._summary = None
-        self.meshBuilder = None
+        self._SBR : float = 0
+        self._LAR : float = 0
+        self._sphericity : float = 0
+        self._volume : float = 0
+        self._surface : float = 0
+        self._comaticity : float = 0
+        self._sphericalAberration : float = 0
+        self._astigmatism : float = 0
+        self._pathSkeleton : np.ndarray = None
+        self._RMin : float = 0
+        self._skeleton2Extremities : float = 0
+        self._ellipsRatio : float = 0
+        self._orientation : float = 0
+        self._centroids : list = []
+        self._summary : dict = None
+        self.meshBuilder : object = None
+        self._commentary : str = ""
 
     def setNormalizedImage(self, image: np.ndarray) -> np.ndarray:
         """Normalizes the input image to a range of [0, 1] and ensures that all values are non-negative.
-        Args:
+        Arguments:
             image (np.ndarray): The input image to be normalized, which should be a 2D or 3D array representing the microscopy image data.
         Raises:
             ValueError: If the input image is not 2D or 3D.
@@ -127,7 +151,7 @@ class MetricTool(object):
 
     def lateralAsymmetryRatio(self, FWHM: list):
         """Calculates the lateral asymmetry ratio (LAR) for a PSF based on the full width at half maximum (FWHM) values.
-        Args:
+        Arguments:
             FWHM (list): A list of FWHM values for the PSF.
         Raises:
            ValueError: If the FWHM values are not available or if there are not enough FWHM values to calculate the LAR.
@@ -141,7 +165,6 @@ class MetricTool(object):
 
     def getVolume(self):
         """Calculates the volume of the object in the microscopy image based on the voxel count and voxel volume.
-
         Returns:
             float: The calculated volume of the object.
         """
@@ -156,8 +179,7 @@ class MetricTool(object):
 
     def updateTile(self, tile, tileIndex):
         """Updates the tile configuration based on the provided tile index, which represents the presence or absence of voxels in a 2x2x2 neighborhood.
-
-        Args:
+        Arguments:
             tile (list): A 3D list representing the tile.
             tileIndex (int): The index of the tile.
         """
@@ -168,7 +190,6 @@ class MetricTool(object):
 
     def surfaceAreaLutD3(self):
         """Calculates the surface area lookup table for 3D tiles.
-
         Returns:
             list: A list of surface area values for each tile configuration.
         """
@@ -194,7 +215,7 @@ class MetricTool(object):
 
     def configIndex(self, configValues):
         """Calculates the index of a tile configuration.
-        Args:
+        Arguments:
             configValues (list): A list of boolean values representing the presence or absence of voxels in a 2x2x2 neighborhood.
         Returns:
             int: The index of the tile configuration.
@@ -256,7 +277,7 @@ class MetricTool(object):
 
     def applyLut(self, histogram, lut):
         """Applies the surface area lookup table to the histogram of tile configurations to calculate the total surface area.
-        Args:
+        Arguments:
             histogram (list): A list of counts for each tile configuration.
             lut (list): A list of surface area values for each tile configuration.
         Returns:
@@ -292,7 +313,7 @@ class MetricTool(object):
 
     def distance(self, x1, x2):
         """Calculates the distance between two points, x1 and x2.
-        Args:
+        Arguments:
             x1 (float): The first point.
             x2 (float): The second point.
         Returns:
@@ -303,9 +324,8 @@ class MetricTool(object):
     def getContours(self, image):
         """Calculates the contours of the object in the microscopy image using the Chan-Vese active contour model.
         The method applies a Gaussian filter to smooth the input image, then uses the Chan-Vese algorithm to segment the image and find the contours of the detected object.
-        Args:
+        Arguments:
             image (numpy.ndarray): The input image.
-
         Returns:
             numpy.ndarray: The detected contours.
         """
@@ -328,7 +348,7 @@ class MetricTool(object):
 
     def computeComaticityCentroids(self):
         """Calculates the comaticity centroids for the object in the microscopy image by analyzing each image along the Z-axis and determining the maximum drift in the X and Y directions from the center of the image."""
-        threshold = ThresholdOtsu().getThreshold(self._image)
+        threshold = ThresholdLegacy().getThreshold(self._image)
         maxDriftX = 0.0
         maxDriftY = 0.0
         for z in range(self._image.shape[0]):
@@ -360,7 +380,7 @@ class MetricTool(object):
 
     def _computeAxisComaticity(self, image, pixelSize):
         """Calculates the axis comaticity for a given 1D image by analyzing the intensity profiles along the specified axis and comparing them to the detected contours of the object in the image.
-        Args:
+        Arguments:
             image (numpy.ndarray): The input image.
             pixelSize (float): The size of each pixel in the image.
         Returns:
@@ -413,26 +433,29 @@ class MetricTool(object):
         else:
             self._comaticity = 0.0
 
+
     def sphericalAberration(self):
         """Calculates the spherical aberration of the object in the microscopy image by comparing the two halves of the intensity profile along the Z-axis to assess the symmetry of the point spread function (PSF) and determine the degree of spherical aberration present in the image."""
         profile = self._image[
             :, int(self._image.shape[1] / 2), int(self._image.shape[2] / 2)
         ].copy()
-        ndi.gaussian_filter(profile, sigma=1.0, output=profile)
+        ndi.gaussian_filter(profile, output=profile, sigma=0.5)
         zCenter = np.argmax(profile)
-        length = min(zCenter, len(profile) - 1 - zCenter)
-        before = profile[zCenter - length : zCenter][::-1]
-        after = profile[zCenter + 1 : zCenter + 1 + length]
+        profile = profile / np.max(profile)
+        length = min(zCenter, len(profile) - zCenter)
+        before = profile[zCenter - length+1 : zCenter+1][::-1]
+        after = profile[zCenter : zCenter + length]
         self._sphericalAberration = 1 - r2_score(before, after)
 
     def getFWHM(self, image, mu, sigma):
         """Calculates the full width at half maximum (FWHM) of the point spread function (PSF) in the given image by fitting a 2D Gaussian function to the intensity profile and extracting the FWHM values along the Y and X axes based on the fitted parameters.
-        Args:
+        Arguments:
             image (numpy.ndarray): The input image containing the PSF to be analyzed.
             mu (list): A list of mean values for the Gaussian fit along the Z, Y, and X axes.
             sigma (list): A list of standard deviation values for the Gaussian fit along the Z, Y, and X axes.
         Returns:
             list: A list containing the FWHM values along the Y and X axes.
+            str: A string containing commentary or notes related to the FWHM calculation and fitting process.
         """
         amp = np.max(image) - np.min(image)
         bg = np.min(image)
@@ -445,11 +468,11 @@ class MetricTool(object):
         )
         fwhmY = fittingTool.fwhm(params[4])
         fwhmX = fittingTool.fwhm(params[5])
-        return [fwhmY, fwhmX]
+        return [fwhmY, fwhmX], fittingTool._commentary
 
     def astigmatism(self, mu, sigma):
         """Calculates the astigmatism of the object in the microscopy image by comparing the FWHM values along the Y and X axes for two points on either side of the object.
-        Args:
+        Arguments:
             mu (list): A list of mean values for the Gaussian fit along the Z, Y, and X axes.
             sigma (list): A list of standard deviation values for the Gaussian fit along the Z, Y, and X axes.
         """
@@ -466,22 +489,31 @@ class MetricTool(object):
         )
         imageBefore = self._image[int(pointBefore[0])]
         imageAfter = self._image[int(pointAfter[0])]
-        fwhmsBefore = self.getFWHM(imageBefore, mu, sigma)
-        fwhmsAfter = self.getFWHM(imageAfter, mu, sigma)
+        fwhmsBefore, commentaryBefore = self.getFWHM(imageBefore, mu, sigma)
+        fwhmsAfter, commentaryAfter = self.getFWHM(imageAfter, mu, sigma)
         scoreBefore = (fwhmsBefore[0] - fwhmsBefore[1]) / (fwhmsBefore[0] + fwhmsBefore[1])
         scoreAfter = (fwhmsAfter[0] - fwhmsAfter[1]) / (fwhmsAfter[0] + fwhmsAfter[1])
         self._astigmatism = scoreAfter - scoreBefore
+        if commentaryBefore :
+            self._commentary += f"Image Before: {commentaryBefore}\n "
+        if commentaryAfter :
+            self._commentary += f"Image After: {commentaryAfter}"
 
     def ellipsRatio(self):
-        """Calculates the ellipticity ratio of the object in the microscopy image by analyzing the major and minor axes of the detected contours."""
+        """Calculates the ellipticity ratio of the object in the microscopy image by analyzing the major and minor axes of the detected contours.
+        Returns:
+            float: The calculated ellipticity ratio of the object.
+        """
         image = self._image[int(self._image.shape[0] / 2)]
         props = regionprops(
             label(image > ThresholdLegacy(nb_iteration=1000).getThreshold(image))
         )
         if not props:
+            self._orientation = 0.0
             return 0.0
         largestRegion = max(props, key=lambda r: r.area)
         if largestRegion.axis_minor_length == 0:
+            self._orientation = 0.0
             return 0.0
         self._ellipsRatio = (
             largestRegion.axis_major_length / largestRegion.axis_minor_length
@@ -489,6 +521,7 @@ class MetricTool(object):
         self._orientation = np.rad2deg(largestRegion.orientation) % 180
 
     def meshMetrics(self):
+        """Calculates the mesh metrics for the object in the microscopy image by creating a mesh representation of the object and computing various metrics related to its geometry and structure."""
         self.meshBuilder = MeshBuilder()
         self.meshBuilder._image = self._image
         self.meshBuilder._pixelSize = self._pixelSize
@@ -515,6 +548,11 @@ class MetricTool(object):
         self._skeleton2Extremities = (maxLength / maxDistance) ** 2 if maxDistance > 0 else 0
 
     def curvaturePath(self):
+        """Calculates the curvature of the path defined by the centroids of the object in the microscopy image.
+        The method fits a polynomial to the centroids and computes the curvature at each point along the path, storing the maximum curvature value as the minimum radius of curvature (RMin) for the object.
+        Returns:
+            float: The calculated minimum radius of curvature (RMin) for the object.
+        """
         if self._centroids is None or len(self._centroids) < 3:
             print("Not enough centroids to calculate curvature.")
             return
@@ -547,12 +585,16 @@ class MetricTool(object):
             curvature[denominator == 0] = 0
         k_max = np.max(curvature)
         if k_max < 1e-10:
-            self._RMin = float("inf")
+            self._RMin = 0.0
         else:
-            self._RMin = 1.0 / k_max
+            self._RMin = k_max
 
 
     def generateBeadOrientation(self, outputPath):
+        """Generates a visualization of the bead orientation based on the calculated orientation angle and saves it as an image file.
+        Args:
+            outputPath (str): The path where the visualization image will be saved.
+        """
         if self._orientation is None:
             print("Orientation not calculated, cannot generate bead orientation.")
             return

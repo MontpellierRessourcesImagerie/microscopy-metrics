@@ -228,9 +228,10 @@
                 <p><strong>Beads rejected:</strong> <span>{{ imageAnalyzer._beadAnalyzer|selectattr("_rejected")|list|length }}</span></p>
             </div>
         </div>
-
+        
         <div>
             <h2>Global Resolution & Fitting Quality</h2>
+            <p><strong>Fitting type:</strong> <span>{{ fitting_type }}</span></p>
             <table>
                 <thead>
                     <tr>

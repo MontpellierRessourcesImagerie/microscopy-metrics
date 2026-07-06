@@ -27,6 +27,44 @@ def showPSF(psf, title="PSF"):
         ax.set_title(title)
         plt.show()
 
+def showPSF2(psf, title="PSF", ax=None):
+    import matplotlib
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+    matplotlib.use('QtAgg')
+
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+    # Sélectionner la coupe centrale (comme dans ton code original)
+    x = np.arange(psf.shape[0])
+    y = np.arange(psf.shape[1])
+    X, Y = np.meshgrid(x, y)
+    ax.imshow(psf[:, :, psf.shape[2] // 2], cmap='viridis')
+    ax.set_title(title)
+
+def showPSFvsNoisy():
+    import matplotlib
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+    matplotlib.use('QtAgg')
+
+    psfGen = PSFRandomParameter(size=PSF_SIZE, aberrationType="comatic")
+    psf = psfGen.psf
+    noisy_psf = addMicroscopyNoise(psf)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))  # Ajuste la taille selon tes besoins
+    # Afficher l'Original PSF dans le premier sous-graphique
+    showPSF2(psf, title="Original PSF", ax=axes[0])
+    
+    # Afficher le Noisy PSF dans le deuxième sous-graphique
+    showPSF2(noisy_psf, title="Noisy PSF", ax=axes[1])
+
+    plt.tight_layout()  # Ajuste l'espacement entre les sous-graphiques
+    plt.show()
+
+
+
 def addMicroscopyNoise(image, maxPhotons=500, readoutNoiseStd=5.0):
     maxPhotons = np.max(image)
     scaledImage = (image / np.max(image)) * maxPhotons
@@ -70,7 +108,7 @@ def test_comatic_aberration_with_aberration_single():
     start_time = time.time()
     metricTool.curvaturePath()
     Mean_Duration_Concavity += time.time() - start_time
-    curvature_detected = metricTool._RMin < 5.0
+    curvature_detected = metricTool._RMin > 0.25
     
     return comaticity_detected, mesh_detected, skeleton_detected, curvature_detected, duration_comaticity, Mean_Duration_Mesh, Mean_Duration_Skeleton, Mean_Duration_Concavity
 
@@ -109,7 +147,7 @@ def test_comatic_aberration_without_aberration_single():
     start_time = time.time()
     metricTool.curvaturePath()
     Mean_Duration_Concavity += time.time() - start_time
-    curvature_detected = metricTool._RMin > 5.0
+    curvature_detected = metricTool._RMin < 0.25
     
     return comaticity_detected, mesh_detected, skeleton_detected, curvature_detected, duration_comaticity, Mean_Duration_Mesh, Mean_Duration_Skeleton, Mean_Duration_Concavity
 
@@ -366,4 +404,5 @@ def BenchMetrics():
     test_astigmatism_aberration()
 
 if __name__ == "__main__":
+    #showPSFvsNoisy()
     BenchMetrics()

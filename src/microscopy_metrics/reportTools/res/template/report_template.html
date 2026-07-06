@@ -418,6 +418,9 @@
                     </span>
                 </p>
             </div>
+            {% if bead._metricTool._commentary is not none %}
+            <p>{{ bead._metricTool._commentary }}</p>
+            {% endif %}
             <h3>Spherical Aberration Metrics</h3>
             <div class="metrics-grid">
                 <p><strong>Spherical aberration:</strong> 

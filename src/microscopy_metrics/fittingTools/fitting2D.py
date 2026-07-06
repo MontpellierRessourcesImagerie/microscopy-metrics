@@ -10,7 +10,6 @@ from scipy.optimize import curve_fit, OptimizeWarning
 
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.fittingTools.fitting1D import Fitting1D
-from microscopy_metrics.fittingTools.fitting3D import Fitting3D
 from microscopy_metrics.utils import pxToUm
 
 warnings.filterwarnings("error", category=OptimizeWarning)
@@ -37,7 +36,7 @@ class Fitting2D(FittingTool):
         sigmaY: float,
     ):
         """Generates a 2D Gaussian function based on the provided parameters.
-        Args:
+        Arguments:
             amp (float): amplitude of the curve
             bg (float): background intensity
             muX,muY (float): center coordinates of the Gaussian
@@ -65,7 +64,7 @@ class Fitting2D(FittingTool):
         sigmaY: float,
     ):
         """Evaluates the 2D Gaussian function at the given coordinates.
-        Args:
+        Arguments:
             amp (float): amplitude of the curve
             bg (float): background intensity
             muX,muY (float): center coordinates of the Gaussian
@@ -87,18 +86,20 @@ class Fitting2D(FittingTool):
         psf: np.ndarray,
     ):
         """Fits a 2D Gaussian curve to the provided PSF data using the initial parameters and coordinates.
-        Args:
+        Arguments:
             amp (float): amplitude of the Gaussian
             bg (float): background intensity
             mu (List(float)): center of the Gaussian
             sigma (List(float)): standard deviation of the Gaussian
             coords (np.array(float)): List of X,Y coordinates
             psf (np.ndarray): 1D image of the flatten 2D psf
+        Raises:
+            RuntimeError: If the optimization fails to converge.
         Returns:
             List(float),Matrix(float): List of fitted parameters and covariance matrix
         """
         params = [amp, bg, *mu, *sigma]
-        try :
+        try:
             popt, pcov = curve_fit(
                 self.evalFun,
                 coords,
@@ -121,11 +122,12 @@ class Fitting2D(FittingTool):
             print(f"Fitting2D Optimization warning: {e}. Returning initial parameters.")
             popt = params
             pcov = np.zeros((len(params), len(params)))
+            self._commentary += f"Fitting2D Optimization warning. Returning initial parameters (Fitting1D).\n"
         return popt, pcov
 
     def showFit(self, outputPath: str):
         """Plots the fitted 3D Gaussian curve with rotation against the original PSF data for all three axes.
-        Args:
+        Arguments:
             outputPath (str): Directory where the plots will be saved.
         """
         psf = self._image.astype(np.float64)
@@ -136,7 +138,14 @@ class Fitting2D(FittingTool):
         xx_fine = np.linspace(0, psf.shape[2], fitShapeX)
         y_fine, x_fine = np.meshgrid(yy_fine, xx_fine, indexing="ij")
         fine_coords_yx = np.stack([y_fine.ravel(), x_fine.ravel()], -1)
-        paramsYX = [ self.parameters[0], self.parameters[1], self.parameters[3], self.parameters[4], self.parameters[6], self.parameters[7]]
+        paramsYX = [
+            self.parameters[0],
+            self.parameters[1],
+            self.parameters[3],
+            self.parameters[4],
+            self.parameters[6],
+            self.parameters[7],
+        ]
         fit = self.gauss(*paramsYX)(fine_coords_yx)
         fit = fit.reshape((fitShapeY, fitShapeX))
         fig = plt.figure(figsize=(10, 5))
@@ -158,7 +167,14 @@ class Fitting2D(FittingTool):
         xx_fine = np.linspace(0, psf.shape[2], fitShapeX)
         z_fine, x_fine = np.meshgrid(zz_fine, xx_fine, indexing="ij")
         fine_coords_xz = np.stack([z_fine.ravel(), x_fine.ravel()], -1)
-        paramsXZ = [ self.parameters[0], self.parameters[1], self.parameters[2], self.parameters[4], self.parameters[5], self.parameters[7]]
+        paramsXZ = [
+            self.parameters[0],
+            self.parameters[1],
+            self.parameters[2],
+            self.parameters[4],
+            self.parameters[5],
+            self.parameters[7],
+        ]
         fit = self.gauss(*paramsXZ)(fine_coords_xz)
         fit = fit.reshape((fitShapeZ, fitShapeX))
         ax2 = fig2.add_subplot(1, 2, 2)
@@ -179,7 +195,14 @@ class Fitting2D(FittingTool):
         yy_fine = np.linspace(0, psf.shape[1], fitShapeY)
         z_fine, y_fine = np.meshgrid(zz_fine, yy_fine, indexing="ij")
         fine_coords_zy = np.stack([z_fine.ravel(), y_fine.ravel()], -1)
-        paramsZY = [ self.parameters[0], self.parameters[1], self.parameters[2], self.parameters[3], self.parameters[5], self.parameters[6]]
+        paramsZY = [
+            self.parameters[0],
+            self.parameters[1],
+            self.parameters[2],
+            self.parameters[3],
+            self.parameters[5],
+            self.parameters[6],
+        ]
         fit = self.gauss(*paramsZY)(fine_coords_zy)
         fit = fit.reshape((fitShapeZ, fitShapeY))
         ax2 = fig3.add_subplot(1, 2, 2)
@@ -205,7 +228,7 @@ class Fitting2D(FittingTool):
         index: int,
     ):
         """Generates and saves a visualization comparing the 1D profile of the original PSF data with the 1D profile of the 2D Gaussian fit along a specified axis.
-        Args:
+        Arguments:
             psf (np.ndarray): The original PSF data.
             fineCoords (np.ndarray): The coordinates for the fine grid.
             fit2D (np.ndarray): The 2D Gaussian fit.
@@ -263,7 +286,7 @@ class Fitting2D(FittingTool):
 
     def plotFit(self, outputPath: str):
         """Generates and saves a visualization of the 3D Gaussian fit compared to the original PSF data.
-        Args:
+        Arguments:
             outputPath (str): The path where the visualization will be saved.
         """
         center = self.getLocalCentroid()
@@ -293,7 +316,7 @@ class Fitting2D(FittingTool):
 
     def getCoords(self, psf: np.ndarray):
         """Generates an array of coordinates corresponding to the length of the PSF profile along two axes.
-        Args:
+        Arguments:
             psf (np.ndarray): 2D image to process
         Returns:
             np.ndarray: Coordinates for the 2D fit
@@ -303,7 +326,7 @@ class Fitting2D(FittingTool):
 
     def processSingleFit(self, index: int):
         """Processes a single fit for the PSF data at the specified index, performing a 2D Gaussian fit and calculating relevant metrics.
-        Args:
+        Arguments:
             index (int): The index of the PSF data to be processed.
         """
         imageFloat = self._image.astype(np.float64)

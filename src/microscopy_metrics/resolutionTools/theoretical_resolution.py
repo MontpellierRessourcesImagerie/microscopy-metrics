@@ -14,11 +14,11 @@ class TheoreticalResolution(object):
     _microscopesClasses = {}
 
     def __init__(self):
-        self._numericalAperture = 0.9
-        self._emissionWavelength = 450
-        self._refractiveIndex = 1.5
-        self._angularAperture = None
-        self._excitationWavelength = 225
+        self._numericalAperture : float = 0.9
+        self._emissionWavelength : float = 450
+        self._refractiveIndex : float = 1.5
+        self._angularAperture : float = None
+        self._excitationWavelength : float = 225
 
     def __init_subclass__(cls):
         name = cls.name
@@ -87,7 +87,10 @@ class TheoreticalResolution(object):
         return [0, 0, 0]
 
     def angularAperture(self):
-        """Calculates the angular aperture of the microscope based on its numerical aperture and refractive index."""
+        """Calculates the angular aperture of the microscope based on its numerical aperture and refractive index.
+        Returns:
+            float: The calculated angular aperture in radians.
+        """
         if self._angularAperture is None:
             self._angularAperture = np.arcsin(
                 self._numericalAperture / self._refractiveIndex

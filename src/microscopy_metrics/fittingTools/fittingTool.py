@@ -34,6 +34,7 @@ class FittingTool(object):
         self.params1D = [0.0] * 8
         self.axes = ["Z", "Y", "X"]
         self.contrast = 0.0
+        self._commentary = ""
 
     def __init_subclass__(cls):
         name = cls.name
@@ -44,7 +45,7 @@ class FittingTool(object):
     @classmethod
     def getInstance(cls, methodName: str):
         """Factory method to create an instance of a fitting class based on the provided method name.
-        Args:
+        Arguments:
             methodName (str): Name of the fitting method (e.g., "1D", "2D", "3D").
         Returns:
             FittingTool: An instance of the fitting class corresponding to the method name.
@@ -54,7 +55,7 @@ class FittingTool(object):
 
     def fwhm(self, sigma: float) -> float:
         """Calculates the full width at half maximum (FWHM) for a Gaussian function based on the provided sigma value.
-        Args:
+        Arguments:
             sigma (float): The standard deviation of the Gaussian function.
         Returns:
             float: The calculated FWHM value.
@@ -105,7 +106,7 @@ class FittingTool(object):
 
     def getActivePath(self, index: int):
         """Provides the path to the folder corresponding to the selected bead, creating it if it does not exist.
-        Args:
+        Arguments:
             index (int): The index of the bead for which to get the active path.
         Returns:
             Path: The path to the folder corresponding to the selected bead.
@@ -117,7 +118,7 @@ class FittingTool(object):
 
     def uncertainty(self, pcov: np.ndarray) -> np.ndarray:
         """Calculates the uncertainties of the fitted parameters based on the provided covariance matrix.
-        Args:
+        Arguments:
             pcov (np.ndarray): The covariance matrix between parameters obtained from the fitting process.
         Returns:
             np.ndarray: The uncertainties of the fitted parameters.
@@ -139,7 +140,7 @@ class FittingTool(object):
     @staticmethod
     def mip3d(image: np.ndarray, axis: int = 0) -> np.ndarray:
         """Calculates the maximum intensity projection (MIP) of a 3D image along a specified axis.
-        Args:
+        Arguments:
             image (np.ndarray): The input 3D image.
             axis (int): The axis along which to compute the MIP (0 for z, 1 for y, 2 for x).
         Returns:
@@ -170,7 +171,7 @@ class FittingTool(object):
 
     def determination(self, params: list, coords: np.ndarray, psf: np.ndarray):
         """Calculates the coefficient of determination (R²) for the fitted curve against the original PSF data.
-        Args:
+        Arguments:
             params (list): The fitted parameters
             coords (array): The coordinates of the PSF profile
             psf (array): The original PSF data
@@ -186,25 +187,23 @@ class FittingTool(object):
             list: The fitted centroid coordinates (mu) for each axis.
         """
         return [self.parameters[2], self.parameters[3], self.parameters[4]]
-    
+
     def getSigma(self):
         """Extracts the fitted sigma values from the fitted parameters.
         Returns:
             list: The fitted sigma values for each axis.
         """
         return [self.parameters[5], self.parameters[6], self.parameters[7]]
-    
 
     def computeContrast(self):
-        """Calculates the contrast of the fitted curve based on the Weber contrast formula.
-        """
+        """Calculates the contrast of the fitted curve based on the Weber contrast formula."""
         if self.parameters[1] == 0:
             self.contrast = self.parameters[0]
         else:
             self.contrast = (self.parameters[0] - self.parameters[1]) / self.parameters[1]
 
-    def plotFit(self, outputPath:str):
+    def plotFit(self, outputPath: str):
         pass
 
-    def showFit(self, outputPath:str):
+    def showFit(self, outputPath: str):
         pass

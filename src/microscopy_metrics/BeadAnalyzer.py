@@ -160,6 +160,16 @@ class BeadAnalyzer(object):
         rmin_val = "Inf" if getattr(self._metricTool, '_RMin', 0) == float('inf') else f"{getattr(self._metricTool, '_RMin', 0):.2f}"
         metrics_data.insert(8, ["Minimal Curvature Radius (RMin)", f"{rmin_val} µm"])
         current_y = self.drawParameterTableOnPDF(pdf, "Quality Metrics", metrics_data, current_y)
+        if self._metricTool._commentary:
+            pdf.setFont("Helvetica", 10)
+            commentary_lines = self._metricTool._commentary.strip().split('\n')
+            for line in commentary_lines:
+                if current_y < 50:
+                    pdf.showPage()
+                    current_y = 800
+                pdf.drawString(100, current_y, line)
+                current_y -= 12
+        current_y -= 20
         fittingData = [
             ["Axis", "Z", "Y", "X"],
             ["Theoretical res. (µm)", f"{theoreticalResolution[0]:.4f}", f"{theoreticalResolution[1]:.4f}", f"{theoreticalResolution[2]:.4f}"],
@@ -169,6 +179,16 @@ class BeadAnalyzer(object):
             ["Determination (R²)",    f"{self._fitTool.determinations[0]:.4f}", f"{self._fitTool.determinations[1]:.4f}", f"{self._fitTool.determinations[2]:.4f}"],
         ]
         current_y = self.drawParameterTableOnPDF(pdf, "Gaussian Fitting Results", fittingData, current_y)
+        if self._fitTool._commentary:
+            current_y -= 15
+            pdf.setFont("Helvetica", 10)
+            commentary_lines = self._fitTool._commentary.strip().split('\n')
+            for line in commentary_lines:
+                if current_y < 50:
+                    pdf.showPage()
+                    current_y = 800
+                pdf.drawString(100, current_y, line)
+                current_y -= 12
         pdf.showPage()
         current_y = 800
         pdf.setFont("Helvetica-Bold", 18)

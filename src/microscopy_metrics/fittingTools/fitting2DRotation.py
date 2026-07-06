@@ -42,7 +42,7 @@ class Fitting2DRotation(FittingTool):
         theta: float,
     ):
         """Generates a 2D Gaussian function with rotation based on the provided parameters.
-        Args:
+        Arguments:
             amp (float): amplitude of the curve
             bg (float): background intensity
             muX,muY (float): center coordinates of the Gaussian
@@ -74,7 +74,8 @@ class Fitting2DRotation(FittingTool):
         theta: float,
     ):
         """Evaluates the 2D Gaussian function with rotation at the given x values.
-        Args:
+        Arguments:
+            x (np.ndarray): The x values at which to evaluate the function.
             amp (float): amplitude of the curve
             bg (float): background intensity
             muX,muY (float): center coordinates of the Gaussian
@@ -98,7 +99,7 @@ class Fitting2DRotation(FittingTool):
         psf: np.ndarray,
     ):
         """Fits the 2D Gaussian function with rotation to the provided PSF data using curve fitting.
-        Args:
+        Arguments:
             amp (float): amplitude of the Gaussian
             bg (float): background intensity
             mu (List(float)): center of the Gaussian
@@ -106,6 +107,8 @@ class Fitting2DRotation(FittingTool):
             theta (float): rotation angle in radians
             coords (np.array(float)): List of X,Y coordinates
             psf (np.ndarray): 1D image of the flatten 2D psf
+        Raises:
+            RuntimeError: If the optimization fails to converge.
         Returns:
             List(float),Matrix(float): List of fitted parameters and covariance matrix
         """
@@ -131,14 +134,17 @@ class Fitting2DRotation(FittingTool):
                 ),
             )
         except Exception as e:
-            print(f"Fitting2DRotation Optimization warning: {e}. Returning initial parameters.")
+            print(
+                f"Fitting2DRotation Optimization warning: {e}. Returning initial parameters."
+            )
             popt = params
-            pcov = np.zeros((len(params), len(params)))  
+            pcov = np.zeros((len(params), len(params)))
+            self._commentary += f"Fitting2DRotation Optimization warning. Returning initial parameters (Fitting1D).\n"
         return popt, pcov
 
     def showFit(self, outputPath: str):
         """Plots the fitted 3D Gaussian curve with rotation against the original PSF data for all three axes.
-        Args:
+        Arguments:
             outputPath (str): Directory where the plots will be saved.
         """
         center = self.getLocalCentroid()
@@ -160,7 +166,9 @@ class Fitting2DRotation(FittingTool):
         thetaZ = self.thetas[0]
         rot = SciRot.from_euler("zyx", [thetaZ, thetaY, thetaX])
         R = rot.as_matrix()
-        sigma2 = np.diag([self.parameters[7] ** 2, self.parameters[6] ** 2, self.parameters[5] ** 2])
+        sigma2 = np.diag(
+            [self.parameters[7] ** 2, self.parameters[6] ** 2, self.parameters[5] ** 2]
+        )
         cov = R @ sigma2 @ R.T
         eigvals, eigvecs = np.linalg.eigh(cov)
         majorIDX = np.argmax(eigvals)
@@ -182,7 +190,12 @@ class Fitting2DRotation(FittingTool):
         if hasMajorAxis and norm_yx > 1e-6:
             dir_yx = proj_yx / norm_yx
             dx_yx, dy_yx = L * dir_yx
-            ax2.plot([x0 - dx_yx, x0 + dx_yx], [y0 + dy_yx, y0 - dy_yx], color="red", linewidth=2)
+            ax2.plot(
+                [x0 - dx_yx, x0 + dx_yx],
+                [y0 + dy_yx, y0 - dy_yx],
+                color="red",
+                linewidth=2,
+            )
             ax2.scatter([x0], [y0], color="red", alpha=0.7)
         ax2.axhline(y=fitShapeY / 2, color="k", alpha=0.5, linestyle="--")
         ax2.axvline(x=fitShapeX / 2, color="k", alpha=0.5, linestyle="--")
@@ -203,7 +216,12 @@ class Fitting2DRotation(FittingTool):
         if hasMajorAxis and norm_xz > 1e-6:
             dir_xz = proj_xz / norm_xz
             dx_xz, dz_xz = L * dir_xz
-            ax2.plot([x0 - dx_xz, x0 + dx_xz], [z0 + dz_xz, z0 - dz_xz], color="red", linewidth=2)
+            ax2.plot(
+                [x0 - dx_xz, x0 + dx_xz],
+                [z0 + dz_xz, z0 - dz_xz],
+                color="red",
+                linewidth=2,
+            )
         ax2.scatter([x0], [z0], color="red", alpha=0.7)
         ax2.axhline(y=fitShapeZ / 2, color="k", alpha=0.5, linestyle="--")
         ax2.axvline(x=fitShapeX / 2, color="k", alpha=0.5, linestyle="--")
@@ -225,7 +243,12 @@ class Fitting2DRotation(FittingTool):
         if hasMajorAxis and norm_zy > 1e-6:
             dir_zy = proj_zy / norm_zy
             dy_zy, dz_zy = L * dir_zy
-            ax2.plot([y0 - dy_zy, y0 + dy_zy], [z0 + dz_zy, z0 - dz_zy], color="red", linewidth=2)
+            ax2.plot(
+                [y0 - dy_zy, y0 + dy_zy],
+                [z0 + dz_zy, z0 - dz_zy],
+                color="red",
+                linewidth=2,
+            )
         ax2.scatter([y0], [z0], color="red", alpha=0.7)
         ax2.axhline(y=fitShapeZ / 2, color="k", alpha=0.5, linestyle="--")
         ax2.axvline(x=fitShapeY / 2, color="k", alpha=0.5, linestyle="--")
@@ -248,7 +271,7 @@ class Fitting2DRotation(FittingTool):
         index: int,
     ):
         """Plots the original data points, the fitted curve, and key parameters for a single axis.
-        Args:
+        Arguments:
             coords (array): Coordinates of the data points.
             psf (array): Intensity values at the data points.
             fineCoords (array): Coordinates for plotting the fitted curve.
@@ -306,7 +329,7 @@ class Fitting2DRotation(FittingTool):
 
     def plotFit(self, outputPath: str):
         """Plots the fitted 2D Gaussian curve in 3D.
-        Args:
+        Arguments:
             outputPath (str): Directory where the plot will be saved.
         """
         psf = self._image.astype(np.float64)
@@ -342,7 +365,7 @@ class Fitting2DRotation(FittingTool):
 
     def getCoords(self, psf: np.ndarray):
         """Generates an array of coordinates corresponding to the shape of the PSF image, suitable for use in the 2D fitting process.
-        Args:
+        Arguments:
             psf (np.ndarray): 2D image to process for coordinate generation
         Returns:
             np.ndarray: Coordinates for the 2D fit

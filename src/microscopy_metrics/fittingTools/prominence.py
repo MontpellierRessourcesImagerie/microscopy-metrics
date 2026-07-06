@@ -20,13 +20,21 @@ class Prominence(FittingTool):
 
     def plotFit(self, outputPath):
         """Plots the intensity profiles along the Z, Y, and X axes of the PSF image, highlighting the detected peaks based on their prominence, and saves the plot to the specified output path.
-        Args:
+        Arguments:
             outputPath (str): Path to the folder where the plot will be saved
         """
         fig1, axs = plt.subplots(1, 3, figsize=(15, 5))
         axes = ["Z", "Y", "X"]
         for idx in range(3):
-            profile = self._image[:, :, :].mean(axis=(0, 1)) if idx == 0 else (self._image[:, :, :].mean(axis=(0, 2)) if idx == 1 else self._image[:, :, :].mean(axis=(1, 2)))
+            profile = (
+                self._image[:, :, :].mean(axis=(0, 1))
+                if idx == 0
+                else (
+                    self._image[:, :, :].mean(axis=(0, 2))
+                    if idx == 1
+                    else self._image[:, :, :].mean(axis=(1, 2))
+                )
+            )
             amp = float(np.max(profile) - np.min(profile))
             prominenceMin = amp * float(self._prominenceRel)
             peaks, props = find_peaks(profile, prominence=prominenceMin)
@@ -45,7 +53,7 @@ class Prominence(FittingTool):
         The method retrieves the local centroid of the image, extracts the intensity profiles along the three axes, and applies the find_peaks function to identify peaks based on their prominence.
         For each detected peak, the method calculates the FWHM by determining the points where the intensity crosses half of the peaks prominence.
         The calculated FWHM values and corresponding parameters are stored in the class attributes for further analysis and evaluation.
-        Args:
+        Arguments:
             index (int): The index of the fit being processed, used for storing results in the parameters attribute.
         Returns:
             list: A list containing the index, calculated FWHM values, covariance matrix, coefficient of determination, and parameters for the fit.
