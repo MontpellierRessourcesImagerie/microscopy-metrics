@@ -3,7 +3,13 @@ import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class Fitting(object):
-    """Class to manage the fitting process for microscopy image analysis, including running the fitting for individual beads and computing the fitting results for all beads in the analysis."""
+    """Class to manage the fitting process for microscopy image analysis, including running the fitting for individual beads and computing the fitting results for all beads in the analysis.
+    Attributes:
+        fitType (str): The type of fitting to be performed (e.g., "1D", "2D", "3D").
+        _thresholdRSquared (float): The threshold for the coefficient of determination (R²) used to filter out poor fits.
+        _prominenceRel (float): The relative prominence used for peak detection during fitting.
+        _imageAnalyzer (ImageAnalyzer): An instance of the ImageAnalyzer class used for analyzing the microscopy images and managing the fitting process.
+    """
 
     def __init__(self):
         self.fitType = "1D"
@@ -68,6 +74,10 @@ class Fitting(object):
                 self._imageAnalyzer._meanUncertainty[2] += bead._fitTool.uncertainties[2] / beadsKept
 
     def displayFitting(self, outputDir):
+        """Displays the fitting results for all beads that were not rejected during the fitting process.
+        Args:
+            outputDir (str): The directory where the fitting results will be saved.
+        """
         if self._imageAnalyzer is None:
             return None
         if len(self._imageAnalyzer._beadAnalyzer) == 0:

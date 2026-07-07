@@ -112,7 +112,7 @@ class MeshBuilder(object):
 
     def saveMesh(self, filename):
         """Saves the constructed 3D mesh to a file in the specified format.
-        Arguments:
+        Args:
             filename (str): The path to the file where the mesh will be saved. The file format is determined by the file extension (e.g., .ply, .obj, .stl).
         Raises:
             ValueError: If the mesh has not been built before saving.

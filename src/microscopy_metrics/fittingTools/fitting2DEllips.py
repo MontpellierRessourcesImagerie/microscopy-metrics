@@ -39,7 +39,7 @@ class Fitting2DEllips(FittingTool):
         c: float,
     ):
         """Generates a 2D Ellipse Gaussian function based on the provided parameters.
-        Arguments:
+        Args:
             amp (float): amplitude of the curve
             bg (float): background intensity
             muX,muY (float): center coordinates of the Gaussian
@@ -70,7 +70,7 @@ class Fitting2DEllips(FittingTool):
         c: float,
     ):
         """calculates the 2D Ellipse Gaussian function at the given x values.
-        Arguments:
+        Args:
             amp (float): amplitude of the curve
             bg (float): background intensity
             muX,muY (float): center coordinates of the Gaussian
@@ -90,7 +90,7 @@ class Fitting2DEllips(FittingTool):
         psf: np.ndarray,
     ):
         """Fits a 2D Ellipse Gaussian curve to the provided PSF data using the given initial parameters and coordinates.
-        Arguments:
+        Args:
             amp (float): amplitude of the Gaussian
             bg (float): background intensity
             mu (List(float)): center of the Gaussian
@@ -126,7 +126,7 @@ class Fitting2DEllips(FittingTool):
 
     def ellipseParmConversion(self, a: float, b: float, c: float):
         """Converts the parameters of a 2D Ellipse Gaussian fit (a, b, c) into the angle of rotation (theta) and the standard deviations along the major and minor axes (sx, sy).
-        Arguments:
+        Args:
             a (float): coefficient for the ellipse linked to the x-axis
             b (float): coefficient for the ellipse linked to the interaction between x and y
             c (float): coefficient for the ellipse linked to the y-axis
@@ -151,7 +151,7 @@ class Fitting2DEllips(FittingTool):
 
     def showFit(self, outputPath: str):
         """Plots the fitted 2D Ellipse Gaussian curve against the original PSF data for all three axes.
-        Arguments:
+        Args:
             outputPath (str): Directory where the plots will be saved.
         """
         fitShapeZ = min(self._image.shape[0] * 5, 256)
@@ -192,7 +192,7 @@ class Fitting2DEllips(FittingTool):
         fitPSFShape=None,
     ):
         """Generates and saves a plot comparing the original PSF data with the fitted 2D Ellipse Gaussian curve, including the center of the Gaussian (mu) and the angle of rotation (theta).
-        Arguments:
+        Args:
             psf (np.ndarray): The original PSF data.
             outputPath (str): The path where the plot will be saved.
             params: The parameters for the 2D Ellipse Gaussian curve.
@@ -241,7 +241,7 @@ class Fitting2DEllips(FittingTool):
         index: int,
     ):
         """Generates and saves a plot comparing the original PSF data with the fitted 1D Gaussian curve and the 2D Ellipse Gaussian curve, including the center of the Gaussian (mu) and the FWHM for both fits.
-        Arguments:
+        Args:
             psf (np.ndarray): The original PSF data.
             fineCoords (np.ndarray): The coordinates for the fine grid.
             fit2D (np.ndarray): The 2D Ellipse Gaussian fit.
@@ -300,7 +300,7 @@ class Fitting2DEllips(FittingTool):
 
     def plotFit(self, outputPath: str):
         """Generates and saves a 3D plot comparing the original PSF data with the fitted 2D Ellipse Gaussian curve, including the center of the Gaussian (mu) and the angle of rotation (theta).
-        Arguments:
+        Args:
             outputPath (str): The path where the visualization will be saved.
         """
         psf = self._image.astype(np.float64)
@@ -331,7 +331,7 @@ class Fitting2DEllips(FittingTool):
 
     def getCoords(self, psf: np.ndarray):
         """Generates a list of coordinates for the 2D fit based on the shape of the provided PSF image.
-        Arguments:
+        Args:
             psf (np.ndarray): The PSF image for which to generate the coordinates.
         Returns:
             np.ndarray: A list of coordinates corresponding to the shape of the PSF image, suitable for use in the 2D fitting process.
@@ -341,7 +341,7 @@ class Fitting2DEllips(FittingTool):
 
     def processSingleFit(self, index: int):
         """Processes a single fit for the given index, performing fitting, and plotting.
-        Arguments:
+        Args:
             index (int): ID of the PSF.
         """
         imageFloat = self._image.astype(np.float64)

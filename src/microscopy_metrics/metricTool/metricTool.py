@@ -79,7 +79,7 @@ class MetricTool(object):
 
     def setNormalizedImage(self, image: np.ndarray) -> np.ndarray:
         """Normalizes the input image to a range of [0, 1] and ensures that all values are non-negative.
-        Arguments:
+        Args:
             image (np.ndarray): The input image to be normalized, which should be a 2D or 3D array representing the microscopy image data.
         Raises:
             ValueError: If the input image is not 2D or 3D.
@@ -151,7 +151,7 @@ class MetricTool(object):
 
     def lateralAsymmetryRatio(self, FWHM: list):
         """Calculates the lateral asymmetry ratio (LAR) for a PSF based on the full width at half maximum (FWHM) values.
-        Arguments:
+        Args:
             FWHM (list): A list of FWHM values for the PSF.
         Raises:
            ValueError: If the FWHM values are not available or if there are not enough FWHM values to calculate the LAR.
@@ -179,7 +179,7 @@ class MetricTool(object):
 
     def updateTile(self, tile, tileIndex):
         """Updates the tile configuration based on the provided tile index, which represents the presence or absence of voxels in a 2x2x2 neighborhood.
-        Arguments:
+        Args:
             tile (list): A 3D list representing the tile.
             tileIndex (int): The index of the tile.
         """
@@ -215,7 +215,7 @@ class MetricTool(object):
 
     def configIndex(self, configValues):
         """Calculates the index of a tile configuration.
-        Arguments:
+        Args:
             configValues (list): A list of boolean values representing the presence or absence of voxels in a 2x2x2 neighborhood.
         Returns:
             int: The index of the tile configuration.
@@ -277,7 +277,7 @@ class MetricTool(object):
 
     def applyLut(self, histogram, lut):
         """Applies the surface area lookup table to the histogram of tile configurations to calculate the total surface area.
-        Arguments:
+        Args:
             histogram (list): A list of counts for each tile configuration.
             lut (list): A list of surface area values for each tile configuration.
         Returns:
@@ -313,7 +313,7 @@ class MetricTool(object):
 
     def distance(self, x1, x2):
         """Calculates the distance between two points, x1 and x2.
-        Arguments:
+        Args:
             x1 (float): The first point.
             x2 (float): The second point.
         Returns:
@@ -324,7 +324,7 @@ class MetricTool(object):
     def getContours(self, image):
         """Calculates the contours of the object in the microscopy image using the Chan-Vese active contour model.
         The method applies a Gaussian filter to smooth the input image, then uses the Chan-Vese algorithm to segment the image and find the contours of the detected object.
-        Arguments:
+        Args:
             image (numpy.ndarray): The input image.
         Returns:
             numpy.ndarray: The detected contours.
@@ -380,7 +380,7 @@ class MetricTool(object):
 
     def _computeAxisComaticity(self, image, pixelSize):
         """Calculates the axis comaticity for a given 1D image by analyzing the intensity profiles along the specified axis and comparing them to the detected contours of the object in the image.
-        Arguments:
+        Args:
             image (numpy.ndarray): The input image.
             pixelSize (float): The size of each pixel in the image.
         Returns:
@@ -449,7 +449,7 @@ class MetricTool(object):
 
     def getFWHM(self, image, mu, sigma):
         """Calculates the full width at half maximum (FWHM) of the point spread function (PSF) in the given image by fitting a 2D Gaussian function to the intensity profile and extracting the FWHM values along the Y and X axes based on the fitted parameters.
-        Arguments:
+        Args:
             image (numpy.ndarray): The input image containing the PSF to be analyzed.
             mu (list): A list of mean values for the Gaussian fit along the Z, Y, and X axes.
             sigma (list): A list of standard deviation values for the Gaussian fit along the Z, Y, and X axes.
@@ -472,7 +472,7 @@ class MetricTool(object):
 
     def astigmatism(self, mu, sigma):
         """Calculates the astigmatism of the object in the microscopy image by comparing the FWHM values along the Y and X axes for two points on either side of the object.
-        Arguments:
+        Args:
             mu (list): A list of mean values for the Gaussian fit along the Z, Y, and X axes.
             sigma (list): A list of standard deviation values for the Gaussian fit along the Z, Y, and X axes.
         """

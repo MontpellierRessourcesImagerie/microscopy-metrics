@@ -13,9 +13,13 @@ NOISE = True
 PSFSHOW = False
 
 def showPSF(psf, title="PSF"):
+    """Displays the provided PSF image using matplotlib.
+    Args:
+        psf (np.ndarray): The PSF image to be displayed.
+        title (str, optional): The title for the displayed image. Defaults to "PSF".
+    """
     import matplotlib
     import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D
     matplotlib.use('QtAgg') 
     if not PSFSHOW:
         fig = plt.figure()
@@ -28,16 +32,19 @@ def showPSF(psf, title="PSF"):
         plt.show()
 
 def showPSF2(psf, title="PSF", ax=None):
+    """Displays the provided PSF image using matplotlib on the specified axis.
+    Args:
+        psf (np.ndarray): The PSF image to be displayed.
+        title (str, optional): The title for the displayed image. Defaults to "PSF".
+        ax (matplotlib.axes.Axes, optional): The axis on which to display the image. If None, a new figure and axis are created. Defaults to None.
+    """
     import matplotlib
     import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D
     matplotlib.use('QtAgg')
 
     if ax is None:
         fig = plt.figure()
         ax = fig.add_subplot(111)
-
-    # Sélectionner la coupe centrale (comme dans ton code original)
     x = np.arange(psf.shape[0])
     y = np.arange(psf.shape[1])
     X, Y = np.meshgrid(x, y)
@@ -45,27 +52,31 @@ def showPSF2(psf, title="PSF", ax=None):
     ax.set_title(title)
 
 def showPSFvsNoisy():
+    """Generates a PSF with comatic aberration, adds noise to it, and displays both the original and noisy PSF images side by side using matplotlib.""" 
     import matplotlib
     import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D
     matplotlib.use('QtAgg')
 
     psfGen = PSFRandomParameter(size=PSF_SIZE, aberrationType="comatic")
     psf = psfGen.psf
     noisy_psf = addMicroscopyNoise(psf)
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))  # Ajuste la taille selon tes besoins
-    # Afficher l'Original PSF dans le premier sous-graphique
-    showPSF2(psf, title="Original PSF", ax=axes[0])
-    
-    # Afficher le Noisy PSF dans le deuxième sous-graphique
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    showPSF2(psf, title="Original PSF", ax=axes[0])    
     showPSF2(noisy_psf, title="Noisy PSF", ax=axes[1])
-
-    plt.tight_layout()  # Ajuste l'espacement entre les sous-graphiques
+    plt.tight_layout()
     plt.show()
 
 
 
 def addMicroscopyNoise(image, maxPhotons=500, readoutNoiseStd=5.0):
+    """Adds Poisson and Gaussian noise to the provided image to simulate microscopy noise.
+    Args:
+        image (np.ndarray): The input image to which noise will be added.
+        maxPhotons (int, optional): The maximum number of photons for scaling the image. Defaults to 500.
+        readoutNoiseStd (float, optional): The standard deviation of the Gaussian readout noise. Defaults to 5.0.
+    Returns:
+        np.ndarray: The noisy image with added Poisson and Gaussian noise, clipped to the range [0, maxPhotons].
+    """
     maxPhotons = np.max(image)
     scaledImage = (image / np.max(image)) * maxPhotons
     noisyPoisson = np.random.poisson(scaledImage).astype(np.float32)
@@ -75,6 +86,11 @@ def addMicroscopyNoise(image, maxPhotons=500, readoutNoiseStd=5.0):
     return finalNoisyImage
 
 def test_comatic_aberration_with_aberration_single():
+    """Tests the detection of comatic aberration in a PSF generated with comatic aberration.
+    This function generates a PSF with comatic aberration, applies various methods, and evaluates the results using the defined metrics.
+    Returns:
+        tuple: A tuple containing the detection results for comaticity, mesh, skeleton, and curvature, along with the durations for each metric calculation.
+    """
     psfGen = PSFRandomParameter(size=PSF_SIZE, aberrationType="comatic")
     psf = psfGen.psf
     metricTool = MetricTool()
@@ -114,6 +130,11 @@ def test_comatic_aberration_with_aberration_single():
 
 
 def test_comatic_aberration_without_aberration_single():
+    """Tests the detection of comatic aberration in a PSF generated without comatic aberration.
+    This function generates a PSF without comatic aberration, applies various methods, and evaluates the results using the defined metrics.
+    Returns:
+        tuple: A tuple containing the detection results for comaticity, mesh, skeleton, and curvature, along with the durations for each metric calculation.
+    """
     psfGen = PSFRandomParameter(size=PSF_SIZE)
     psf = psfGen.psf
     metricTool = MetricTool()
@@ -153,9 +174,9 @@ def test_comatic_aberration_without_aberration_single():
 
 
 def test_comatic_aberration():
-    """Test function for evaluating the impact of comatic aberration on PSF fitting.
-    This function generates a PSF with comatic aberration, applies various fitting methods, and evaluates the results using the defined metrics.
-    The test assesses the accuracy of the fitting methods in estimating the PSF parameters in the presence of comatic aberration.
+    """Test function for evaluating metrics of comatic aberration detection.
+    This function generates a PSF with comatic aberration, applies various methods, and evaluates the results using the defined metrics.
+    The test assesses the accuracy of the methods in estimating the PSF parameters in the presence of comatic aberration.
     """
     tdqm = tqdm(total=200, desc="Evaluating Comatic Aberration Detection", unit="test")
     
@@ -236,6 +257,11 @@ def test_comatic_aberration():
 
 
 def test_spherical_aberration_with_aberration_single():
+    """Tests the detection of spherical aberration in a PSF generated with spherical aberration.    
+    This function generates a PSF with spherical aberration, applies various fitting methods, and evaluates the results using the defined metrics.
+    Returns:
+        tuple: A tuple containing the detection result for sphericality and the duration for the metric calculation.
+    """
     psfGen = PSFRandomParameter(size=PSF_SIZE, aberrationType="spherical")
     psf = psfGen.psf
     metricTool = MetricTool()
@@ -253,6 +279,11 @@ def test_spherical_aberration_with_aberration_single():
 
 
 def test_spherical_aberration_without_aberration_single():
+    """Tests the detection of spherical aberration in a PSF generated without spherical aberration.
+    This function generates a PSF without spherical aberration, applies various fitting methods, and evaluates the results using the defined metrics.
+    Returns:
+        tuple: A tuple containing the detection result for sphericality and the duration for the metric calculation.
+    """
     psfGen = PSFRandomParameter(size=PSF_SIZE)
     psf = psfGen.psf
     metricTool = MetricTool()
@@ -270,9 +301,9 @@ def test_spherical_aberration_without_aberration_single():
 
 
 def test_spherical_aberration():
-    """Test function for evaluating the impact of spherical aberration on PSF fitting.
-    This function generates a PSF with spherical aberration, applies various fitting methods, and evaluates the results using the defined metrics.
-    The test assesses the accuracy of the fitting methods in estimating the PSF parameters in the presence of spherical aberration.
+    """Test function for evaluation metrics of spherical aberration.
+    This function generates a PSF with spherical aberration, applies various methods, and evaluates the results using the defined metrics.
+    The test assesses the accuracy of the methods in estimating the PSF parameters in the presence of spherical aberration.
     """
     Mean_Duration_Sphericality = 0.0
     tp_spherical = 0
@@ -311,6 +342,11 @@ def test_spherical_aberration():
 
 
 def test_astigmatism_aberration_with_aberration_single():
+    """Tests the detection of astigmatism aberration in a PSF generated with astigmatism aberration.
+    This function generates a PSF with astigmatism aberration, applies various methods, and evaluates the results using the defined metrics.
+    Returns:
+        tuple: A tuple containing the detection result for astigmatism and the duration for the metric calculation.
+    """
     psfGen = PSFRandomParameter(size=PSF_SIZE, aberrationType="astigmatism")
     psf = psfGen.psf
     metricTool = MetricTool()
@@ -335,6 +371,11 @@ def test_astigmatism_aberration_with_aberration_single():
     return astigmatism_detected, duration_astigmatism
 
 def test_astigmatism_aberration_without_aberration_single():
+    """Tests the detection of astigmatism aberration in a PSF generated without astigmatism aberration.
+    This function generates a PSF without astigmatism aberration, applies various methods, and evaluates the results using the defined metrics.
+    Returns:
+        tuple: A tuple containing the detection result for astigmatism and the duration for the metric calculation.
+    """
     psfGen = PSFRandomParameter(size=PSF_SIZE)
     psf = psfGen.psf
     metricTool = MetricTool()
@@ -359,9 +400,9 @@ def test_astigmatism_aberration_without_aberration_single():
     return astigmatism_detected, duration_astigmatism
 
 def test_astigmatism_aberration():
-    """Test function for evaluating the impact of astigmatism aberration on PSF fitting.
-    This function generates a PSF with astigmatism aberration, applies various fitting methods, and evaluates the results using the defined metrics.
-    The test assesses the accuracy of the fitting methods in estimating the PSF parameters in the presence of astigmatism aberration.
+    """Test function for evaluating metrics of astigmatism aberration detection.
+    This function generates a PSF with astigmatism aberration, applies various methods, and evaluates the results using the defined metrics.
+    The test assesses the accuracy of the methods in estimating the PSF parameters in the presence of astigmatism aberration.
     """
     Mean_Duration_Astigmatism = 0.0
     tp_astig = 0
@@ -399,6 +440,7 @@ def test_astigmatism_aberration():
     print(f"Astigmatism Aberration - Precision: {Precision_astigmatism:.2f}, Recall: {Rappel_astigmatism:.2f}, Accuracy: {Accuracy_astigmatism:.2f}, F1 Score: {F1_astigmatism:.2f}, Mean Duration: {Mean_Duration_Astigmatism/200:.2f} seconds")
     
 def BenchMetrics():
+    """Runs the benchmark tests for comatic aberration, spherical aberration, and astigmatism aberration detection metrics."""
     test_comatic_aberration()
     test_spherical_aberration()
     test_astigmatism_aberration()

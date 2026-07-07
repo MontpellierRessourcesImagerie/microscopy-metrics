@@ -9,7 +9,6 @@ from skimage.filters import (
     threshold_triangle
 )
 
-
 class Threshold(object):
     """Base class for thresholding methods.
     This class defines the interface for thresholding algorithms and provides a mechanism for registering and retrieving specific thresholding implementations.
@@ -170,10 +169,6 @@ class ThresholdMinimum(Threshold):
         """
         return threshold_minimum(image)
     
-
-
-
-
 
 class ThresholdOtsu(Threshold):
     """Class for computing the Otsu thresholding method.

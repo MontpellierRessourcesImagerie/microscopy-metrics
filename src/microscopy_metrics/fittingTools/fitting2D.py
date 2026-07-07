@@ -36,7 +36,7 @@ class Fitting2D(FittingTool):
         sigmaY: float,
     ):
         """Generates a 2D Gaussian function based on the provided parameters.
-        Arguments:
+        Args:
             amp (float): amplitude of the curve
             bg (float): background intensity
             muX,muY (float): center coordinates of the Gaussian
@@ -64,7 +64,7 @@ class Fitting2D(FittingTool):
         sigmaY: float,
     ):
         """Evaluates the 2D Gaussian function at the given coordinates.
-        Arguments:
+        Args:
             amp (float): amplitude of the curve
             bg (float): background intensity
             muX,muY (float): center coordinates of the Gaussian
@@ -86,7 +86,7 @@ class Fitting2D(FittingTool):
         psf: np.ndarray,
     ):
         """Fits a 2D Gaussian curve to the provided PSF data using the initial parameters and coordinates.
-        Arguments:
+        Args:
             amp (float): amplitude of the Gaussian
             bg (float): background intensity
             mu (List(float)): center of the Gaussian
@@ -127,7 +127,7 @@ class Fitting2D(FittingTool):
 
     def showFit(self, outputPath: str):
         """Plots the fitted 3D Gaussian curve with rotation against the original PSF data for all three axes.
-        Arguments:
+        Args:
             outputPath (str): Directory where the plots will be saved.
         """
         psf = self._image.astype(np.float64)
@@ -228,7 +228,7 @@ class Fitting2D(FittingTool):
         index: int,
     ):
         """Generates and saves a visualization comparing the 1D profile of the original PSF data with the 1D profile of the 2D Gaussian fit along a specified axis.
-        Arguments:
+        Args:
             psf (np.ndarray): The original PSF data.
             fineCoords (np.ndarray): The coordinates for the fine grid.
             fit2D (np.ndarray): The 2D Gaussian fit.
@@ -286,7 +286,7 @@ class Fitting2D(FittingTool):
 
     def plotFit(self, outputPath: str):
         """Generates and saves a visualization of the 3D Gaussian fit compared to the original PSF data.
-        Arguments:
+        Args:
             outputPath (str): The path where the visualization will be saved.
         """
         center = self.getLocalCentroid()
@@ -316,7 +316,7 @@ class Fitting2D(FittingTool):
 
     def getCoords(self, psf: np.ndarray):
         """Generates an array of coordinates corresponding to the length of the PSF profile along two axes.
-        Arguments:
+        Args:
             psf (np.ndarray): 2D image to process
         Returns:
             np.ndarray: Coordinates for the 2D fit
@@ -326,7 +326,7 @@ class Fitting2D(FittingTool):
 
     def processSingleFit(self, index: int):
         """Processes a single fit for the PSF data at the specified index, performing a 2D Gaussian fit and calculating relevant metrics.
-        Arguments:
+        Args:
             index (int): The index of the PSF data to be processed.
         """
         imageFloat = self._image.astype(np.float64)

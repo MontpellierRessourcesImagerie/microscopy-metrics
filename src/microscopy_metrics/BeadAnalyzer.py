@@ -1,9 +1,6 @@
 import os
-from reportlab.pdfgen import canvas
 from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.pagesizes import A4
-from reportlab.platypus import Paragraph, Table, TableStyle
+from reportlab.platypus import Table, TableStyle
 
 from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.metricTool.metricTool import MetricTool
@@ -12,6 +9,15 @@ from microscopy_metrics.metricTool.metricTool import MetricTool
 class BeadAnalyzer(object):
     """Class to manage the analysis of individual beads, including storing the bead's image, region of interest (ROI), centroid, and results of fitting and metric calculations.
     It provides methods for running fitting and calculating metrics for the bead, which are used in the overall analysis of microscopy images.
+    Attributes:
+        _id (int): The unique identifier for the bead.
+        _image (np.ndarray): The image data for the bead.
+        _roi (list): The region of interest (ROI) for the bead in the image.
+        _centroid (list): The centroid coordinates of the bead in the image.
+        _rejected (bool): A flag indicating whether the bead has been rejected from analysis.
+        _rejectionDesc (str): A description of why the bead was rejected, if applicable.
+        _metricTool (MetricTool): An instance of the MetricTool class used for calculating metrics for the bead.
+        _fitTool (FittingTool): An instance of the FittingTool class used for fitting curves to the bead's image data.
     """
 
     def __init__(self, id=0, image=None, roi=None, centroid=None):
@@ -75,11 +81,12 @@ class BeadAnalyzer(object):
     def drawParameterTableOnPDF(self, pdf, title, data, y):
         """Helper to draw a styled parameter table with a title
         Args:
-           title (str): The section title
-           data (List[List[str]]): The data rows
-           y (int): The y-coordinate to start drawing (top to bottom)
+            pdf (reportlab.pdfgen.canvas.Canvas): The PDF canvas to draw on
+            title (str): The section title
+            data (List[List[str]]): The data rows
+            y (int): The y-coordinate to start drawing (top to bottom)
         Returns:
-           int: The new y-coordinate after drawing the table
+            int: The new y-coordinate after drawing the table
         """
         pdf.setFont("Helvetica-Bold", 16)
         pdf.drawCentredString(300, y, title)
@@ -130,7 +137,13 @@ class BeadAnalyzer(object):
         return y - h - 35
     
     def generatePDFReport(self, pdf, inputDir, theoreticalResolution, samplingDistance):
-        """Generates a clean PDF report for the bead analysis results."""
+        """Generates a clean PDF report for the bead analysis results.
+        Args:
+            pdf (reportlab.pdfgen.canvas.Canvas): The PDF canvas to draw on
+            inputDir (str): The directory containing the input image files
+            theoreticalResolution (float): The theoretical resolution of the microscope
+            samplingDistance (float): The sampling distance of the microscope
+        """
         beadPath = os.path.join(inputDir, f"bead_{self._id}")
         current_y = 800
         pdf.setFont("Helvetica-Bold", 24)

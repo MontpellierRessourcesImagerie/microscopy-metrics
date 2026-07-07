@@ -7,7 +7,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 class Metrics(object):
-    """Class for calculating various metrics related to microscopy images."""
+    """Class for calculating various metrics related to microscopy images.
+    Attributes:
+        _imageAnalyzer (ImageAnalyzer): An instance of the ImageAnalyzer class used for analyzing the microscopy images.
+        _ringInnerDistance (float): The inner distance of the ring used for signal-to-background ratio (SBR) calculation.
+        _ringThickness (float): The thickness of the ring used for signal-to-background ratio (SBR) calculation.
+        _TheoreticalResolutionTool (TheoreticalResolutionTool): An instance of the TheoreticalResolutionTool class used for estimating theoretical resolution."""
 
     def __init__(self):
         self._imageAnalyzer = None
@@ -103,7 +108,10 @@ class Metrics(object):
                 _ = future.result()
 
     def runSingleMetrics(self, bead):
-        """Runs the complete metrics calculation process for a single index, including pre-fitting metrics and fitting metrics calculations."""
+        """Runs the complete metrics calculation process for a single index, including pre-fitting metrics and fitting metrics calculations.
+        Args:
+            bead (BeadAnalyzer): An instance of the BeadAnalyzer class representing the bead for which to calculate metrics.
+        """
         if bead._rejected == False and bead._roi is not None:
             FWHM = bead._fitTool.fwhms
             bead._metricTool.lateralAsymmetryRatio(FWHM)
@@ -159,7 +167,10 @@ class Metrics(object):
         self._imageAnalyzer._density = density
 
     def GenerateHeatmap(self, outputDir=None):
-        """Generates a heatmap visualization of the signal-to-background ratio (SBR) for the microscopy images, providing insights into the spatial distribution of SBR across the images."""
+        """Generates a heatmap visualization of metrics for the microscope image.
+        Args:
+            outputDir (str): The directory where the heatmap image will be saved. If None, the heatmap will not be saved to disk.
+        """
         self.calculateDensity()
         if self._imageAnalyzer._density < 0.5:
             print(f"Density of beads is too low for heatmap generation. Generating placeholder image...")
@@ -206,7 +217,13 @@ class Metrics(object):
         
 
     def HeatmapPlaceholder(self, outputDir=None, MetricName="SBR"):
-        """Returns a white placeholder image with centered text."""
+        """Returns a white placeholder image with centered text.
+        Args:
+            outputDir (str): The directory where the placeholder image will be saved. If None, the placeholder image will not be saved to disk.
+            MetricName (str): The name of the metric for which the placeholder is being generated. Default is "SBR".
+        Returns:
+            matplotlib.figure.Figure: The generated placeholder figure.
+        """
         image = self._imageAnalyzer._image
         if image.ndim == 3:
             image = np.max(image, axis=0)
@@ -237,6 +254,16 @@ class Metrics(object):
         return fig
     
     def HeatmapGenerator(self,outputDir,Values,xCoords,yCoords,MetricName="SBR"):
+        """ Generates a heatmap visualization of the provided metric values over the microscopy image.
+        Args:
+            outputDir (str): The directory where the heatmap image will be saved. If None, the heatmap will not be saved to disk.
+            Values (List[float]): The metric values to visualize.
+            xCoords (List[float]): The x-coordinates of the metric values.
+            yCoords (List[float]): The y-coordinates of the metric values.
+            MetricName (str, optional): The name of the metric for which the heatmap is being generated. Defaults to "SBR".
+        Returns:
+            matplotlib.figure.Figure: The generated heatmap figure.
+        """
         if len(Values) == 0:
             return self.HeatmapPlaceholder(outputDir, MetricName)
         if self._imageAnalyzer._density < 0.5:

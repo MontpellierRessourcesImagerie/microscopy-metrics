@@ -14,6 +14,16 @@ from microscopy_metrics.BeadAnalyzer import BeadAnalyzer
 class Detection(object):
     """Class for detecting and extracting regions of interest (ROIs) from microscopy images based on detected centroids.
     It initializes the imageAnalyzer object to manage the analysis of the image and the detected beads, and provides methods for setting parameters related to bead detection and ROI extraction.
+    Attributes:
+        _image (np.ndarray): The microscopy image to be analyzed.
+        _cropFactor (int): The factor used to determine the size of the ROI around each detected bead.
+        _beadSize (float): The size of the beads in micrometers, used for ROI extraction.
+        _rejectionDistance (float): The minimum distance from the top and bottom of the image to reject centroids.
+        _pixelSize (list): The pixel size of the image in micrometers
+        _thresholdIntensity (float): The threshold intensity for rejecting beads based on their intensity relative to the mean intensity of detected centroids.
+        _imageAnalyzer (ImageAnalyzer): An instance of the ImageAnalyzer class used for analyzing the microscopy images and managing the detected beads.
+        _thresholdTool (object): An instance of the thresholding tool used for detecting centroids in the image.
+        _detectionTool (object): An instance of the detection tool used for detecting centroids in the image.
     """
 
     def __init__(self, image=None):
@@ -225,8 +235,6 @@ class Detection(object):
         """Checks if the given centroid is located within the rejection zone near the top or bottom of the image.
         Args:
             centroid (List): Coordinates of the bead's centroid
-            imageShape (List): Dimensions of the picture
-            rejectionZone (float): Minimal distance between top/bottom and the centroid
         Returns:
             Boolean: True if the centroid is not located within the rejection zone, False otherwise.
         """

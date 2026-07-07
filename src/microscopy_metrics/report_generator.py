@@ -2,7 +2,16 @@ from abc import abstractmethod
 
 
 class ReportGenerator(object):
-    """Abstract base class for generating reports based on microscopy image analysis results."""
+    """Abstract base class for generating reports based on microscopy image analysis results.
+    Attributes:
+        _inputDir (str): The input directory containing the microscopy images and analysis results.
+        _imageAnalyzer (ImageAnalyzer): An instance of the ImageAnalyzer class used for analyzing the microscopy images.
+        _detectionDatas (dict): A dictionary to store detection-related data for the report.
+        _fittingDatas (dict): A dictionary to store fitting-related data for the report.
+        _microscopeDatas (dict): A dictionary to store microscope-related data for the report.
+        _roiDatas (dict): A dictionary to store region of interest (ROI) related data for the report.
+        _thresholdDatas (dict): A dictionary to store threshold-related data for the report.
+    """
 
     _generatorClasses = {}
 

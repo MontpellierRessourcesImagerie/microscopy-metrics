@@ -61,7 +61,7 @@ class PSFGenerator(object):
 
     def addNoise(self, mean=0, std=2.0):
         """Adds Gaussian noise to the generated PSF image based on the specified mean and standard deviation.   
-        Arguments:
+        Args:
             mean (float): Mean of the Gaussian noise to be added (default: 0).
             std (float): Standard deviation of the Gaussian noise to be added (default: 2.0).
         """
@@ -187,7 +187,7 @@ class PSFRandomParameter(object):
         randomWvl (float): Wavelength of light used for imaging (default: 0.5).
         randomNA (float): Numerical aperture of the objective lens (default: 1.4).
     
-    Arguments:
+    Args:
         size (int): Size of the PSF image (default: 100).
         aberrationType (str): Type of aberration to apply to the PSF. Options include "comatic", "astigmatism", "spherical", or None for no aberration (default: None).
     """

@@ -1,12 +1,32 @@
 import os
-from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.pagesizes import A4
 from reportlab.platypus import Paragraph, Table, TableStyle
 
 class ImageAnalyzer(object):
-    """Class for managing the image data, bead analysis results, and various parameters such as bead size and pixel size."""
+    """Class for managing the image data, bead analysis results, and various parameters such as bead size and pixel size.
+    Attributes:
+        _path (str): The path to the image file.
+        _beadAnalyzer (List[BeadAnalyzer]): A list of bead analyzers for each bead in the image.
+        _beadSize (float): The size of the beads in the image.
+        _pixelSize (List[float]): The size of each pixel in the image.
+        _image (numpy.ndarray): The image data.
+        _theoreticalResolution (List[float]): The estimated theoretical resolution in each dimension.
+        _samplingDistance (List[float]): The sampling distance in each dimension.
+        _density (float): The density of the beads in the image.
+        _meanSBR (float): The mean signal-to-background ratio (SBR) across all beads.
+        _meanContrast (float): The mean contrast across all beads.
+        _meanEllipsRatio (float): The mean ellipticity ratio across all beads.
+        _meanOrientation (float): The mean orientation across all beads.
+        _meanLAR (float): The mean length-to-width ratio across all beads.
+        _meanSphericity (float): The mean sphericity across all beads.
+        _meanComaticity (float): The mean comaticity across all beads.
+        _meanSkeleton2Extremities (float): The mean skeleton-to-extremities ratio across all beads.
+        _meanRMin (float): The mean minimum radius across all beads.
+        _meanDetermination (List[float]): The mean determination values across all beads.
+        _meanFWHM (List[float]): The mean full width at half maximum values across all beads.
+        _meanUncertainty (List[float]): The mean uncertainty values across all beads.
+    """
 
     def __init__(
         self, image=None, path="~/", BeadAnalyzer=None, beadSize=1.0, pixelSize=[1, 1, 1]
