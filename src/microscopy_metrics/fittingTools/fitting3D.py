@@ -171,9 +171,10 @@ class Fitting3D(FittingTool):
         ]
         for name, _, fit_slice in slices:
             fig, ax = plt.subplots(figsize=(6, 6))
-            ax.imshow(fit_slice, cmap="viridis", origin="lower")
+            ax.imshow(fit_slice, cmap="viridis", origin="upper")
             ax.set_title("Fitted 2D Gaussian - " + name)
             ax.axis("off")
+            ax.xaxis.set_inverted(True)
             ax.axhline(y=fit_slice.shape[0] / 2, color="k", alpha=0.5, linestyle="--")
             ax.axvline(x=fit_slice.shape[1] / 2, color="k", alpha=0.5, linestyle="--")
             plt.tight_layout()

@@ -170,7 +170,7 @@ class PSFWithSphericalAberration(PSFGenerator):
         self.dxy : float = dxy
         self.dz : float = dz
         self.ni0 : float = ni0
-        self.ni : float = ni0 - np.random.uniform(0.015, 0.02)
+        self.ni : float = ni0 - np.random.uniform(0.005, 0.015)
         self.wvl : float = wvl
         self.NA : float = NA
         self.psf : np.ndarray = self.generate_psf()

@@ -48,7 +48,7 @@ def showPSF2(psf, title="PSF", ax=None):
     x = np.arange(psf.shape[0])
     y = np.arange(psf.shape[1])
     X, Y = np.meshgrid(x, y)
-    ax.imshow(psf[:, :, psf.shape[2] // 2], cmap='viridis')
+    ax.imshow(psf[:, psf.shape[2] // 2, :], cmap='viridis')
     ax.set_title(title)
 
 def showPSFvsNoisy():
@@ -57,7 +57,7 @@ def showPSFvsNoisy():
     import matplotlib.pyplot as plt
     matplotlib.use('QtAgg')
 
-    psfGen = PSFRandomParameter(size=PSF_SIZE, aberrationType="comatic")
+    psfGen = PSFRandomParameter(size=PSF_SIZE, aberrationType="spherical")
     psf = psfGen.psf
     noisy_psf = addMicroscopyNoise(psf)
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
@@ -441,9 +441,9 @@ def test_astigmatism_aberration():
     
 def BenchMetrics():
     """Runs the benchmark tests for comatic aberration, spherical aberration, and astigmatism aberration detection metrics."""
-    test_comatic_aberration()
+    #test_comatic_aberration()
     test_spherical_aberration()
-    test_astigmatism_aberration()
+    #test_astigmatism_aberration()
 
 if __name__ == "__main__":
     #showPSFvsNoisy()

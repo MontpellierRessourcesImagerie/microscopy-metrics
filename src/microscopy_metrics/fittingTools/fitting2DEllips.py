@@ -111,7 +111,7 @@ class Fitting2DEllips(FittingTool):
                 p0=params,
                 maxfev=20000,
                 bounds=(
-                    [0, -np.inf, 0, 0, 1e-6, 1e-6, -np.pi - 1e-6],
+                    [0, -np.inf, 0, 0, -1e-6, -1e-6, -1e-6],
                     [np.inf, np.inf, psf.shape[0], psf.shape[1], np.inf, np.inf, np.pi],
                 ),
             )
@@ -220,12 +220,13 @@ class Fitting2DEllips(FittingTool):
             dy = L * np.sin(theta)
             dx = L * np.cos(theta)
         fig, ax = plt.subplots(figsize=(5, 5))
-        ax.imshow(fit, cmap="viridis", origin="lower")
+        ax.imshow(fit, cmap="viridis", origin="upper")
         ax.plot([x0 - dx, x0 + dx], [y0 - dy, y0 + dy], color="red", linewidth=2)
         ax.scatter([x0], [y0], color="red", alpha=0.7)
         ax.axhline(y=fitPSFShape[0] / 2, color="k", alpha=0.5, linestyle="--")
         ax.axvline(x=fitPSFShape[1] / 2, color="k", alpha=0.5, linestyle="--")
         ax.axis("off")
+        ax.xaxis.set_inverted(True)
         ax.set_title(title)
         plt.tight_layout()
         fig.savefig(outputPath, dpi=300, bbox_inches="tight")

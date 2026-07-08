@@ -217,7 +217,7 @@ class Fitting3DRotation(FittingTool):
         fig = plt.figure(figsize=(10, 5))
         ax2 = fig.add_subplot(1, 2, 2)
         centerFit = int(fitShapeZ * (center[0] / psf.shape[0]))
-        ax2.imshow(fit[centerFit], cmap="viridis", origin="lower")
+        ax2.imshow(fit[centerFit], cmap="viridis", origin="upper")
         ax2.set_title(f"Fit YX - angle {self.thetas[0]:.2f} rad")
         ax2.axis("off")
         proj_yx = np.array([majorAxis[0], majorAxis[1]])
@@ -227,13 +227,14 @@ class Fitting3DRotation(FittingTool):
             dx_yx, dy_yx = L * dir_yx
             ax2.plot(
                 [x0 - dx_yx, x0 + dx_yx],
-                [y0 + dy_yx, y0 - dy_yx],
+                [y0 - dy_yx, y0 + dy_yx],
                 color="red",
                 linewidth=2,
             )
             ax2.scatter([x0], [y0], color="red", alpha=0.7)
         ax2.axhline(y=fitShapeY / 2, color="k", alpha=0.5, linestyle="--")
         ax2.axvline(x=fitShapeX / 2, color="k", alpha=0.5, linestyle="--")
+        ax2.xaxis.set_inverted(True)
         plt.tight_layout()
         fig.savefig(
             os.path.join(outputPath, "2D_Gaussian_Image_YX.png"),
@@ -244,7 +245,7 @@ class Fitting3DRotation(FittingTool):
         fig2 = plt.figure(figsize=(10, 5))
         ax2 = fig2.add_subplot(1, 2, 2)
         centerFit = int(fitShapeY * (center[1] / psf.shape[1]))
-        ax2.imshow(fit[:, centerFit, :], cmap="viridis", origin="lower")
+        ax2.imshow(fit[:, centerFit, :], cmap="viridis", origin="upper")
         ax2.set_title(f"Fit XZ - Pitch: {self.thetas[1]:.2f} rad")
         proj_xz = np.array([majorAxis[0], majorAxis[2]])
         norm_xz = np.linalg.norm(proj_xz)
@@ -253,13 +254,14 @@ class Fitting3DRotation(FittingTool):
             dx_xz, dz_xz = L * dir_xz
             ax2.plot(
                 [x0 - dx_xz, x0 + dx_xz],
-                [z0 + dz_xz, z0 - dz_xz],
+                [z0 - dz_xz, z0 + dz_xz],
                 color="red",
                 linewidth=2,
             )
         ax2.scatter([x0], [z0], color="red", alpha=0.7)
         ax2.axhline(y=fitShapeZ / 2, color="k", alpha=0.5, linestyle="--")
         ax2.axvline(x=fitShapeX / 2, color="k", alpha=0.5, linestyle="--")
+        ax2.xaxis.set_inverted(True)
         ax2.axis("off")
         plt.tight_layout()
         fig2.savefig(
@@ -271,7 +273,7 @@ class Fitting3DRotation(FittingTool):
         fig3 = plt.figure(figsize=(10, 5))
         ax2 = fig3.add_subplot(1, 2, 2)
         centerFit = int(fitShapeX * (center[2] / psf.shape[2]))
-        ax2.imshow(fit[:, :, centerFit], cmap="viridis", origin="lower")
+        ax2.imshow(fit[:, :, centerFit], cmap="viridis", origin="upper")
         ax2.set_title(f"Fit ZY - Roll: {self.thetas[2]:.2f} rad")
         proj_zy = np.array([majorAxis[1], majorAxis[2]])
         norm_zy = np.linalg.norm(proj_zy)
@@ -288,6 +290,7 @@ class Fitting3DRotation(FittingTool):
         ax2.axhline(y=fitShapeZ / 2, color="k", alpha=0.5, linestyle="--")
         ax2.axvline(x=fitShapeY / 2, color="k", alpha=0.5, linestyle="--")
         ax2.axis("off")
+        ax2.xaxis.set_inverted(True)
         plt.tight_layout()
         fig3.savefig(
             os.path.join(outputPath, "2D_Gaussian_Image_ZY.png"),
