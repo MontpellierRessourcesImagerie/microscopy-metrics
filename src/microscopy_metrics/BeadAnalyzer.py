@@ -9,6 +9,7 @@ from microscopy_metrics.metricTool.metricTool import MetricTool
 class BeadAnalyzer(object):
     """Class to manage the analysis of individual beads, including storing the bead's image, region of interest (ROI), centroid, and results of fitting and metric calculations.
     It provides methods for running fitting and calculating metrics for the bead, which are used in the overall analysis of microscopy images.
+    
     Attributes:
         _id (int): The unique identifier for the bead.
         _image (np.ndarray): The image data for the bead.
@@ -32,6 +33,7 @@ class BeadAnalyzer(object):
 
     def toDict(self):
         """Converts the bead analysis results into a dictionary format for easier access and manipulation of the bead's data, including its ID, image, ROI, centroid, rejection status, and any rejection descriptions.
+        
         Returns:
             dict: A dictionary containing the bead's analysis results.
         """
@@ -48,6 +50,7 @@ class BeadAnalyzer(object):
         self, fittingType="1D", spacing=[1, 1, 1], outputDir=None, prominenceRel=None
     ):
         """Runs the fitting process for the bead using the specified fitting type, spacing, output directory, and prominence relative value.
+        
         Args:
             fittingType (str, optional): The type of fitting to perform. Defaults to "1D".
             spacing (list, optional): The spacing of the image pixels. Defaults to [1,1,1].
@@ -66,6 +69,7 @@ class BeadAnalyzer(object):
 
     def runSBRMetric(self, spacing=[1, 1, 1], ringInnerDistance=1.0, ringThickness=2.0):
         """Runs the signal-to-background ratio (SBR) metric calculation for the bead using the specified spacing, ring inner distance, and ring thickness.
+        
         Args:
             spacing (list, optional): The spacing of the image pixels. Defaults to [1,1,1].
             ringInnerDistance (float, optional): The inner distance of the ring for SBR calculation. Defaults to 1.0.
@@ -80,11 +84,13 @@ class BeadAnalyzer(object):
 
     def drawParameterTableOnPDF(self, pdf, title, data, y):
         """Helper to draw a styled parameter table with a title
+        
         Args:
             pdf (reportlab.pdfgen.canvas.Canvas): The PDF canvas to draw on
             title (str): The section title
             data (List[List[str]]): The data rows
             y (int): The y-coordinate to start drawing (top to bottom)
+        
         Returns:
             int: The new y-coordinate after drawing the table
         """
@@ -138,6 +144,7 @@ class BeadAnalyzer(object):
     
     def generatePDFReport(self, pdf, inputDir, theoreticalResolution, samplingDistance):
         """Generates a clean PDF report for the bead analysis results.
+        
         Args:
             pdf (reportlab.pdfgen.canvas.Canvas): The PDF canvas to draw on
             inputDir (str): The directory containing the input image files

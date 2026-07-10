@@ -7,6 +7,7 @@ from scipy.ndimage import map_coordinates
 class PSFGenerator(object):
     """Class for generating a Point Spread Function (PSF) for microscopy images based on specified parameters such as size, pixel size, refractive index, wavelength, and numerical aperture.
     The class provides methods for generating the PSF, computing its full width at half maximum (FWHM), adding noise to the PSF, and visualizing the PSF.
+    
     Attributes:
         size (int): Size of the PSF image (default: 100).
         dxy (float): Pixel size in the XY plane (default: 0.05).
@@ -33,6 +34,7 @@ class PSFGenerator(object):
 
     def generate_psf(self):
         """Generates the Point Spread Function (PSF) based on the specified parameters using the psfmodels library.
+        
         Returns:
             np.ndarray: The generated PSF image.
         """
@@ -52,6 +54,7 @@ class PSFGenerator(object):
 
     def computeFWHM(self):
         """Computes the full width at half maximum (FWHM) for the generated PSF along the Z, Y, and X axes based on the specified parameters.
+        
         Returns:
             list: A list containing the FWHM values for Z, Y, and X axes.
         """ 
@@ -61,6 +64,7 @@ class PSFGenerator(object):
 
     def addNoise(self, mean=0, std=2.0):
         """Adds Gaussian noise to the generated PSF image based on the specified mean and standard deviation.   
+        
         Args:
             mean (float): Mean of the Gaussian noise to be added (default: 0).
             std (float): Standard deviation of the Gaussian noise to be added (default: 2.0).
@@ -79,6 +83,7 @@ class PSFGenerator(object):
 
 class PSFWithComaticAberration(PSFGenerator):
     """Class for generating a Point Spread Function (PSF) with comatic aberration based on specified parameters such as size, pixel size, refractive index, wavelength, numerical aperture, and intensity of the aberration.
+    
     Attributes:
         size (int): Size of the PSF image (default: 100).
         dxy (float): Pixel size in the XY plane (default: 0.05).
@@ -99,6 +104,7 @@ class PSFWithComaticAberration(PSFGenerator):
 
     def generate_comatic_aberration(self):
         """Generates the Point Spread Function (PSF) with comatic aberration based on the specified parameters using the psfmodels library and applies a comatic distortion to the PSF.
+        
         Returns:
             np.ndarray: The generated PSF image with comatic aberration.
         """
@@ -114,6 +120,7 @@ class PSFWithComaticAberration(PSFGenerator):
 
 class PSFWithAstigmatismAberration(PSFGenerator):
     """Class for generating a Point Spread Function (PSF) with astigmatism aberration based on specified parameters such as size, pixel size, refractive index, wavelength, numerical aperture, and intensity of the aberration.
+    
     Attributes:
         size (int): Size of the PSF image (default: 100).
         dxy (float): Pixel size in the XY plane (default: 0.05).
@@ -134,6 +141,7 @@ class PSFWithAstigmatismAberration(PSFGenerator):
 
     def generate_astigmatism_aberration(self):
         """Generates the Point Spread Function (PSF) with astigmatism aberration based on the specified parameters using the psfmodels library and applies an astigmatic distortion to the PSF.
+        
         Returns:
             np.ndarray: The generated PSF image with astigmatism aberration.
         """
@@ -155,6 +163,7 @@ class PSFWithAstigmatismAberration(PSFGenerator):
 
 class PSFWithSphericalAberration(PSFGenerator):
     """Class for generating a Point Spread Function (PSF) with spherical aberration based on specified parameters such as size, pixel size, refractive index, wavelength, and numerical aperture.
+    
     Attributes:
         size (int): Size of the PSF image (default: 100).
         dxy (float): Pixel size in the XY plane (default: 0.05).
@@ -180,6 +189,7 @@ class PSFWithSphericalAberration(PSFGenerator):
 class PSFRandomParameter(object):
     """Class for generating a Point Spread Function (PSF) with random parameters and optional aberration types.
     This class allows for the creation of a PSF with random values for pixel size, refractive index, wavelength, and numerical aperture, as well as the option to apply specific aberration types such as comatic, astigmatism, or spherical aberrations.
+    
     Attributes:
         randomDxy (float): Pixel size in the XY plane (default: 0.05).
         randomDz (float): Pixel size in the Z direction (default: 0.05).

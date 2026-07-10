@@ -29,8 +29,10 @@ class TheoreticalResolution(object):
     @classmethod
     def getInstance(cls, methodName):
         """Factory method to create an instance of a microscope class based on the provided method name.
+        
         Args:
             methodName (str): The name of the microscope class to instantiate.
+        
         Returns:
             TheoreticalResolution: An instance of the specified microscope class.
         """
@@ -88,6 +90,7 @@ class TheoreticalResolution(object):
 
     def angularAperture(self):
         """Calculates the angular aperture of the microscope based on its numerical aperture and refractive index.
+        
         Returns:
             float: The calculated angular aperture in radians.
         """
@@ -110,6 +113,7 @@ class WidefieldResolution(TheoreticalResolution):
 
     def getTheoreticalResolution(self):
         """Calculates the theoretical resolution of a widefield microscope in the XY and Z dimensions based on the emission wavelength, numerical aperture, and refractive index.
+        
         Returns:
             list: A list containing the theoretical resolution in the Z dimension followed by the resolution in the XY dimensions (resZ, resXY, resXY).
         """
@@ -121,6 +125,7 @@ class WidefieldResolution(TheoreticalResolution):
 
     def getSamplingDistance(self):
         """Calculates the recommended sampling distance for a widefield microscope based on the theoretical resolution in the XY and Z dimensions.
+        
         Returns:
             list: A list containing the recommended sampling distance in the Z dimension followed by the distance in the XY dimensions (distZ, distXY, distXY).
         """
@@ -144,6 +149,7 @@ class ConfocalResolution(TheoreticalResolution):
 
     def getTheoreticalResolution(self):
         """Calculates the theoretical resolution of a confocal microscope in the XY and Z dimensions based on the emission wavelength, numerical aperture, and refractive index.
+        
         Returns:
             list: A list containing the theoretical resolution in the Z dimension followed by the resolution in the XY dimensions (resZ, resXY, resXY).
         """
@@ -156,6 +162,7 @@ class ConfocalResolution(TheoreticalResolution):
 
     def getSamplingDistance(self):
         """Calculates the recommended sampling distance for a confocal microscope based on the theoretical resolution in the XY and Z dimensions.
+        
         Returns:
             list: A list containing the recommended sampling distance in the Z dimension followed by the distance in the XY dimensions (distZ, distXY, distXY).
         """
@@ -179,6 +186,7 @@ class MultiphotonResolution(TheoreticalResolution):
 
     def getTheoreticalResolution(self):
         """Calculates the theoretical resolution of a multiphoton microscope in the XY and Z dimensions based on the emission wavelength, numerical aperture, and refractive index.
+        
         Returns:
             list: A list containing the theoretical resolution in the Z dimension followed by the resolution in the XY dimensions (resZ, resXY, resXY).
         """
@@ -196,6 +204,7 @@ class MultiphotonResolution(TheoreticalResolution):
 
     def getSamplingDistance(self, k=2):
         """Calculates the recommended sampling distance for a multiphoton microscope based on the theoretical resolution in the XY and Z dimensions.
+        
         Returns:
             list: A list containing the recommended sampling distance in the Z dimension followed by the distance in the XY dimensions (distZ, distXY, distXY).
         """
@@ -219,6 +228,7 @@ class SpinningDiskResolution(TheoreticalResolution):
 
     def getTheoreticalResolution(self):
         """Calculates the theoretical resolution of a spinning disk confocal microscope in the XY and Z dimensions based on the emission wavelength, numerical aperture, and refractive index.
+        
         Returns:
             list: A list containing the theoretical resolution in the Z dimension followed by the resolution in the XY dimensions (resZ, resXY, resXY).
         """
@@ -231,6 +241,7 @@ class SpinningDiskResolution(TheoreticalResolution):
 
     def getSamplingDistance(self):
         """Calculates the recommended sampling distance for a spinning disk confocal microscope based on the theoretical resolution in the XY and Z dimensions.
+        
         Returns:
             list: A list containing the recommended sampling distance in the Z dimension followed by the distance in the XY dimensions (distZ, distXY, distXY).
         """

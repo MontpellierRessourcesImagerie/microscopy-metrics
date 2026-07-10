@@ -27,11 +27,14 @@ class Fitting1D(FittingTool):
 
     def getCovMatrix(self, image: np.ndarray, centroid: list):
         """Calculates the covariance matrix for a 1D image based on the provided centroid.
+        
         Args:
             image (np.ndarray): The 1D image data for which to calculate the covariance matrix.
             centroid (List(float)): The centroid of the image, used as a reference point for the covariance calculation.
+        
         Raises:
             NotImplementedError: If the input image is not 1D
+        
         Returns:
             float: The calculated covariance value for the 1D image.
         """
@@ -42,11 +45,13 @@ class Fitting1D(FittingTool):
 
     def gauss(self, amp: float, bg: float, mu: float, sigma: float):
         """Generates a 1D Gaussian function based on the provided parameters.
+        
         Args:
             amp (float): amplitude of the curve
             bg (float): background intensity
             mu (float): center of the curve
             sigma (float): standard deviation of the curve
+        
         Returns:
             float: Intensity value at x following the curve
         """
@@ -54,12 +59,14 @@ class Fitting1D(FittingTool):
 
     def evalFun(self, x: np.ndarray, amp: float, bg: float, mu: float, sigma: float):
         """Evaluates the 1D Gaussian function at the given x values.
+        
         Args:
             x (array): x values at which to evaluate the function
             amp (float): amplitude of the curve
             bg (float): background intensity
             mu (float): center of the curve
             sigma (float): standard deviation of the curve
+        
         Returns:
             float: Intensity value at x following the curve
         """
@@ -76,6 +83,7 @@ class Fitting1D(FittingTool):
     ):
         """
         Fits a 1D Gaussian curve to the given data.
+        
         Args:
             amp (float): Initial guess for the amplitude.
             bg (float): Initial guess for the background.
@@ -83,8 +91,10 @@ class Fitting1D(FittingTool):
             sigma (float): Initial guess for the standard deviation.
             coords (array): Coordinates of the data points.
             psf (array): Intensity values at the data points.
+        
         Raises:
             RuntimeError: If the optimization fails to converge.
+        
         Returns:
             tuple: Optimal parameters and covariance matrix.
         """
@@ -111,6 +121,7 @@ class Fitting1D(FittingTool):
         self, psf: np.ndarray, fineCoords: np.ndarray, outputPath: str, index: int
     ):
         """Plots the original data points, the fitted curve, and key parameters.
+        
         Args:
             psf (array): Intensity values at the data points.
             fineCoords (array): Coordinates for plotting the fitted curve.
@@ -168,6 +179,7 @@ class Fitting1D(FittingTool):
 
     def plotFit(self, outputPath: str):
         """Plots the fitted curves for all three axes.
+        
         Args:
             outputPath (str): Directory where the plots will be saved.
         """
@@ -184,8 +196,10 @@ class Fitting1D(FittingTool):
 
     def getCoords(self, psf: np.ndarray):
         """Generates an array of coordinates corresponding to the length of the PSF profile.
+        
         Args:
             psf (array): Intensity values of the PSF profile.
+        
         Returns:
             array: Coordinates corresponding to the PSF profile.
         """
@@ -193,6 +207,7 @@ class Fitting1D(FittingTool):
 
     def processSingleFit(self, index: int):
         """Processes a single fit for the given index.
+        
         Args:
             index (int): ID of the psf.
         """

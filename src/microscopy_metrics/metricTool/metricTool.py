@@ -31,6 +31,7 @@ warnings.filterwarnings(
 
 class MetricTool(object):
     """Class for calculating various metrics related to microscopy images, such as signal-to-background ratio (SBR), lateral asymmetry ratio (LAR), and sphericity ratio.
+    
     Attributes:
         _image (np.ndarray): The input microscopy image for metric calculations.
         _ringInnerDistance (float): The inner distance of the ring used for SBR calculation.
@@ -79,10 +80,13 @@ class MetricTool(object):
 
     def setNormalizedImage(self, image: np.ndarray) -> np.ndarray:
         """Normalizes the input image to a range of [0, 1] and ensures that all values are non-negative.
+        
         Args:
             image (np.ndarray): The input image to be normalized, which should be a 2D or 3D array representing the microscopy image data.
+        
         Raises:
             ValueError: If the input image is not 2D or 3D.
+        
         Returns:
             np.ndarray: The normalized image with values in the range [0, 1].
         """
@@ -98,6 +102,7 @@ class MetricTool(object):
     def processSingleSBRRing(self):
         """Calculates the signal-to-background ratio (SBR) for a single microscopy image using a ring-based method.
         The calculated SBR values are stored in the class attributes for further analysis and evaluation.
+        
         Raises:
             ValueError: If the input image is not 2D or 3D, if there are no background pixels detected, or if there are no signal pixels detected in the image.
         """
@@ -151,8 +156,10 @@ class MetricTool(object):
 
     def lateralAsymmetryRatio(self, FWHM: list):
         """Calculates the lateral asymmetry ratio (LAR) for a PSF based on the full width at half maximum (FWHM) values.
+        
         Args:
             FWHM (list): A list of FWHM values for the PSF.
+        
         Raises:
            ValueError: If the FWHM values are not available or if there are not enough FWHM values to calculate the LAR.
         """
@@ -165,6 +172,7 @@ class MetricTool(object):
 
     def getVolume(self):
         """Calculates the volume of the object in the microscopy image based on the voxel count and voxel volume.
+        
         Returns:
             float: The calculated volume of the object.
         """
@@ -179,6 +187,7 @@ class MetricTool(object):
 
     def updateTile(self, tile, tileIndex):
         """Updates the tile configuration based on the provided tile index, which represents the presence or absence of voxels in a 2x2x2 neighborhood.
+        
         Args:
             tile (list): A 3D list representing the tile.
             tileIndex (int): The index of the tile.
@@ -190,6 +199,7 @@ class MetricTool(object):
 
     def surfaceAreaLutD3(self):
         """Calculates the surface area lookup table for 3D tiles.
+        
         Returns:
             list: A list of surface area values for each tile configuration.
         """
@@ -215,8 +225,10 @@ class MetricTool(object):
 
     def configIndex(self, configValues):
         """Calculates the index of a tile configuration.
+        
         Args:
             configValues (list): A list of boolean values representing the presence or absence of voxels in a 2x2x2 neighborhood.
+        
         Returns:
             int: The index of the tile configuration.
         """
@@ -224,6 +236,7 @@ class MetricTool(object):
 
     def getHistogram3D(self):
         """Calculates the histogram of 3D tile configurations in the binary image.
+        
         Returns:
             list: A list of counts for each tile configuration.
         """
@@ -277,9 +290,11 @@ class MetricTool(object):
 
     def applyLut(self, histogram, lut):
         """Applies the surface area lookup table to the histogram of tile configurations to calculate the total surface area.
+        
         Args:
             histogram (list): A list of counts for each tile configuration.
             lut (list): A list of surface area values for each tile configuration.
+        
         Returns:
             float: The total surface area calculated by applying the lookup table to the histogram.
         """
@@ -290,6 +305,7 @@ class MetricTool(object):
 
     def getSurface(self):
         """Calculates the surface area of the object in the microscopy image.
+        
         Returns:
             float: The calculated surface area of the object.
         """
@@ -299,6 +315,7 @@ class MetricTool(object):
 
     def sphericity(self):
         """Calculates the sphericity of the object in the microscopy image based on its volume and surface area, using the formula: sphericity = (36 * π * volume^2) / (surface^3).
+        
         Returns:
             float: The calculated sphericity of the object.
         """
@@ -313,9 +330,11 @@ class MetricTool(object):
 
     def distance(self, x1, x2):
         """Calculates the distance between two points, x1 and x2.
+        
         Args:
             x1 (float): The first point.
             x2 (float): The second point.
+        
         Returns:
             float: The calculated distance between the two points.
         """
@@ -324,8 +343,10 @@ class MetricTool(object):
     def getContours(self, image):
         """Calculates the contours of the object in the microscopy image using the Chan-Vese active contour model.
         The method applies a Gaussian filter to smooth the input image, then uses the Chan-Vese algorithm to segment the image and find the contours of the detected object.
+        
         Args:
             image (numpy.ndarray): The input image.
+        
         Returns:
             numpy.ndarray: The detected contours.
         """
@@ -380,9 +401,11 @@ class MetricTool(object):
 
     def _computeAxisComaticity(self, image, pixelSize):
         """Calculates the axis comaticity for a given 1D image by analyzing the intensity profiles along the specified axis and comparing them to the detected contours of the object in the image.
+        
         Args:
             image (numpy.ndarray): The input image.
             pixelSize (float): The size of each pixel in the image.
+        
         Returns:
             float: The calculated axis comaticity.
         """
@@ -449,10 +472,12 @@ class MetricTool(object):
 
     def getFWHM(self, image, mu, sigma):
         """Calculates the full width at half maximum (FWHM) of the point spread function (PSF) in the given image by fitting a 2D Gaussian function to the intensity profile and extracting the FWHM values along the Y and X axes based on the fitted parameters.
+        
         Args:
             image (numpy.ndarray): The input image containing the PSF to be analyzed.
             mu (list): A list of mean values for the Gaussian fit along the Z, Y, and X axes.
             sigma (list): A list of standard deviation values for the Gaussian fit along the Z, Y, and X axes.
+        
         Returns:
             list: A list containing the FWHM values along the Y and X axes.
             str: A string containing commentary or notes related to the FWHM calculation and fitting process.
@@ -472,6 +497,7 @@ class MetricTool(object):
 
     def astigmatism(self, mu, sigma):
         """Calculates the astigmatism of the object in the microscopy image by comparing the FWHM values along the Y and X axes for two points on either side of the object.
+        
         Args:
             mu (list): A list of mean values for the Gaussian fit along the Z, Y, and X axes.
             sigma (list): A list of standard deviation values for the Gaussian fit along the Z, Y, and X axes.
@@ -501,6 +527,7 @@ class MetricTool(object):
 
     def ellipsRatio(self):
         """Calculates the ellipticity ratio of the object in the microscopy image by analyzing the major and minor axes of the detected contours.
+       
         Returns:
             float: The calculated ellipticity ratio of the object.
         """
@@ -550,6 +577,7 @@ class MetricTool(object):
     def curvaturePath(self):
         """Calculates the curvature of the path defined by the centroids of the object in the microscopy image.
         The method fits a polynomial to the centroids and computes the curvature at each point along the path, storing the maximum curvature value as the minimum radius of curvature (RMin) for the object.
+        
         Returns:
             float: The calculated minimum radius of curvature (RMin) for the object.
         """
@@ -592,6 +620,7 @@ class MetricTool(object):
 
     def generateBeadOrientation(self, outputPath):
         """Generates a visualization of the bead orientation based on the calculated orientation angle and saves it as an image file.
+        
         Args:
             outputPath (str): The path where the visualization image will be saved.
         """

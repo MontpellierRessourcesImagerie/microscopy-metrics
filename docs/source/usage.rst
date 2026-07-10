@@ -2,6 +2,7 @@ Getting started
 ===============
 
 .. _installation:
+
 Installation
 ------------
 
@@ -74,7 +75,7 @@ Running the project
 Microscopy metrics can be run using the napari plugin interface:
 
 .. code-block:: bash
-    
+
     pip install git+https://github.com/MontpellierRessourcesImagerie/napari-microscopy-metrics.git
     napari
 

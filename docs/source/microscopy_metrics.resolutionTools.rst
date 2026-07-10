@@ -1,21 +1,22 @@
-microscopy\_metrics.resolutionTools package
-===========================================
+microscopy_metrics.resolutionTools package
+=======================================
 
-Submodules
-----------
-
-microscopy\_metrics.resolutionTools.theoretical\_resolution module
-------------------------------------------------------------------
-
-.. automodule:: microscopy_metrics.resolutionTools.theoretical_resolution
+.. autoclass:: microscopy_metrics.resolutionTools.theoretical_resolution.TheoreticalResolution
    :members:
    :show-inheritance:
-   :undoc-members:
 
-Module contents
----------------
-
-.. automodule:: microscopy_metrics.resolutionTools
+.. autoclass:: microscopy_metrics.resolutionTools.theoretical_resolution.WidefieldResolution
    :members:
    :show-inheritance:
-   :undoc-members:
+
+.. autoclass:: microscopy_metrics.resolutionTools.theoretical_resolution.ConfocalResolution
+   :members:
+   :show-inheritance:
+
+.. autoclass:: microscopy_metrics.resolutionTools.theoretical_resolution.MultiphotonResolution
+   :members:
+   :show-inheritance:
+
+.. autoclass:: microscopy_metrics.resolutionTools.theoretical_resolution.SpinningDiskResolution
+   :members:
+   :show-inheritance:

@@ -5,6 +5,7 @@ from reportlab.platypus import Paragraph, Table, TableStyle
 
 class ImageAnalyzer(object):
     """Class for managing the image data, bead analysis results, and various parameters such as bead size and pixel size.
+    
     Attributes:
         _path (str): The path to the image file.
         _beadAnalyzer (List[BeadAnalyzer]): A list of bead analyzers for each bead in the image.
@@ -62,6 +63,7 @@ class ImageAnalyzer(object):
 
     def toDict(self):
         """Converts the image analysis results into a dictionary format for easier access and manipulation of the image's data.
+        
         Returns:
             dict: A dictionary containing the image's analysis results.
         """
@@ -88,10 +90,12 @@ class ImageAnalyzer(object):
     
     def drawParameterTableOnPDF(self,pdf, title, data, y):
         """Helper to draw a styled parameter table with a title
+        
         Args:
             title (str): The section title
             data (List[List[str]]): The key-value pairs for the table
             y (int): The y-coordinate to start drawing (top to bottom)
+        
         Returns:
             int: The new y-coordinate after drawing the table
         """
@@ -117,6 +121,7 @@ class ImageAnalyzer(object):
     
     def generatePDFReport(self, pdf):
         """Generates a PDF report for the image analysis results, including bead analysis and various metrics.
+        
         Args:
             pdf (PDFReport, optional): An instance of the PDFReport class to generate the report. Defaults to None.
         """
@@ -249,6 +254,7 @@ class ImageAnalyzer(object):
 
     def generateSimplifiedPDFReport(self, pdf):
         """Generates a simplified PDF report for the image analysis results, focusing on key metrics and bead analysis.
+        
         Args:
             pdf (PDFReport, optional): An instance of the PDFReport class to generate the report. Defaults to None.
         """

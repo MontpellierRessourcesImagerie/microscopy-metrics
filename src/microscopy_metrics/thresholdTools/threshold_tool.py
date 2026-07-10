@@ -27,8 +27,10 @@ class Threshold(object):
     @classmethod
     def getInstance(cls, methodName):
         """Factory method to create an instance of a thresholding class based on the provided method name.
+        
         Args:
             methodName (str): Name of the thresholding method (e.g., "otsu", "li", "minimum").
+        
         Returns:
             Threshold: An instance of the requested thresholding class.
         """
@@ -37,8 +39,10 @@ class Threshold(object):
 
     def getThreshold(self, image):
         """Abstract method to compute the threshold value based on the provided image.
+        
         Args:
             image (np.ndarray): The input image for which the threshold value is to be computed.
+        
         Returns:
             float: The computed threshold value.
         """
@@ -63,8 +67,10 @@ class ThresholdIsodata(Threshold):
 
     def getThreshold(self, image):
         """Computes the isodata threshold value based on the provided image.
+        
         Args:
             image (np.ndarray): The input image for which the threshold value is to be computed.
+        
         Returns:
             float: The computed isodata threshold value.
         """
@@ -85,8 +91,10 @@ class ThresholdLegacy(Threshold):
 
     def getThreshold(self, image):
         """Computes the legacy threshold value based on the provided image.
+        
         Args:
             image (np.ndarray): The input image for which the threshold value is to be computed.
+        
         Returns:
             float: The computed legacy threshold value.
         """
@@ -119,8 +127,10 @@ class ThresholdLi(Threshold):
 
     def getThreshold(self, image):
         """Computes the Li threshold value based on the provided image.
+        
         Args:
             image (np.ndarray): The input image for which the threshold value is to be computed.
+        
         Returns:
             float: The computed Li threshold value.
         """
@@ -141,8 +151,10 @@ class ThresholdManual(Threshold):
 
     def getThreshold(self, image):
         """Computes the manual threshold value based on the provided image and the user-defined relative threshold parameter.
+        
         Args:
             image (np.ndarray): The input image for which the threshold value is to be computed.
+        
         Returns:
             float: The computed manual threshold value, calculated as a fraction of the maximum pixel intensity in the image.
         """
@@ -162,8 +174,10 @@ class ThresholdMinimum(Threshold):
 
     def getThreshold(self, image):
         """Computes the minimum threshold value based on the provided image.
+        
         Args:
             image (np.ndarray): The input image for which the threshold value is to be computed.
+        
         Returns:
             float: The computed minimum threshold value.
         """
@@ -183,8 +197,10 @@ class ThresholdOtsu(Threshold):
 
     def getThreshold(self, image):
         """Computes the Otsu threshold value based on the provided image.
+        
         Args:
             image (np.ndarray): The input image for which the threshold value is to be computed.
+        
         Returns:
             float: The computed Otsu threshold value.
         """
@@ -204,8 +220,10 @@ class ThresholdTriangle(Threshold):
 
     def getThreshold(self, image):
         """Computes the triangle threshold value based on the provided image.
+        
         Args:
             image (np.ndarray): The input image for which the threshold value is to be computed.
+        
         Returns:
             float: The computed triangle threshold value.
         """

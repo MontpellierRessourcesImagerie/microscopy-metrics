@@ -1,21 +1,22 @@
-microscopy\_metrics.detectionTools package
-==========================================
+microscopy_metrics.detectionTools package
+=========================================
 
-Submodules
-----------
-
-microscopy\_metrics.detectionTools.detection\_tool module
----------------------------------------------------------
-
-.. automodule:: microscopy_metrics.detectionTools.detection_tool
+.. autoclass:: microscopy_metrics.detectionTools.detection_tool.DetectionTool
    :members:
    :show-inheritance:
-   :undoc-members:
 
-Module contents
----------------
-
-.. automodule:: microscopy_metrics.detectionTools
+.. autoclass:: microscopy_metrics.detectionTools.detection_tool.PeakLocalMaxDetector
    :members:
    :show-inheritance:
-   :undoc-members:
+
+.. autoclass:: microscopy_metrics.detectionTools.detection_tool.CentroidDetector
+   :members:
+   :show-inheritance:
+
+.. autoclass:: microscopy_metrics.detectionTools.detection_tool.BlobLogDetector
+   :members:
+   :show-inheritance:
+
+.. autoclass:: microscopy_metrics.detectionTools.detection_tool.BlobDogDetector
+   :members:
+   :show-inheritance:

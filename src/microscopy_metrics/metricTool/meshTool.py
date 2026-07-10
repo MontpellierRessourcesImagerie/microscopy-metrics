@@ -13,6 +13,7 @@ from scipy.ndimage import gaussian_filter
 class MeshBuilder(object):
     """Class for building a 3D mesh from a microscopy image using segmentation and surface extraction techniques.
     This class provides methods for constructing a mesh representation of the largest region in a 3D microscopy image, calculating concavity and curvature metrics, and saving the mesh to a file.
+    
     Attributes:
         _image (np.ndarray): The input 3D microscopy image for mesh construction.
         _pixelSize (list): The pixel size in micrometers for each dimension of the image.
@@ -51,9 +52,11 @@ class MeshBuilder(object):
         The method uses the marching cubes algorithm to generate a mesh representation of the largest region, and computes the vertices and faces of the mesh. 
         The vertices are resized based on the pixel size, and the mesh is smoothed and cleaned to remove duplicates. 
         The resulting mesh can be used for further analysis and visualization.
+        
         Raises:
             ValueError: If the input image is not set or no regions are found in the image.
             ValueError: If the largest region cannot be extracted.
+        
         Returns:
             o3d.geometry.TriangleMesh: The constructed 3D mesh.
         """
@@ -112,8 +115,10 @@ class MeshBuilder(object):
 
     def saveMesh(self, filename):
         """Saves the constructed 3D mesh to a file in the specified format.
+        
         Args:
             filename (str): The path to the file where the mesh will be saved. The file format is determined by the file extension (e.g., .ply, .obj, .stl).
+        
         Raises:
             ValueError: If the mesh has not been built before saving.
         """
@@ -130,6 +135,7 @@ class MeshBuilder(object):
         """Calculates the concavity metric of the constructed 3D mesh.
         The concavity is defined as the ratio of the difference between the volume of the convex hull and the volume of the mesh to the volume of the convex hull.
         A higher concavity value indicates a more concave shape, while a lower value indicates a more convex shape.
+        
         Raises:
             ValueError: If the mesh has not been built before calculating concavity.
 
@@ -151,8 +157,10 @@ class MeshBuilder(object):
 
     def curvature(self):
         """Calculates the curvature metric of the constructed 3D mesh.
+        
         Raises:
             ValueError: If the mesh has not been built before calculating curvature.
+        
         Returns:
             np.ndarray: The calculated curvature metric of the mesh.
         """

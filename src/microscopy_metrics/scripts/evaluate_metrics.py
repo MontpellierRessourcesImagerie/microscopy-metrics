@@ -14,6 +14,7 @@ PSFSHOW = False
 
 def showPSF(psf, title="PSF"):
     """Displays the provided PSF image using matplotlib.
+    
     Args:
         psf (np.ndarray): The PSF image to be displayed.
         title (str, optional): The title for the displayed image. Defaults to "PSF".
@@ -33,6 +34,7 @@ def showPSF(psf, title="PSF"):
 
 def showPSF2(psf, title="PSF", ax=None):
     """Displays the provided PSF image using matplotlib on the specified axis.
+    
     Args:
         psf (np.ndarray): The PSF image to be displayed.
         title (str, optional): The title for the displayed image. Defaults to "PSF".
@@ -70,10 +72,12 @@ def showPSFvsNoisy():
 
 def addMicroscopyNoise(image, maxPhotons=500, readoutNoiseStd=5.0):
     """Adds Poisson and Gaussian noise to the provided image to simulate microscopy noise.
+    
     Args:
         image (np.ndarray): The input image to which noise will be added.
         maxPhotons (int, optional): The maximum number of photons for scaling the image. Defaults to 500.
         readoutNoiseStd (float, optional): The standard deviation of the Gaussian readout noise. Defaults to 5.0.
+    
     Returns:
         np.ndarray: The noisy image with added Poisson and Gaussian noise, clipped to the range [0, maxPhotons].
     """
@@ -88,6 +92,7 @@ def addMicroscopyNoise(image, maxPhotons=500, readoutNoiseStd=5.0):
 def test_comatic_aberration_with_aberration_single():
     """Tests the detection of comatic aberration in a PSF generated with comatic aberration.
     This function generates a PSF with comatic aberration, applies various methods, and evaluates the results using the defined metrics.
+    
     Returns:
         tuple: A tuple containing the detection results for comaticity, mesh, skeleton, and curvature, along with the durations for each metric calculation.
     """
@@ -132,6 +137,7 @@ def test_comatic_aberration_with_aberration_single():
 def test_comatic_aberration_without_aberration_single():
     """Tests the detection of comatic aberration in a PSF generated without comatic aberration.
     This function generates a PSF without comatic aberration, applies various methods, and evaluates the results using the defined metrics.
+    
     Returns:
         tuple: A tuple containing the detection results for comaticity, mesh, skeleton, and curvature, along with the durations for each metric calculation.
     """
@@ -259,6 +265,7 @@ def test_comatic_aberration():
 def test_spherical_aberration_with_aberration_single():
     """Tests the detection of spherical aberration in a PSF generated with spherical aberration.    
     This function generates a PSF with spherical aberration, applies various fitting methods, and evaluates the results using the defined metrics.
+    
     Returns:
         tuple: A tuple containing the detection result for sphericality and the duration for the metric calculation.
     """
@@ -281,6 +288,7 @@ def test_spherical_aberration_with_aberration_single():
 def test_spherical_aberration_without_aberration_single():
     """Tests the detection of spherical aberration in a PSF generated without spherical aberration.
     This function generates a PSF without spherical aberration, applies various fitting methods, and evaluates the results using the defined metrics.
+   
     Returns:
         tuple: A tuple containing the detection result for sphericality and the duration for the metric calculation.
     """
@@ -344,6 +352,7 @@ def test_spherical_aberration():
 def test_astigmatism_aberration_with_aberration_single():
     """Tests the detection of astigmatism aberration in a PSF generated with astigmatism aberration.
     This function generates a PSF with astigmatism aberration, applies various methods, and evaluates the results using the defined metrics.
+    
     Returns:
         tuple: A tuple containing the detection result for astigmatism and the duration for the metric calculation.
     """
@@ -373,6 +382,7 @@ def test_astigmatism_aberration_with_aberration_single():
 def test_astigmatism_aberration_without_aberration_single():
     """Tests the detection of astigmatism aberration in a PSF generated without astigmatism aberration.
     This function generates a PSF without astigmatism aberration, applies various methods, and evaluates the results using the defined metrics.
+    
     Returns:
         tuple: A tuple containing the detection result for astigmatism and the duration for the metric calculation.
     """
@@ -441,9 +451,9 @@ def test_astigmatism_aberration():
     
 def BenchMetrics():
     """Runs the benchmark tests for comatic aberration, spherical aberration, and astigmatism aberration detection metrics."""
-    #test_comatic_aberration()
+    test_comatic_aberration()
     test_spherical_aberration()
-    #test_astigmatism_aberration()
+    test_astigmatism_aberration()
 
 if __name__ == "__main__":
     #showPSFvsNoisy()

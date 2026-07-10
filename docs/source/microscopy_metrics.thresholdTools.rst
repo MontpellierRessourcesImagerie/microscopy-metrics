@@ -1,21 +1,6 @@
-microscopy\_metrics.thresholdTools package
+microscopy_metrics.thresholdTools package
 ==========================================
 
-Submodules
-----------
-
-microscopy\_metrics.thresholdTools.threshold\_tool module
----------------------------------------------------------
-
-.. automodule:: microscopy_metrics.thresholdTools.threshold_tool
+.. autoclass:: microscopy_metrics.thresholdTools.threshold_tool.Threshold
    :members:
    :show-inheritance:
-   :undoc-members:
-
-Module contents
----------------
-
-.. automodule:: microscopy_metrics.thresholdTools
-   :members:
-   :show-inheritance:
-   :undoc-members:

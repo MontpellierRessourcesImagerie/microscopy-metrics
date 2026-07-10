@@ -14,6 +14,7 @@ from microscopy_metrics.BeadAnalyzer import BeadAnalyzer
 class Detection(object):
     """Class for detecting and extracting regions of interest (ROIs) from microscopy images based on detected centroids.
     It initializes the imageAnalyzer object to manage the analysis of the image and the detected beads, and provides methods for setting parameters related to bead detection and ROI extraction.
+    
     Attributes:
         _image (np.ndarray): The microscopy image to be analyzed.
         _cropFactor (int): The factor used to determine the size of the ROI around each detected bead.
@@ -100,6 +101,7 @@ class Detection(object):
 
     def getMeanIntensity(self):
         """Calculates the mean intensity of the detected centroids in the image.
+        
         Returns:
             float: The calculated mean intensity of the detected centroids.
         """
@@ -204,8 +206,10 @@ class Detection(object):
 
     def isRoiOverlapped(self, index):
         """Checks if the given ROI overlaps with any of the already extracted ROIs.
+        
         Args:
             index (int): The index of the bead for which to check overlap with existing ROIs.
+        
         Returns:
             Boolean: True if the given ROI overlaps with any of the existing ROIs, False otherwise.
         """
@@ -233,8 +237,10 @@ class Detection(object):
 
     def isRoiNotInRejection(self, centroid):
         """Checks if the given centroid is located within the rejection zone near the top or bottom of the image.
+        
         Args:
             centroid (List): Coordinates of the bead's centroid
+        
         Returns:
             Boolean: True if the centroid is not located within the rejection zone, False otherwise.
         """
@@ -247,8 +253,10 @@ class Detection(object):
 
     def isRoiInImage(self, roi):
         """Checks if the given ROI is contained within the boundaries of the image.
+        
         Args:
             roi (np.array): Coordinates of corners of the ROI to be checked for containment within the image boundaries.
+        
         Returns:
             Boolean: True if the given ROI is contained within the image boundaries, False otherwise.
         """
@@ -260,11 +268,14 @@ class Detection(object):
 
     def run(self, outputDir=None, cropPsf=True):
         """Runs the complete detection workflow, including detecting centroids, extracting ROIs, and saving cropped PSF images.
+        
         Args:
             outputDir (Path, optional): Directory of the output folder where cropped PSF images will be saved. Required if cropPsf is set to True. Defaults to None.
             cropPsf (bool, optional): Flag indicating whether to crop PSF images and save them in the output directory. Defaults to True.
+        
         Raises:
             ValueError: If cropPsf is set to True and outputDir is not provided, indicating that the output directory is required for saving cropped PSF images.
+        
         Yields:
             String: Description of the current step in the detection workflow, providing progress updates to the user.
         """
@@ -288,6 +299,7 @@ class Detection(object):
 
     def getActivePath(self, index, outputDir):
         """Provides the path to the folder corresponding to the selected bead, creating it if it does not exist.
+        
         Args:
             index (int): The index of the bead for which to get the active path
             outputDir (Path): The directory of the output folder where the bead's folder will be created if it does not exist
@@ -302,6 +314,7 @@ class Detection(object):
 
     def addRoiOnImage(self, roi, image=None, beadId=None):
         """Adds a visual representation of the ROI on the image by drawing a polygon perimeter around the specified ROI coordinates.
+        
         Args:
             roi (np.ndarray): Coordinates of the corners of the ROI to be highlighted on the image.
             image (np.ndarray, optional): The image on which to draw the ROI. If not provided, the internal image will be used.
@@ -341,6 +354,7 @@ class Detection(object):
 
     def cropPsf(self, outputDir):
         """Crops the PSF images for each valid ROI and saves them in the specified output directory.
+        
         Args:
             outputDir (Path): The directory of the output folder where the cropped PSF images will be saved.
         """
@@ -371,6 +385,7 @@ class Detection(object):
 
     def GlobalCropPsf(self, outputDir):
         """Crops the PSF images for all valid ROIs and saves them in the specified output directory.
+        
         Args:
             outputDir (Path): The directory of the output folder where the cropped PSF images will be saved.
         """

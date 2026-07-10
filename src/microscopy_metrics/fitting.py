@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class Fitting(object):
     """Class to manage the fitting process for microscopy image analysis, including running the fitting for individual beads and computing the fitting results for all beads in the analysis.
+    
     Attributes:
         fitType (str): The type of fitting to be performed (e.g., "1D", "2D", "3D").
         _thresholdRSquared (float): The threshold for the coefficient of determination (R²) used to filter out poor fits.
@@ -19,6 +20,7 @@ class Fitting(object):
 
     def runFitting(self, index):
         """Runs the fitting process for a single index, using the specified fitting tool and storing the results.
+        
         Args:
             index (int): The index of the fit being processed, used for retrieving the corresponding image, centroid, spacing, and ROI for the fitting process.
         """
@@ -75,6 +77,7 @@ class Fitting(object):
 
     def displayFitting(self, outputDir):
         """Displays the fitting results for all beads that were not rejected during the fitting process.
+        
         Args:
             outputDir (str): The directory where the fitting results will be saved.
         """

@@ -39,11 +39,13 @@ class Fitting2DEllips(FittingTool):
         c: float,
     ):
         """Generates a 2D Ellipse Gaussian function based on the provided parameters.
+        
         Args:
             amp (float): amplitude of the curve
             bg (float): background intensity
             muX,muY (float): center coordinates of the Gaussian
             a,b,c (float): coefficients for the ellipse
+        
         Returns:
             float: Intensity value at (x,y) following the curve
         """
@@ -70,11 +72,13 @@ class Fitting2DEllips(FittingTool):
         c: float,
     ):
         """calculates the 2D Ellipse Gaussian function at the given x values.
+        
         Args:
             amp (float): amplitude of the curve
             bg (float): background intensity
             muX,muY (float): center coordinates of the Gaussian
             a,b,c (float): coefficients for the ellipse
+        
         Returns:
             float: Intensity value at (x,y) following the curve
         """
@@ -90,6 +94,7 @@ class Fitting2DEllips(FittingTool):
         psf: np.ndarray,
     ):
         """Fits a 2D Ellipse Gaussian curve to the provided PSF data using the given initial parameters and coordinates.
+        
         Args:
             amp (float): amplitude of the Gaussian
             bg (float): background intensity
@@ -97,8 +102,10 @@ class Fitting2DEllips(FittingTool):
             sigma (List(float)): standard deviation of the Gaussian
             coords (np.array(float)): List of X,Y coordinates
             psf (np.ndarray): 1D image of the flatten 2D psf
+        
         Raises:
             RuntimeError: If the optimization fails to converge.
+        
         Returns:
             List(float),Matrix(float): List of fitted parameters and covariance matrix
         """
@@ -126,10 +133,12 @@ class Fitting2DEllips(FittingTool):
 
     def ellipseParmConversion(self, a: float, b: float, c: float):
         """Converts the parameters of a 2D Ellipse Gaussian fit (a, b, c) into the angle of rotation (theta) and the standard deviations along the major and minor axes (sx, sy).
+        
         Args:
             a (float): coefficient for the ellipse linked to the x-axis
             b (float): coefficient for the ellipse linked to the interaction between x and y
             c (float): coefficient for the ellipse linked to the y-axis
+        
         Returns:
             tuple: The angle of rotation (theta) and the standard deviations along the major and minor axes (sx, sy)
         """
@@ -151,6 +160,7 @@ class Fitting2DEllips(FittingTool):
 
     def showFit(self, outputPath: str):
         """Plots the fitted 2D Ellipse Gaussian curve against the original PSF data for all three axes.
+        
         Args:
             outputPath (str): Directory where the plots will be saved.
         """
@@ -192,6 +202,7 @@ class Fitting2DEllips(FittingTool):
         fitPSFShape=None,
     ):
         """Generates and saves a plot comparing the original PSF data with the fitted 2D Ellipse Gaussian curve, including the center of the Gaussian (mu) and the angle of rotation (theta).
+        
         Args:
             psf (np.ndarray): The original PSF data.
             outputPath (str): The path where the plot will be saved.
@@ -242,6 +253,7 @@ class Fitting2DEllips(FittingTool):
         index: int,
     ):
         """Generates and saves a plot comparing the original PSF data with the fitted 1D Gaussian curve and the 2D Ellipse Gaussian curve, including the center of the Gaussian (mu) and the FWHM for both fits.
+        
         Args:
             psf (np.ndarray): The original PSF data.
             fineCoords (np.ndarray): The coordinates for the fine grid.
@@ -301,6 +313,7 @@ class Fitting2DEllips(FittingTool):
 
     def plotFit(self, outputPath: str):
         """Generates and saves a 3D plot comparing the original PSF data with the fitted 2D Ellipse Gaussian curve, including the center of the Gaussian (mu) and the angle of rotation (theta).
+        
         Args:
             outputPath (str): The path where the visualization will be saved.
         """
@@ -332,8 +345,10 @@ class Fitting2DEllips(FittingTool):
 
     def getCoords(self, psf: np.ndarray):
         """Generates a list of coordinates for the 2D fit based on the shape of the provided PSF image.
+        
         Args:
             psf (np.ndarray): The PSF image for which to generate the coordinates.
+        
         Returns:
             np.ndarray: A list of coordinates corresponding to the shape of the PSF image, suitable for use in the 2D fitting process.
         """
@@ -342,6 +357,7 @@ class Fitting2DEllips(FittingTool):
 
     def processSingleFit(self, index: int):
         """Processes a single fit for the given index, performing fitting, and plotting.
+        
         Args:
             index (int): ID of the PSF.
         """

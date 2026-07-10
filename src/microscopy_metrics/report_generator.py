@@ -3,6 +3,7 @@ from abc import abstractmethod
 
 class ReportGenerator(object):
     """Abstract base class for generating reports based on microscopy image analysis results.
+    
     Attributes:
         _inputDir (str): The input directory containing the microscopy images and analysis results.
         _imageAnalyzer (ImageAnalyzer): An instance of the ImageAnalyzer class used for analyzing the microscopy images.
@@ -33,8 +34,10 @@ class ReportGenerator(object):
     @classmethod
     def getInstance(cls, methodName: str):
         """Factory method to create an instance of a report class based on the provided method name.
+        
         Args:
             methodName (str): Name of the report method (e.g., "PDF", "CSV", "HTML").
+        
         Returns:
             ReportGenerator: An instance of the report class corresponding to the method name.
         """

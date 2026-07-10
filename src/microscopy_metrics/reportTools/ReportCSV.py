@@ -14,6 +14,7 @@ class ReportCSV(ReportGenerator):
 
     def generateReport(self, outputPath=None):
         """Generates a CSV report containing the results of the microscopy image analysis, including bead information, fitting results, and calculated metrics.
+        
         Args:
             outputPath (str, optional): Path to the directory where the CSV report will be saved. Defaults to None.
         """

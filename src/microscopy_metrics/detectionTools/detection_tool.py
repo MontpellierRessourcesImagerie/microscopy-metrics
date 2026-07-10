@@ -12,6 +12,7 @@ class DetectionTool(object):
     """Abstract base class for bead detection tools in microscopy images.
     It includes methods for normalizing images, applying Gaussian high-pass filtering, and an abstract method for detecting features in the image.
     The class also maintains a registry of detection classes for easy instantiation based on method names.
+
     Attributes:
         _detectionClasses (dict): A dictionary to store registered detection classes.
         _image (np.ndarray): The input image for detection.
@@ -25,12 +26,12 @@ class DetectionTool(object):
     _detectionClasses = {}
 
     def __init__(self):
-        self._image : np.ndarray = None
-        self._sigma : float = 2.0
+        self._image: np.ndarray = None
+        self._sigma: float = 2.0
         self._thresholdTool = None
-        self._normalizedImage : np.ndarray = None
-        self._highPassedImage : np.ndarray = None
-        self._centroids : list = []
+        self._normalizedImage: np.ndarray = None
+        self._highPassedImage: np.ndarray = None
+        self._centroids: list = []
 
     def __init_subclass__(cls):
         name = cls.name
@@ -41,8 +42,10 @@ class DetectionTool(object):
     @classmethod
     def getInstance(cls, methodName: str):
         """Factory method to create an instance of a detection class based on the provided method name.
+
         Args:
             methodName (str): Name of the detection method (e.g., 'peak local maxima', 'Laplacian of Gaussian', 'Difference of Gaussian', 'Centroids').
+
         Returns:
             DetectionTool: An instance of the detection class corresponding to the method name.
         """
@@ -58,8 +61,10 @@ class DetectionTool(object):
         """Normalize the input image for processing by the detection algorithms.
         Converts the original image to a float64 type and normalizes pixel values to the range [0, 1].
         Negative pixel values are set to zero.
+
         Raises:
             ValueError: If the image is not 2D or 3D
+
         Note:
             Call this method before detection to ensure the image is normalized.
         """
@@ -73,8 +78,10 @@ class DetectionTool(object):
 
     def gaussianHighPass(self):
         """Applies a Gaussian high-pass filter to the normalized image.
+
         Raises:
             ValueError: If the normalized image is not set before calling this method.
+
         Note:
             This method should be called after setNormalizedImage()"""
         if self._normalizedImage is None:
@@ -94,6 +101,7 @@ class DetectionTool(object):
 
 class PeakLocalMaxDetector(DetectionTool):
     """Inherits from the DetectionTool base class and implements the detect method to identify local maxima in the input image.
+
     Attributes:
         name (str): The name of the detection method, set to 'peak local maxima'.
         _minDistance (int): The minimum distance between detected peaks, used to filter out closely spaced maxima.
@@ -103,7 +111,7 @@ class PeakLocalMaxDetector(DetectionTool):
 
     def __init__(self):
         super().__init__()
-        self._minDistance : int = 1
+        self._minDistance: int = 1
 
     def detect(self):
         """Detects local maxima in the input image.
@@ -124,6 +132,7 @@ class PeakLocalMaxDetector(DetectionTool):
 
 class CentroidDetector(DetectionTool):
     """Inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using a centroid algorithm.
+
     Attributes:
         name (str): The name of the detection method, set to 'Centroids'.
     """
@@ -154,6 +163,7 @@ class CentroidDetector(DetectionTool):
 
 class BlobLogDetector(DetectionTool):
     """Inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using the LoG algorithm.
+
     Attributes:
         name (str): The name of the detection method, set to 'Laplacian of Gaussian'.
     """
@@ -179,6 +189,7 @@ class BlobLogDetector(DetectionTool):
 
 class BlobDogDetector(DetectionTool):
     """Inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using the DoG algorithm.
+    
     Attributes:
         name (str): The name of the detection method, set to 'Difference of Gaussian'.
     """

@@ -4,10 +4,9 @@
     <meta charset="utf-8">
     <title>Analysis results - {{ title }}</title>
     <style>
-        /* Base typography and body */
         body {
-            background-color: #f7f9f9; /* Soft off-white */
-            color: #2c3e50; /* Softer black for better reading */
+            background-color: #f7f9f9;
+            color: #2c3e50;
             font-family: 'Charter', 'Georgia', 'Times New Roman', serif;
             line-height: 1.6;
             margin: 0;
@@ -17,18 +16,16 @@
             align-items: center;
         }
 
-        /* Main container acting as a "Page" */
         .container {
             background-color: #ffffff;
             width: 100%;
             max-width: 850px;
             padding: 40px 60px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1);
-            border-top: 5px solid #2980b9; /* Academic blue accent */
+            border-top: 5px solid #2980b9;
             box-sizing: border-box;
         }
 
-        /* Typography */
         h1 {
             font-family: 'Helvetica Neue', 'Arial', sans-serif;
             color: #2c3e50;
@@ -59,7 +56,6 @@
             font-weight: 600;
         }
 
-        /* Tables (Academic style) */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -84,7 +80,6 @@
             border-bottom: 2px solid #34495e;
         }
 
-        /* Lists */
         ul {
             list-style-type: square;
             padding-left: 20px;
@@ -95,7 +90,6 @@
             font-size: 1.05em;
         }
 
-        /* Links */
         a {
             color: #2980b9;
             text-decoration: none;
@@ -104,11 +98,10 @@
         }
 
         a:hover {
-            color: #c0392b; /* Change to a deep red on hover */
+            color: #c0392b;
             border-bottom: 1px solid #c0392b;
         }
 
-                /* Images */
         img {
             max-width: 100%;
             height: auto;
@@ -119,7 +112,6 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
 
-        /* Specific section styling */
         .header {
             text-align: center;
             margin-bottom: 30px;
@@ -147,7 +139,6 @@
             border-bottom: 1px dotted #e1e8ed;
         }
 
-        /* Footer */
         .footer {
             margin-top: 50px;
             padding-top: 20px;
@@ -163,7 +154,6 @@
             font-weight: bold;
         }
 
-        /* Status dots for metrics */
         .status-dot {
             height: 12px;
             width: 12px;
@@ -209,7 +199,6 @@
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
             z-index: 100;
         }
-
     </style>
 </head>
 <body>
@@ -409,8 +398,8 @@
                     {% endset %}
                     <span class="metric-value">
                         {% set rmin = imageAnalyzer._meanRMin if imageAnalyzer._meanRMin else 100 %}
-                        {% if rmin > 5.0 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{minCurvatureRadiusCentroidsPath_help}}Good : RMin is high, the image quality is good.</span>
-                        {% elif rmin > 1.0 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">{{minCurvatureRadiusCentroidsPath_help}}Warning : RMin is moderate, you may check if the objective lens is tipped and translated with respect to the optic axis.</span>
+                        {% if rmin < 0.1 %} <span class="status-dot status-good"></span> <span class="hoverable-tooltip">{{minCurvatureRadiusCentroidsPath_help}}Good : RMin is high, the image quality is good.</span>
+                        {% elif rmin < 0.2 %} <span class="status-dot status-warn"></span> <span class="hoverable-tooltip">{{minCurvatureRadiusCentroidsPath_help}}Warning : RMin is moderate, you may check if the objective lens is tipped and translated with respect to the optic axis.</span>
                         {% else %} <span class="status-dot status-bad"></span> <span class="hoverable-tooltip">{{minCurvatureRadiusCentroidsPath_help}}Bad : RMin is low, you have to check if the objective lens is tipped and translated with respect to the optic axis.</span>{% endif %}
                         {{ imageAnalyzer._meanRMin|round(4) if imageAnalyzer._meanRMin else "N/A" }}
                     </span>

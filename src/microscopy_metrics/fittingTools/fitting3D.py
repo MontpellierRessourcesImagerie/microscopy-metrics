@@ -38,11 +38,17 @@ class Fitting3D(FittingTool):
         sigmaZ: float,
     ):
         """Generates a 3D Gaussian function based on the provided parameters.
+        
         Args:
             amp (float): amplitude of the curve
             bg (float): background intensity
-            muX,muY,muZ (float): center coordinates of the Gaussian
-            sigmaX,sigmaY,sigmaZ (float): standard deviation of the Gaussian
+            muX (float) : center of the curve along X axis
+            muY (float) : center of the curve along Y axis
+            muZ (float) : center of the curve along Z axis
+            sigmaX (float): standard deviation of the curve along X axis
+            sigmaY (float): standard deviation of the curve along Y axis
+            sigmaZ (float): standard deviation of the curve along Z axis
+        
         Returns:
             float: Intensity value at (x,y,z) following the curve
         """
@@ -70,12 +76,18 @@ class Fitting3D(FittingTool):
         sigmaZ: float,
     ):
         """Evaluates the 3D Gaussian function at the given x values.
+        
         Args:
             x (array): x values at which to evaluate the function
             amp (float): amplitude of the curve
             bg (float): background intensity
-            muX,muY,muZ (float): center coordinates of the Gaussian
-            sigmaX,sigmaY,sigmaZ (float): standard deviation of the Gaussian
+            muX (float) : center of the curve along X axis
+            muY (float) : center of the curve along Y axis
+            muZ (float) : center of the curve along Z axis
+            sigmaX (float): standard deviation of the curve along X axis
+            sigmaY (float): standard deviation of the curve along Y axis
+            sigmaZ (float): standard deviation of the curve along Z axis
+        
         Returns:
             float: Intensity value at (x,y,z) following the curve
         """
@@ -100,6 +112,7 @@ class Fitting3D(FittingTool):
         psf: np.ndarray,
     ):
         """Fits a 3D Gaussian curve to the provided PSF data.
+        
         Args:
             amp (float): amplitude of the Gaussian
             bg (float): background intensity
@@ -107,8 +120,10 @@ class Fitting3D(FittingTool):
             sigma (List(float)): standard deviation of the Gaussian
             coords (np.array(float)): List of X,Y,Z coordinates
             psf (np.ndarray): 1D image of the flatten 3D psf
+        
         Raises:
             RuntimeError: If the optimization fails to converge.
+        
         Returns:
             List(float),Matrix(float): List of fitted parameters and covariance matrix
         """
@@ -144,6 +159,7 @@ class Fitting3D(FittingTool):
 
     def showFit(self, outputPath: str):
         """Plots the 2D slices of the PSF data and the corresponding fitted Gaussian curves, and saves the plots to the specified output path.
+        
         Args:
             psf (np.ndarray): 3D image of the PSF data
             outputPath (str): Path to the folder where the plots will be saved
@@ -195,6 +211,7 @@ class Fitting3D(FittingTool):
         index: int,
     ):
         """Plots the original data points, the fitted curve, and key parameters for a single axis.
+        
         Args:
             coords (array): Coordinates of the data points.
             psf (array): Intensity values at the data points.
@@ -253,6 +270,7 @@ class Fitting3D(FittingTool):
 
     def plotFit(self, outputPath: str):
         """Plots the fitted 3D Gaussian curve along with the original PSF data, and saves the plot to the specified output path.
+        
         Args:
             outputPath (str): Path to the folder where the plot will be saved
         """
@@ -279,8 +297,10 @@ class Fitting3D(FittingTool):
 
     def getCoords(self, psf: np.ndarray) -> np.ndarray:
         """Generates an array of coordinates corresponding to the length of the PSF profile for 3D fitting.
+        
         Args:
             psf (np.ndarray): 3D image of the PSF data
+        
         Returns:
             np.ndarray: Array of coordinates for each axis (Z, Y, X) corresponding to the PSF profile.
         """
@@ -289,6 +309,7 @@ class Fitting3D(FittingTool):
 
     def processSingleFit(self, index: int):
         """Processes a single fit for the given index, performing fitting, plotting, and calculating metrics.
+        
         Args:
             index (int): ID of the PSF and position in lists for which to perform the fit.
         """

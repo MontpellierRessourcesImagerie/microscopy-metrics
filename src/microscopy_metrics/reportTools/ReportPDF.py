@@ -22,10 +22,12 @@ class ReportPDF(ReportGenerator):
 
     def drawParameterTableOnPDF(self, title, data, y):
         """Helper to draw a styled parameter table with a title
+        
         Args:
             title (str): The section title
             data (List[List[str]]): The key-value pairs for the table
             y (int): The y-coordinate to start drawing (top to bottom)
+        
         Returns:
             int: The new y-coordinate after drawing the table
         """
@@ -109,6 +111,7 @@ class ReportPDF(ReportGenerator):
 
     def generateSimplifiedReport(self, outputPath=None):
         """Generates a simplified PDF report containing the results of the microscopy image analysis, including bead information, fitting results, and calculated metrics.
+        
         Args:
             outputPath (str, optional): Path to the directory where the PDF report will be saved. Defaults to None.
         """
