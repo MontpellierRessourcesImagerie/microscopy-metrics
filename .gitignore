@@ -4,3 +4,7 @@ src/scratch/
 src/microscopy_metrics/EvalFitResult/
 
 docs/build/
+
+"__pycache__/"
+
+"*.py[cod]"

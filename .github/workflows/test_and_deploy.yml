@@ -44,6 +44,11 @@ jobs:
           qt: true
           wm: herbstluftwm
 
+      - name: Clean up before build
+        run: |
+          find . -type d -name "__pycache__" -exec rm -r {} + || true
+          find . -type f -name "*.pyc" -delete || true
+
       - name: Test with tox
         run: uvx --with tox-gh-actions tox
         env:
@@ -57,7 +62,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+
+      - name: Clean up before build
+        run: |
+          find . -type d -name "__pycache__" -exec rm -r {} + || true
+          find . -type f -name "*.pyc" -delete || true
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install setuptools-scm build
+
       - uses: hynek/build-and-inspect-python-package@v2
 
   deploy:
@@ -66,6 +82,7 @@ jobs:
     if: github.ref_type == 'tag'
     permissions:
       id-token: write
+      contents: write
     steps:
       - name: Download built artifact to dist/
         uses: actions/download-artifact@v5
