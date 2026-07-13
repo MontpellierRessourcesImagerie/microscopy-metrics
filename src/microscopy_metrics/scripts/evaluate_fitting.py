@@ -15,7 +15,10 @@ from microscopy_metrics.fittingTools.fittingTool import FittingTool
 from microscopy_metrics.scripts.PSFGenerator.PSF import PSFRandomParameter
 from microscopy_metrics.fittingTools.fitting3DRotation import Fitting3DRotation
 
-matplotlib.use("Qt5Agg")
+if os.environ.get('DISPLAY', '') == '' or os.environ.get('GITHUB_ACTIONS'):
+    matplotlib.use('Agg')
+else:
+    matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 
 GIBSONLANNI = False

@@ -21,7 +21,11 @@ def showPSF(psf, title="PSF"):
     """
     import matplotlib
     import matplotlib.pyplot as plt
-    matplotlib.use('QtAgg') 
+    import os
+    if os.environ.get('DISPLAY', '') == '' or os.environ.get('GITHUB_ACTIONS'):
+        matplotlib.use('Agg')
+    else:
+        matplotlib.use('QtAgg')
     if not PSFSHOW:
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -42,7 +46,10 @@ def showPSF2(psf, title="PSF", ax=None):
     """
     import matplotlib
     import matplotlib.pyplot as plt
-    matplotlib.use('QtAgg')
+    if os.environ.get('DISPLAY', '') == '' or os.environ.get('GITHUB_ACTIONS'):
+        matplotlib.use('Agg')
+    else:
+        matplotlib.use('QtAgg')
 
     if ax is None:
         fig = plt.figure()
@@ -57,7 +64,10 @@ def showPSFvsNoisy():
     """Generates a PSF with comatic aberration, adds noise to it, and displays both the original and noisy PSF images side by side using matplotlib.""" 
     import matplotlib
     import matplotlib.pyplot as plt
-    matplotlib.use('QtAgg')
+    if os.environ.get('DISPLAY', '') == '' or os.environ.get('GITHUB_ACTIONS'):
+        matplotlib.use('Agg')
+    else:
+        matplotlib.use('QtAgg')
 
     psfGen = PSFRandomParameter(size=PSF_SIZE, aberrationType="spherical")
     psf = psfGen.psf

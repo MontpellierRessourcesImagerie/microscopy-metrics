@@ -4,7 +4,11 @@ import skan
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.use('QtAgg')
+import os
+if os.environ.get('DISPLAY', '') == '' or os.environ.get('GITHUB_ACTIONS'):
+    matplotlib.use('Agg')
+else:
+    matplotlib.use('QtAgg')
 
 from scipy import ndimage as ndi
 from scipy.signal import find_peaks
