@@ -16,6 +16,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
+    "PyQt5",
     "numpy",
     "scipy",
     "scikit-image",
