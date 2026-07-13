@@ -1,22 +1,52 @@
-.. Microscopy metrics documentation master file, created by
-   sphinx-quickstart on Tue Jul  7 16:48:49 2026.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. Microscopy Metrics documentation master file
 
-Microscopy metrics documentation
-================================
+=================================
+Microscopy Metrics Documentation
+=================================
 
-**Microscopy metrics** is a Python package designed to realise the metrology of a microscopy system using a PSF (Point Spread Function).
-Check out the :doc:`usage` section for further information, including how to :ref:`install <installation>` and :ref:`run <run>` the project.
+.. image:: https://img.shields.io/github/v/release/MontpellierRessourcesImagerie/microscopy-metrics
+   :alt: GitHub release (latest by date)
+   :target: https://github.com/MontpellierRessourcesImagerie/microscopy-metrics/releases
+
+**Microscopy Metrics** is a **Python package** designed for **metrology of microscopy systems** using **Point Spread Function (PSF) analysis**.
+This tool enables you to **characterize optical aberrations**, **evaluate system resolution**, and **generate detailed reports** for quality control in microscopy.
+
+Whether you're a researcher, engineer, or developer, Microscopy Metrics provides the tools you need to **analyze, visualize, and optimize** your microscopy data.
+
+---
 
 .. note::
-   This project is under active development. The current version is a work in progress and may not be fully stable. Users are encouraged to report any issues or provide feedback to help improve the project.
 
+   **This project is under active development.**
+   The current version is a work in progress and may not be fully stable.
+   We encourage users to **report issues** or **provide feedback** to help improve the project.
+   For the latest updates, check out our `GitHub repository <https://github.com/MontpellierRessourcesImagerie/microscopy-metrics>`_.
+
+---
+
+========
 Contents
---------
+========
 
 .. toctree::
+   :maxdepth: 2
+   :caption: Getting Started
+   :name: getting_started_toc
+
    usage
+
+.. toctree::
+   :maxdepth: 2
+   :caption: User Guide
+   :name: user_guide_toc
+
    how_to
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference
+   :name: api_toc
+
    api
 
+---

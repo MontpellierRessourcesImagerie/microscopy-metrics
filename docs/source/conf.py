@@ -21,6 +21,7 @@ extensions = [
     'sphinx_tabs.tabs',
     'sphinx.ext.napoleon',
     'sphinx_rtd_theme',
+    'sphinx.ext.viewcode',
 ]
 
 templates_path = ['_templates']

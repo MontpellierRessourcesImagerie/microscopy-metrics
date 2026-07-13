@@ -11,5 +11,7 @@ Cette section regroupe l'API publique du package.
    microscopy_metrics.metricTool
    microscopy_metrics.resolutionTools
    microscopy_metrics.thresholdTools
+   microscopy_metrics.reportTools
    microscopy_metrics.PSFGenerator
    microscopy_metrics.evaluate
+   microscopy_metrics.analyzers
