@@ -53,3 +53,4 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools_scm]
 version_file = "src/microscopy_metrics/_version.py"
 write_to = "src/microscopy_metrics/_version.py"
+local_scheme = "no-local-version"
