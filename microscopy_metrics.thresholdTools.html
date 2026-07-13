@@ -14,8 +14,8 @@
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -108,7 +108,7 @@
 <h2>Threshold<a class="headerlink" href="#threshold" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.thresholdTools.threshold_tool.</span></span><span class="sig-name descname"><span class="pre">Threshold</span></span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#Threshold"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.thresholdTools.threshold_tool.</span></span><span class="sig-name descname"><span class="pre">Threshold</span></span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#Threshold"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Base class for thresholding methods.
 This class defines the interface for thresholding algorithms and provides a mechanism for registering and retrieving specific thresholding implementations.
@@ -116,7 +116,7 @@ Subclasses must implement the <cite>getThreshold</cite> method to compute the th
 <p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.thresholdTools.threshold_tool.Threshold</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">getInstance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methodName</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#Threshold.getInstance"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">getInstance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methodName</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#Threshold.getInstance"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Factory method to create an instance of a thresholding class based on the provided method name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -155,7 +155,7 @@ Subclasses must implement the <cite>getThreshold</cite> method to compute the th
 <h2>ThresholdIsodata<a class="headerlink" href="#thresholdisodata" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.thresholdTools.threshold_tool.</span></span><span class="sig-name descname"><span class="pre">ThresholdIsodata</span></span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#ThresholdIsodata"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.thresholdTools.threshold_tool.</span></span><span class="sig-name descname"><span class="pre">ThresholdIsodata</span></span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#ThresholdIsodata"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Threshold</span></code></p>
 <p>Class for computing the isodata thresholding method.
 This class inherits from the Threshold base class and implements the getThreshold method to compute the isodata threshold value based on the provided image.
@@ -185,7 +185,7 @@ The isodata method iteratively computes the threshold value by minimizing the in
 <h2>ThresholdLegacy<a class="headerlink" href="#thresholdlegacy" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.thresholdTools.threshold_tool.</span></span><span class="sig-name descname"><span class="pre">ThresholdLegacy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nb_iteration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#ThresholdLegacy"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.thresholdTools.threshold_tool.</span></span><span class="sig-name descname"><span class="pre">ThresholdLegacy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nb_iteration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#ThresholdLegacy"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Threshold</span></code></p>
 <p>Class for computing the legacy thresholding method.
 This class inherits from the Threshold base class and implements the getThreshold method to compute the legacy threshold value based on the provided image.
@@ -215,7 +215,7 @@ The legacy method iteratively computes the threshold value by separating the pix
 <h2>ThresholdLi<a class="headerlink" href="#thresholdli" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.thresholdTools.threshold_tool.</span></span><span class="sig-name descname"><span class="pre">ThresholdLi</span></span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#ThresholdLi"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.thresholdTools.threshold_tool.</span></span><span class="sig-name descname"><span class="pre">ThresholdLi</span></span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#ThresholdLi"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Threshold</span></code></p>
 <p>Class for computing the Li thresholding method.
 This class inherits from the Threshold base class and implements the getThreshold method to compute the Li threshold value based on the provided image.
@@ -245,7 +245,7 @@ The Li method iteratively computes the threshold value by minimizing the cross-e
 <h2>ThresholdManual<a class="headerlink" href="#thresholdmanual" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.thresholdTools.threshold_tool.</span></span><span class="sig-name descname"><span class="pre">ThresholdManual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rel_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#ThresholdManual"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.thresholdTools.threshold_tool.</span></span><span class="sig-name descname"><span class="pre">ThresholdManual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rel_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#ThresholdManual"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Threshold</span></code></p>
 <p>Class for computing a manual thresholding method.
 This class inherits from the Threshold base class and implements the getThreshold method to compute a manual threshold value based on the provided image and a user-defined relative threshold parameter.
@@ -275,7 +275,7 @@ The manual method calculates the threshold value as a fraction of the maximum pi
 <h2>ThresholdMinimum<a class="headerlink" href="#thresholdminimum" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.thresholdTools.threshold_tool.</span></span><span class="sig-name descname"><span class="pre">ThresholdMinimum</span></span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#ThresholdMinimum"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.thresholdTools.threshold_tool.</span></span><span class="sig-name descname"><span class="pre">ThresholdMinimum</span></span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#ThresholdMinimum"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Threshold</span></code></p>
 <p>Class for computing the minimum thresholding method.
 This class inherits from the Threshold base class and implements the getThreshold method to compute the minimum threshold value based on the provided image.
@@ -305,7 +305,7 @@ The minimum method computes the threshold value by finding the minimum between t
 <h2>ThresholdOtsu<a class="headerlink" href="#thresholdotsu" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.thresholdTools.threshold_tool.</span></span><span class="sig-name descname"><span class="pre">ThresholdOtsu</span></span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#ThresholdOtsu"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.thresholdTools.threshold_tool.</span></span><span class="sig-name descname"><span class="pre">ThresholdOtsu</span></span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#ThresholdOtsu"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Threshold</span></code></p>
 <p>Class for computing the Otsu thresholding method.
 This class inherits from the Threshold base class and implements the getThreshold method to compute the Otsu threshold value based on the provided image.
@@ -335,7 +335,7 @@ The Otsu method computes the threshold value by maximizing the between-class var
 <h2>ThresholdTriangle<a class="headerlink" href="#thresholdtriangle" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.thresholdTools.threshold_tool.</span></span><span class="sig-name descname"><span class="pre">ThresholdTriangle</span></span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#ThresholdTriangle"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.thresholdTools.threshold_tool.</span></span><span class="sig-name descname"><span class="pre">ThresholdTriangle</span></span><a class="reference internal" href="_modules/microscopy_metrics/thresholdTools/threshold_tool.html#ThresholdTriangle"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Threshold</span></code></p>
 <p>Class for computing the triangle thresholding method.
 This class inherits from the Threshold base class and implements the getThreshold method to compute the triangle threshold value based on the provided image.

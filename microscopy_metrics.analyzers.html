@@ -14,8 +14,8 @@
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -99,13 +99,193 @@
 <p>These classes are used to store and analyze the results for each bead and for the hole image.</p>
 <section id="beadanalyzer">
 <h2>BeadAnalyzer<a class="headerlink" href="#beadanalyzer" title="Link to this heading"></a></h2>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.BeadAnalyzer</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.BeadAnalyzer.</span></span><span class="sig-name descname"><span class="pre">BeadAnalyzer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/BeadAnalyzer.html#BeadAnalyzer"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to manage the analysis of individual beads, including storing the bead’s image, region of interest (ROI), centroid, and results of fitting and metric calculations.
+It provides methods for running fitting and calculating metrics for the bead, which are used in the overall analysis of microscopy images.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_id</span></span></dt>
+<dd><p>The unique identifier for the bead.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_image</span></span></dt>
+<dd><p>The image data for the bead.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_roi</span></span></dt>
+<dd><p>The region of interest (ROI) for the bead in the image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_centroid</span></span></dt>
+<dd><p>The centroid coordinates of the bead in the image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_rejected</span></span></dt>
+<dd><p>A flag indicating whether the bead has been rejected from analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_rejectionDesc</span></span></dt>
+<dd><p>A description of why the bead was rejected, if applicable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_metricTool</span></span></dt>
+<dd><p>An instance of the MetricTool class used for calculating metrics for the bead.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>MetricTool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_fitTool</span></span></dt>
+<dd><p>An instance of the FittingTool class used for fitting curves to the bead’s image data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>FittingTool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">drawParameterTableOnPDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pdf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/BeadAnalyzer.html#BeadAnalyzer.drawParameterTableOnPDF"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Helper to draw a styled parameter table with a title</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pdf</strong> (<em>reportlab.pdfgen.canvas.Canvas</em>) – The PDF canvas to draw on</p></li>
+<li><p><strong>title</strong> (<em>str</em>) – The section title</p></li>
+<li><p><strong>data</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – The data rows</p></li>
+<li><p><strong>y</strong> (<em>int</em>) – The y-coordinate to start drawing (top to bottom)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The new y-coordinate after drawing the table</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">generatePDFReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pdf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputDir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theoreticalResolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samplingDistance</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/BeadAnalyzer.html#BeadAnalyzer.generatePDFReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates a clean PDF report for the bead analysis results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pdf</strong> (<em>reportlab.pdfgen.canvas.Canvas</em>) – The PDF canvas to draw on</p></li>
+<li><p><strong>inputDir</strong> (<em>str</em>) – The directory containing the input image files</p></li>
+<li><p><strong>theoreticalResolution</strong> (<em>float</em>) – The theoretical resolution of the microscope</p></li>
+<li><p><strong>samplingDistance</strong> (<em>float</em>) – The sampling distance of the microscope</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">runFitting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fittingType</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1D'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputDir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prominenceRel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/BeadAnalyzer.html#BeadAnalyzer.runFitting"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Runs the fitting process for the bead using the specified fitting type, spacing, output directory, and prominence relative value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fittingType</strong> (<em>str</em><em>, </em><em>optional</em>) – The type of fitting to perform. Defaults to “1D”.</p></li>
+<li><p><strong>spacing</strong> (<em>list</em><em>, </em><em>optional</em>) – The spacing of the image pixels. Defaults to [1,1,1].</p></li>
+<li><p><strong>outputDir</strong> (<em>_type_</em><em>, </em><em>optional</em>) – The directory to save the fitting results. Defaults to None.</p></li>
+<li><p><strong>prominenceRel</strong> (<em>_type_</em><em>, </em><em>optional</em>) – The relative prominence value for the fitting. Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">runSBRMetric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ringInnerDistance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ringThickness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/BeadAnalyzer.html#BeadAnalyzer.runSBRMetric"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Runs the signal-to-background ratio (SBR) metric calculation for the bead using the specified spacing, ring inner distance, and ring thickness.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spacing</strong> (<em>list</em><em>, </em><em>optional</em>) – The spacing of the image pixels. Defaults to [1,1,1].</p></li>
+<li><p><strong>ringInnerDistance</strong> (<em>float</em><em>, </em><em>optional</em>) – The inner distance of the ring for SBR calculation. Defaults to 1.0.</p></li>
+<li><p><strong>ringThickness</strong> (<em>float</em><em>, </em><em>optional</em>) – The thickness of the ring for SBR calculation. Defaults to 2.0.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">toDict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/BeadAnalyzer.html#BeadAnalyzer.toDict"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Converts the bead analysis results into a dictionary format for easier access and manipulation of the bead’s data, including its ID, image, ROI, centroid, rejection status, and any rejection descriptions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary containing the bead’s analysis results.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="imageanalyzer">
 <h2>ImageAnalyzer<a class="headerlink" href="#imageanalyzer" title="Link to this heading"></a></h2>
 <p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.ImageAnalyzer</span></code></p>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.ImageAnalyzer.</span></span><span class="sig-name descname"><span class="pre">ImageAnalyzer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'~/'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeadAnalyzer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beadSize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixelSize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1,</span> <span class="pre">1]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/ImageAnalyzer.html#ImageAnalyzer"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.ImageAnalyzer.</span></span><span class="sig-name descname"><span class="pre">ImageAnalyzer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'~/'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeadAnalyzer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beadSize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixelSize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1,</span> <span class="pre">1,</span> <span class="pre">1]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/ImageAnalyzer.html#ImageAnalyzer"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Class for managing the image data, bead analysis results, and various parameters such as bead size and pixel size.</p>
 <dl class="py attribute">

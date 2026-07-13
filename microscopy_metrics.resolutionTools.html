@@ -14,8 +14,8 @@
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -105,7 +105,7 @@
 <h2>TheoreticalResolution<a class="headerlink" href="#theoreticalresolution" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.resolutionTools.theoretical_resolution.</span></span><span class="sig-name descname"><span class="pre">TheoreticalResolution</span></span><a class="reference internal" href="_modules/microscopy_metrics/resolutionTools/theoretical_resolution.html#TheoreticalResolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.resolutionTools.theoretical_resolution.</span></span><span class="sig-name descname"><span class="pre">TheoreticalResolution</span></span><a class="reference internal" href="_modules/microscopy_metrics/resolutionTools/theoretical_resolution.html#TheoreticalResolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Abstract base class for calculating the theoretical resolution of a microscopy system based on its numerical aperture, emission wavelength, and refractive index.
 This class provides a common interface and shared functionality for different types of microscopes (e.g., widefield, confocal).
@@ -128,7 +128,7 @@ The class also maintains a registry of microscope classes for easy instantiation
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">getInstance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methodName</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/resolutionTools/theoretical_resolution.html#TheoreticalResolution.getInstance"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">getInstance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methodName</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/resolutionTools/theoretical_resolution.html#TheoreticalResolution.getInstance"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Factory method to create an instance of a microscope class based on the provided method name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -156,7 +156,7 @@ The class also maintains a registry of microscope classes for easy instantiation
 <h2>WidefieldResolution<a class="headerlink" href="#widefieldresolution" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.resolutionTools.theoretical_resolution.</span></span><span class="sig-name descname"><span class="pre">WidefieldResolution</span></span><a class="reference internal" href="_modules/microscopy_metrics/resolutionTools/theoretical_resolution.html#WidefieldResolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.resolutionTools.theoretical_resolution.</span></span><span class="sig-name descname"><span class="pre">WidefieldResolution</span></span><a class="reference internal" href="_modules/microscopy_metrics/resolutionTools/theoretical_resolution.html#WidefieldResolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TheoreticalResolution</span></code></p>
 <p>Class for calculating the theoretical resolution of a widefield microscope based on its parameters.
 This class inherits from the TheoreticalResolution base class and implements the method to calculate the theoretical resolution in the XY and Z dimensions using the appropriate formulas for widefield microscopy.</p>
@@ -196,7 +196,7 @@ This class inherits from the TheoreticalResolution base class and implements the
 <h2>ConfocalResolution<a class="headerlink" href="#confocalresolution" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.resolutionTools.theoretical_resolution.</span></span><span class="sig-name descname"><span class="pre">ConfocalResolution</span></span><a class="reference internal" href="_modules/microscopy_metrics/resolutionTools/theoretical_resolution.html#ConfocalResolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.resolutionTools.theoretical_resolution.</span></span><span class="sig-name descname"><span class="pre">ConfocalResolution</span></span><a class="reference internal" href="_modules/microscopy_metrics/resolutionTools/theoretical_resolution.html#ConfocalResolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TheoreticalResolution</span></code></p>
 <p>Class for calculating the theoretical resolution of a confocal microscope based on its parameters.
 This class inherits from the TheoreticalResolution base class and implements the method to calculate the theoretical resolution in the XY and Z dimensions using the appropriate formulas for confocal microscopy.</p>
@@ -236,7 +236,7 @@ This class inherits from the TheoreticalResolution base class and implements the
 <h2>MultiphotonResolution<a class="headerlink" href="#multiphotonresolution" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.resolutionTools.theoretical_resolution.</span></span><span class="sig-name descname"><span class="pre">MultiphotonResolution</span></span><a class="reference internal" href="_modules/microscopy_metrics/resolutionTools/theoretical_resolution.html#MultiphotonResolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.resolutionTools.theoretical_resolution.</span></span><span class="sig-name descname"><span class="pre">MultiphotonResolution</span></span><a class="reference internal" href="_modules/microscopy_metrics/resolutionTools/theoretical_resolution.html#MultiphotonResolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TheoreticalResolution</span></code></p>
 <p>Class for calculating the theoretical resolution of a multiphoton microscope based on its parameters.
 This class inherits from the TheoreticalResolution base class and implements the method to calculate the theoretical resolution in the XY and Z dimensions using the appropriate formulas for multiphoton microscopy.</p>
@@ -276,7 +276,7 @@ This class inherits from the TheoreticalResolution base class and implements the
 <h2>SpinningDiskResolution<a class="headerlink" href="#spinningdiskresolution" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.resolutionTools.theoretical_resolution.</span></span><span class="sig-name descname"><span class="pre">SpinningDiskResolution</span></span><a class="reference internal" href="_modules/microscopy_metrics/resolutionTools/theoretical_resolution.html#SpinningDiskResolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.resolutionTools.theoretical_resolution.</span></span><span class="sig-name descname"><span class="pre">SpinningDiskResolution</span></span><a class="reference internal" href="_modules/microscopy_metrics/resolutionTools/theoretical_resolution.html#SpinningDiskResolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TheoreticalResolution</span></code></p>
 <p>Class for calculating the theoretical resolution of a spinning disk confocal microscope based on its parameters.
 This class inherits from the TheoreticalResolution base class and implements the method to calculate the theoretical resolution in the XY and Z dimensions using the appropriate formulas for spinning disk confocal microscopy.</p>

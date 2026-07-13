@@ -14,8 +14,8 @@
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -106,7 +106,7 @@
 <h2>DetectionTool<a class="headerlink" href="#detectiontool" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.detectionTools.detection_tool.</span></span><span class="sig-name descname"><span class="pre">DetectionTool</span></span><a class="reference internal" href="_modules/microscopy_metrics/detectionTools/detection_tool.html#DetectionTool"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.detectionTools.detection_tool.</span></span><span class="sig-name descname"><span class="pre">DetectionTool</span></span><a class="reference internal" href="_modules/microscopy_metrics/detectionTools/detection_tool.html#DetectionTool"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Abstract base class for bead detection tools in microscopy images.
 It includes methods for normalizing images, applying Gaussian high-pass filtering, and an abstract method for detecting features in the image.
@@ -191,7 +191,7 @@ The class also maintains a registry of detection classes for easy instantiation 
 <p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.detectionTools.detection_tool.DetectionTool</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">detect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/detectionTools/detection_tool.html#DetectionTool.detect"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">detect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/detectionTools/detection_tool.html#DetectionTool.detect"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Detect features in the image.
 Subclasses must implement this method to specify the detection algorithm they use.</p>
 </dd></dl>
@@ -213,7 +213,7 @@ Subclasses must implement this method to specify the detection algorithm they us
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">getInstance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methodName</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/detectionTools/detection_tool.html#DetectionTool.getInstance"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">getInstance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methodName</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/detectionTools/detection_tool.html#DetectionTool.getInstance"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Factory method to create an instance of a detection class based on the provided method name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -253,7 +253,7 @@ Negative pixel values are set to zero.</p>
 <h2>PeakLocalMaxDetector<a class="headerlink" href="#peaklocalmaxdetector" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.detectionTools.detection_tool.</span></span><span class="sig-name descname"><span class="pre">PeakLocalMaxDetector</span></span><a class="reference internal" href="_modules/microscopy_metrics/detectionTools/detection_tool.html#PeakLocalMaxDetector"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.detectionTools.detection_tool.</span></span><span class="sig-name descname"><span class="pre">PeakLocalMaxDetector</span></span><a class="reference internal" href="_modules/microscopy_metrics/detectionTools/detection_tool.html#PeakLocalMaxDetector"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionTool</span></code></p>
 <p>Inherits from the DetectionTool base class and implements the detect method to identify local maxima in the input image.</p>
 <dl class="py attribute">
@@ -295,7 +295,7 @@ Detected maxima are stored in ‘self._centroids’.</p>
 <h2>CentroidDetector<a class="headerlink" href="#centroiddetector" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.detectionTools.detection_tool.</span></span><span class="sig-name descname"><span class="pre">CentroidDetector</span></span><a class="reference internal" href="_modules/microscopy_metrics/detectionTools/detection_tool.html#CentroidDetector"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.detectionTools.detection_tool.</span></span><span class="sig-name descname"><span class="pre">CentroidDetector</span></span><a class="reference internal" href="_modules/microscopy_metrics/detectionTools/detection_tool.html#CentroidDetector"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionTool</span></code></p>
 <p>Inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using a centroid algorithm.</p>
 <dl class="py attribute">
@@ -326,7 +326,7 @@ Centroids are stored in ‘self._centroids’.</p>
 <h2>BlobLogDetector<a class="headerlink" href="#bloblogdetector" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.detectionTools.detection_tool.</span></span><span class="sig-name descname"><span class="pre">BlobLogDetector</span></span><a class="reference internal" href="_modules/microscopy_metrics/detectionTools/detection_tool.html#BlobLogDetector"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.detectionTools.detection_tool.</span></span><span class="sig-name descname"><span class="pre">BlobLogDetector</span></span><a class="reference internal" href="_modules/microscopy_metrics/detectionTools/detection_tool.html#BlobLogDetector"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionTool</span></code></p>
 <p>Inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using the LoG algorithm.</p>
 <dl class="py attribute">
@@ -357,7 +357,7 @@ Detected centroids are stored in ‘self._centroids’.</p>
 <h2>BlobDogDetector<a class="headerlink" href="#blobdogdetector" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.detectionTools.detection_tool.</span></span><span class="sig-name descname"><span class="pre">BlobDogDetector</span></span><a class="reference internal" href="_modules/microscopy_metrics/detectionTools/detection_tool.html#BlobDogDetector"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.detectionTools.detection_tool.</span></span><span class="sig-name descname"><span class="pre">BlobDogDetector</span></span><a class="reference internal" href="_modules/microscopy_metrics/detectionTools/detection_tool.html#BlobDogDetector"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionTool</span></code></p>
 <p>Inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using the DoG algorithm.</p>
 <dl class="py attribute">
@@ -386,6 +386,269 @@ Detected centroids are stored in ‘self._centroids’ for further processing.</
 <section id="detection">
 <h2>Detection<a class="headerlink" href="#detection" title="Link to this heading"></a></h2>
 <p>This module uses the detection tools to detect objects in microscopy images. It provides a unified interface for using different detection tools and allows for easy switching between them.</p>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.detection</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.detection.</span></span><span class="sig-name descname"><span class="pre">Detection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/detection.html#Detection"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for detecting and extracting regions of interest (ROIs) from microscopy images based on detected centroids.
+It initializes the imageAnalyzer object to manage the analysis of the image and the detected beads, and provides methods for setting parameters related to bead detection and ROI extraction.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_image</span></span></dt>
+<dd><p>The microscopy image to be analyzed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_cropFactor</span></span></dt>
+<dd><p>The factor used to determine the size of the ROI around each detected bead.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_beadSize</span></span></dt>
+<dd><p>The size of the beads in micrometers, used for ROI extraction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_rejectionDistance</span></span></dt>
+<dd><p>The minimum distance from the top and bottom of the image to reject centroids.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_pixelSize</span></span></dt>
+<dd><p>The pixel size of the image in micrometers</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_thresholdIntensity</span></span></dt>
+<dd><p>The threshold intensity for rejecting beads based on their intensity relative to the mean intensity of detected centroids.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_imageAnalyzer</span></span></dt>
+<dd><p>An instance of the ImageAnalyzer class used for analyzing the microscopy images and managing the detected beads.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ImageAnalyzer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_thresholdTool</span></span></dt>
+<dd><p>An instance of the thresholding tool used for detecting centroids in the image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_detectionTool</span></span></dt>
+<dd><p>An instance of the detection tool used for detecting centroids in the image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">GlobalCropPsf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputDir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/detection.html#Detection.GlobalCropPsf"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Crops the PSF images for all valid ROIs and saves them in the specified output directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outputDir</strong> (<em>Path</em>) – The directory of the output folder where the cropped PSF images will be saved.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">addRoiOnImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beadId</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/detection.html#Detection.addRoiOnImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Adds a visual representation of the ROI on the image by drawing a polygon perimeter around the specified ROI coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>roi</strong> (<em>np.ndarray</em>) – Coordinates of the corners of the ROI to be highlighted on the image.</p></li>
+<li><p><strong>image</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – The image on which to draw the ROI. If not provided, the internal image will be used.</p></li>
+<li><p><strong>beadId</strong> (<em>int</em><em>, </em><em>optional</em>) – The ID of the bead for which to add the ROI. If not provided, no specific bead will be targeted.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The image with the ROI highlighted by a polygon perimeter.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">cropPsf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputDir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/detection.html#Detection.cropPsf"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Crops the PSF images for each valid ROI and saves them in the specified output directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outputDir</strong> (<em>Path</em>) – The directory of the output folder where the cropped PSF images will be saved.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">extractRegionOfInterest</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/detection.html#Detection.extractRegionOfInterest"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Extracts regions of interest (ROIs) from the image based on the detected centroids and specified parameters for bead size, crop factor, and rejection distance.
+The method calculates the ROI for each detected bead, checks for overlaps with other beads and the image boundaries, and applies rejection criteria based on intensity and peak detection within the ROI.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">getActivePath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputDir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/detection.html#Detection.getActivePath"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Provides the path to the folder corresponding to the selected bead, creating it if it does not exist.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>index</strong> (<em>int</em>) – The index of the bead for which to get the active path</p></li>
+<li><p><strong>outputDir</strong> (<em>Path</em>) – The directory of the output folder where the bead’s folder will be created if it does not exist</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The path to the folder corresponding to the selected bead</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">getMeanIntensity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/detection.html#Detection.getMeanIntensity"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Calculates the mean intensity of the detected centroids in the image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The calculated mean intensity of the detected centroids.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">isRoiInImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/detection.html#Detection.isRoiInImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Checks if the given ROI is contained within the boundaries of the image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>roi</strong> (<em>np.array</em>) – Coordinates of corners of the ROI to be checked for containment within the image boundaries.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the given ROI is contained within the image boundaries, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">isRoiNotInRejection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centroid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/detection.html#Detection.isRoiNotInRejection"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Checks if the given centroid is located within the rejection zone near the top or bottom of the image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>centroid</strong> (<em>List</em>) – Coordinates of the bead’s centroid</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the centroid is not located within the rejection zone, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">isRoiOverlapped</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/detection.html#Detection.isRoiOverlapped"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Checks if the given ROI overlaps with any of the already extracted ROIs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<em>int</em>) – The index of the bead for which to check overlap with existing ROIs.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the given ROI overlaps with any of the existing ROIs, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputDir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cropPsf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/detection.html#Detection.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Runs the complete detection workflow, including detecting centroids, extracting ROIs, and saving cropped PSF images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>outputDir</strong> (<em>Path</em><em>, </em><em>optional</em>) – Directory of the output folder where cropped PSF images will be saved. Required if cropPsf is set to True. Defaults to None.</p></li>
+<li><p><strong>cropPsf</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flag indicating whether to crop PSF images and save them in the output directory. Defaults to True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If cropPsf is set to True and outputDir is not provided, indicating that the output directory is required for saving cropped PSF images.</p>
+</dd>
+<dt class="field-odd">Yields<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>String</em> – Description of the current step in the detection workflow, providing progress updates to the user.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 </section>
 

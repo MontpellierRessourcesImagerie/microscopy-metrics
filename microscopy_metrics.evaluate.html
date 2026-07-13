@@ -14,8 +14,8 @@
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -100,9 +100,574 @@
 <p>This package contains the evaluation scripts used for evaluating microscopy data.</p>
 <section id="evaluatefitting">
 <h2>EvaluateFitting<a class="headerlink" href="#evaluatefitting" title="Link to this heading"></a></h2>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.scripts.evaluate_fitting</span></code></p>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">addMicroscopyNoise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxPhotons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readoutNoiseStd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#addMicroscopyNoise"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Adds realistic microscopy noise to the input image, simulating both Poisson noise (photon counting noise) and Gaussian readout noise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>np.ndarray</em>) – The input image to which noise will be added.</p></li>
+<li><p><strong>maxPhotons</strong> (<em>int</em>) – The maximum number of photons for scaling the image before adding noise.</p></li>
+<li><p><strong>readoutNoiseStd</strong> (<em>float</em>) – The standard deviation of the Gaussian readout noise.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The noisy image with added Poisson and Gaussian noise, clipped to the range [0, maxPhotons].</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">addTab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tabA</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tabB</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#addTab"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Adds two lists element-wise, returning a new list containing the sums of corresponding elements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tabA</strong> (<em>list</em>) – The first list of values.</p></li>
+<li><p><strong>tabB</strong> (<em>list</em>) – The second list of values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new list containing the element-wise sums of tabA and tabB. The length of the returned list is the minimum of the lengths of tabA and tabB.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">computeAngularError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truths</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#computeAngularError"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Computes the angular error between the estimated rotation angles and the true rotation angles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>estimations</strong> (<em>list</em>) – A list of estimated rotation angles [thetaX, thetaY, thetaZ].</p></li>
+<li><p><strong>truths</strong> (<em>list</em>) – A list of true rotation angles [thetaX, thetaY, thetaZ].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated angular error in radians. If the fit method is not “2D” or “3D”, returns infinity.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">computeBhattacharyyaDistance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#computeBhattacharyyaDistance"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Computes the Bhattacharyya distance between two Gaussian distributions defined by their means and standard deviations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mu1</strong> (<em>float</em>) – Mean of the first Gaussian distribution.</p></li>
+<li><p><strong>mu2</strong> (<em>float</em>) – Mean of the second Gaussian distribution.</p></li>
+<li><p><strong>sigma1</strong> (<em>float</em>) – Standard deviation of the first Gaussian distribution.</p></li>
+<li><p><strong>sigma2</strong> (<em>float</em>) – Standard deviation of the second Gaussian distribution.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated Bhattacharyya distance between the two distributions.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">computeMSE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truths</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#computeMSE"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Computes the Mean Squared Error (MSE) between the estimated values and the true values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>estimations</strong> (<em>list</em>) – A list of estimated values.</p></li>
+<li><p><strong>truths</strong> (<em>list</em>) – A list of true values corresponding to the estimations.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated MSE value. If there are no valid comparisons, returns infinity.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">computeMape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truths</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#computeMape"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Computes the Mean Absolute Percentage Error (MAPE) between the estimated values and the true values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>estimations</strong> (<em>list</em>) – A list of estimated values.</p></li>
+<li><p><strong>truths</strong> (<em>list</em>) – A list of true values corresponding to the estimations.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated MAPE value, expressed as a percentage. If there are no valid comparisons, returns infinity.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">computePSNR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truths</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#computePSNR"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Computes the Peak Signal-to-Noise Ratio (PSNR) between the estimated values and the true values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>estimations</strong> (<em>list</em>) – A list of estimated values.</p></li>
+<li><p><strong>truths</strong> (<em>list</em>) – A list of true values corresponding to the estimations.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated PSNR value in decibels (dB). If the MSE is zero, returns infinity.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">divTab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">div</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#divTab"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Divides each element of a list by a specified divisor, returning a new list containing the results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tab</strong> (<em>list</em>) – The list of values to be divided.</p></li>
+<li><p><strong>div</strong> (<em>float</em>) – The divisor by which each element of the list will be divided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new list containing the results of dividing each element of tab by div.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">evaluatePsf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#evaluatePsf"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Evaluates the fitting of a Point Spread Function (PSF) by generating a random PSF, optionally adding noise, and then fitting it using various fitting methods. Computes metrics such as correlation, PSNR, Bhattacharyya distance, determination coefficient, elapsed time, and orientation correlation for each fitting method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – The random seed for reproducibility.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing lists of computed metrics for each fitting method (correlation, PSNR, Bhattacharyya distance, determination coefficient, elapsed time, orientation correlation).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">evaluateXDPsf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psfReshape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">FWHM</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fitMethod</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2D'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thetas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#evaluateXDPsf"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Evaluates the fitting of a Point Spread Function (PSF) using the specified fitting method and computes various metrics such as correlation, PSNR, Bhattacharyya distance, determination coefficient, elapsed time, and orientation correlation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>psf</strong> (<em>np.ndarray</em>) – The original PSF image.</p></li>
+<li><p><strong>psfReshape</strong> (<em>np.ndarray</em>) – The reshaped PSF image for fitting.</p></li>
+<li><p><strong>FWHM</strong> (<em>list</em>) – A list containing the true Full Width at Half Maximum (FWHM) values.</p></li>
+<li><p><strong>coords</strong> (<em>np.ndarray</em>) – The coordinates corresponding to the PSF image.</p></li>
+<li><p><strong>params</strong> (<em>list</em><em>, </em><em>optional</em>) – A list containing the true parameters [amp, bg, mu_x, mu_y, mu_z, sigma_x, sigma_y, sigma_z].</p></li>
+<li><p><strong>fitMethod</strong> (<em>str</em>) – The name of the fitting method to be used (e.g., “1D”, “2D”, “3D”).</p></li>
+<li><p><strong>thetas</strong> (<em>list</em><em>, </em><em>optional</em>) – A list containing the true rotation angles [thetaX, thetaY, thetaZ].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the computed metrics (correlation, PSNR, Bhattacharyya distance, determination coefficient, elapsed time, orientation correlation).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">fitPSF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fitName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#fitPSF"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Fits the provided Point Spread Function (PSF) image using the specified fitting method and returns the fitting results along with the elapsed time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fitName</strong> (<em>str</em>) – The name of the fitting method to be used (e.g., “1D”, “2D”, “3D”).</p></li>
+<li><p><strong>image</strong> (<em>np.ndarray</em>) – The PSF image to be fitted.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the fitting results and the elapsed time for the fitting process.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">generateOrientedPSF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#generateOrientedPSF"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates an oriented Point Spread Function (PSF) based on the provided parameters and applies a random rotation to it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> (<em>list</em>) – A list containing the parameters [amp, bg, mu_x, mu_y, mu_z, sigma_x, sigma_y, sigma_z].</p></li>
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – The random seed for reproducibility.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the generated PSF, coordinates, and FWHM values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">generatePSF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#generatePSF"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates a Point Spread Function (PSF) based on the provided parameters using the Fitting3D class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>list</em>) – A list containing the parameters [amp, bg, mu_x, mu_y, mu_z, sigma_x, sigma_y, sigma_z].</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the generated PSF, coordinates, and FWHM values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">generateRandomGibsonLanniPSF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#generateRandomGibsonLanniPSF"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates a random Point Spread Function (PSF) based on the Gibson-Lanni model using the PSFRandomParameter class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – The random seed for reproducibility.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the generated PSF, coordinates, and FWHM values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">generateRandomPSFParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#generateRandomPSFParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates random parameters for a Point Spread Function (PSF) based on the specified PSF size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>psf_size</strong> (<em>int</em>) – The size of the PSF, used to determine the range for generating random parameters.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list containing the generated parameters [amp, bg, mu_x, mu_y, mu_z, sigma_x, sigma_y, sigma_z].</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">getBhattacharyyaFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#getBhattacharyyaFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Calculates the average Bhattacharyya distance between the fitted parameters and the true parameters for a Point Spread Function (PSF).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> (<em>list</em>) – A list containing the fitted parameters [amp, bg, mu_x, mu_y, mu_z, sigma_x, sigma_y, sigma_z].</p></li>
+<li><p><strong>mu</strong> (<em>list</em>) – A list containing the true means [mu_x, mu_y, mu_z].</p></li>
+<li><p><strong>sigma</strong> (<em>list</em>) – A list containing the true standard deviations [sigma_x, sigma_y, sigma_z].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The average Bhattacharyya distance between the fitted and true parameters.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">inferior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#inferior"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Checks if the first argument is strictly less than the second.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<em>float</em>) – The first value.</p></li>
+<li><p><strong>b</strong> (<em>float</em>) – The second value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if a is strictly less than b, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">printResults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metricStr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unitStr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comparison=&lt;function</span> <span class="pre">superior&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#printResults"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Prints the results of the evaluation for a specific metric, including the mean values for each fitting method and identifies the best fitting method based on the specified comparison function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>metricStr</strong> (<em>str</em>) – The name of the metric being evaluated (e.g., “MAPE”, “PSNR”).</p></li>
+<li><p><strong>metric</strong> (<em>list</em>) – A list of mean values for the specified metric corresponding to each fitting method.</p></li>
+<li><p><strong>unitStr</strong> (<em>str</em>) – The unit of measurement for the metric (e.g., “%”, “dB”).</p></li>
+<li><p><strong>comparison</strong> (<em>function</em>) – A function that defines how to compare two values to determine which is better. Defaults to the ‘superior’ function.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">show2DPsf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#show2DPsf"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Displays a 2D slice of the Point Spread Function (PSF) image at the specified center index along the Z-axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>psf</strong> (<em>np.ndarray</em>) – The 3D PSF image to be visualized.</p></li>
+<li><p><strong>center</strong> (<em>int</em>) – The index along the Z-axis at which to take the 2D slice for visualization.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_fitting.</span></span><span class="sig-name descname"><span class="pre">superior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_fitting.html#superior"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Checks if the first argument is strictly greater than the second.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<em>float</em>) – The first value.</p></li>
+<li><p><strong>b</strong> (<em>float</em>) – The second value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if a is strictly greater than b, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="evaluatemetrics">
 <h2>EvaluateMetrics<a class="headerlink" href="#evaluatemetrics" title="Link to this heading"></a></h2>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.scripts.evaluate_metrics</span></code></p>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_metrics.</span></span><span class="sig-name descname"><span class="pre">BenchMetrics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_metrics.html#BenchMetrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Runs the benchmark tests for comatic aberration, spherical aberration, and astigmatism aberration detection metrics.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_metrics.</span></span><span class="sig-name descname"><span class="pre">addMicroscopyNoise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxPhotons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readoutNoiseStd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_metrics.html#addMicroscopyNoise"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Adds Poisson and Gaussian noise to the provided image to simulate microscopy noise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>np.ndarray</em>) – The input image to which noise will be added.</p></li>
+<li><p><strong>maxPhotons</strong> (<em>int</em><em>, </em><em>optional</em>) – The maximum number of photons for scaling the image. Defaults to 500.</p></li>
+<li><p><strong>readoutNoiseStd</strong> (<em>float</em><em>, </em><em>optional</em>) – The standard deviation of the Gaussian readout noise. Defaults to 5.0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The noisy image with added Poisson and Gaussian noise, clipped to the range [0, maxPhotons].</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_metrics.</span></span><span class="sig-name descname"><span class="pre">showPSF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'PSF'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_metrics.html#showPSF"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Displays the provided PSF image using matplotlib.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>psf</strong> (<em>np.ndarray</em>) – The PSF image to be displayed.</p></li>
+<li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – The title for the displayed image. Defaults to “PSF”.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_metrics.</span></span><span class="sig-name descname"><span class="pre">showPSF2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'PSF'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_metrics.html#showPSF2"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Displays the provided PSF image using matplotlib on the specified axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>psf</strong> (<em>np.ndarray</em>) – The PSF image to be displayed.</p></li>
+<li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – The title for the displayed image. Defaults to “PSF”.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – The axis on which to display the image. If None, a new figure and axis are created. Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_metrics.</span></span><span class="sig-name descname"><span class="pre">showPSFvsNoisy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_metrics.html#showPSFvsNoisy"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates a PSF with comatic aberration, adds noise to it, and displays both the original and noisy PSF images side by side using matplotlib.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_metrics.</span></span><span class="sig-name descname"><span class="pre">test_astigmatism_aberration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_metrics.html#test_astigmatism_aberration"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Test function for evaluating metrics of astigmatism aberration detection.
+This function generates a PSF with astigmatism aberration, applies various methods, and evaluates the results using the defined metrics.
+The test assesses the accuracy of the methods in estimating the PSF parameters in the presence of astigmatism aberration.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_metrics.</span></span><span class="sig-name descname"><span class="pre">test_astigmatism_aberration_with_aberration_single</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_metrics.html#test_astigmatism_aberration_with_aberration_single"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Tests the detection of astigmatism aberration in a PSF generated with astigmatism aberration.
+This function generates a PSF with astigmatism aberration, applies various methods, and evaluates the results using the defined metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple containing the detection result for astigmatism and the duration for the metric calculation.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_metrics.</span></span><span class="sig-name descname"><span class="pre">test_astigmatism_aberration_without_aberration_single</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_metrics.html#test_astigmatism_aberration_without_aberration_single"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Tests the detection of astigmatism aberration in a PSF generated without astigmatism aberration.
+This function generates a PSF without astigmatism aberration, applies various methods, and evaluates the results using the defined metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple containing the detection result for astigmatism and the duration for the metric calculation.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_metrics.</span></span><span class="sig-name descname"><span class="pre">test_comatic_aberration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_metrics.html#test_comatic_aberration"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Test function for evaluating metrics of comatic aberration detection.
+This function generates a PSF with comatic aberration, applies various methods, and evaluates the results using the defined metrics.
+The test assesses the accuracy of the methods in estimating the PSF parameters in the presence of comatic aberration.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_metrics.</span></span><span class="sig-name descname"><span class="pre">test_comatic_aberration_with_aberration_single</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_metrics.html#test_comatic_aberration_with_aberration_single"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Tests the detection of comatic aberration in a PSF generated with comatic aberration.
+This function generates a PSF with comatic aberration, applies various methods, and evaluates the results using the defined metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple containing the detection results for comaticity, mesh, skeleton, and curvature, along with the durations for each metric calculation.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_metrics.</span></span><span class="sig-name descname"><span class="pre">test_comatic_aberration_without_aberration_single</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_metrics.html#test_comatic_aberration_without_aberration_single"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Tests the detection of comatic aberration in a PSF generated without comatic aberration.
+This function generates a PSF without comatic aberration, applies various methods, and evaluates the results using the defined metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple containing the detection results for comaticity, mesh, skeleton, and curvature, along with the durations for each metric calculation.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_metrics.</span></span><span class="sig-name descname"><span class="pre">test_spherical_aberration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_metrics.html#test_spherical_aberration"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Test function for evaluation metrics of spherical aberration.
+This function generates a PSF with spherical aberration, applies various methods, and evaluates the results using the defined metrics.
+The test assesses the accuracy of the methods in estimating the PSF parameters in the presence of spherical aberration.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_metrics.</span></span><span class="sig-name descname"><span class="pre">test_spherical_aberration_with_aberration_single</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_metrics.html#test_spherical_aberration_with_aberration_single"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Tests the detection of spherical aberration in a PSF generated with spherical aberration.
+This function generates a PSF with spherical aberration, applies various fitting methods, and evaluates the results using the defined metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple containing the detection result for sphericality and the duration for the metric calculation.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.evaluate_metrics.</span></span><span class="sig-name descname"><span class="pre">test_spherical_aberration_without_aberration_single</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/evaluate_metrics.html#test_spherical_aberration_without_aberration_single"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Tests the detection of spherical aberration in a PSF generated without spherical aberration.
+This function generates a PSF without spherical aberration, applies various fitting methods, and evaluates the results using the defined metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple containing the detection result for sphericality and the duration for the metric calculation.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 </section>
 

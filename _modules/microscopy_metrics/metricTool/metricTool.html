@@ -1,0 +1,831 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>microscopy_metrics.metricTool.metricTool &mdash; Microscopy metrics  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Microscopy metrics
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to.html">How To</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Microscopy metrics</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">microscopy_metrics.metricTool.metricTool</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for microscopy_metrics.metricTool.metricTool</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">skan</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;DISPLAY&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;GITHUB_ACTIONS&#39;</span><span class="p">):</span>
+    <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;Agg&#39;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;QtAgg&#39;</span><span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">ndimage</span> <span class="k">as</span> <span class="n">ndi</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.signal</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_peaks</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.ndimage</span><span class="w"> </span><span class="kn">import</span> <span class="n">median_filter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">r2_score</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skimage.measure</span><span class="w"> </span><span class="kn">import</span> <span class="n">regionprops</span><span class="p">,</span> <span class="n">label</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skimage.filters</span><span class="w"> </span><span class="kn">import</span> <span class="n">gaussian</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skimage.segmentation</span><span class="w"> </span><span class="kn">import</span> <span class="n">chan_vese</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skimage.measure</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_contours</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skimage.morphology</span><span class="w"> </span><span class="kn">import</span> <span class="n">skeletonize</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">umToPx</span><span class="p">,</span> <span class="n">pxToUm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.thresholdTools.threshold_tool</span><span class="w"> </span><span class="kn">import</span> <span class="n">ThresholdLegacy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.thresholdTools.threshold_tool</span><span class="w"> </span><span class="kn">import</span> <span class="n">ThresholdOtsu</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.fittingTools.fitting2D</span><span class="w"> </span><span class="kn">import</span> <span class="n">Fitting2D</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.metricTool.meshTool</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeshBuilder</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;error&quot;</span><span class="p">)</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span>
+    <span class="s2">&quot;ignore&quot;</span><span class="p">,</span>
+    <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Calling the getitem method from a UnitRegistry&quot;</span><span class="p">,</span>
+    <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span>
+<span class="p">)</span>
+
+<div class="viewcode-block" id="MetricTool">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MetricTool</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class for calculating various metrics related to microscopy images, such as signal-to-background ratio (SBR), lateral asymmetry ratio (LAR), and sphericity ratio.</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        _image (np.ndarray): The input microscopy image for metric calculations.</span>
+<span class="sd">        _ringInnerDistance (float): The inner distance of the ring used for SBR calculation.</span>
+<span class="sd">        _ringThickness (float): The thickness of the ring used for SBR calculation.</span>
+<span class="sd">        _pixelSize (list): The pixel size in micrometers for each dimension of the image.</span>
+<span class="sd">        _SBR (float): The calculated signal-to-background ratio.</span>
+<span class="sd">        _LAR (float): The calculated lateral asymmetry ratio.</span>
+<span class="sd">        _sphericity (float): The calculated sphericity ratio.</span>
+<span class="sd">        _volume (float): The calculated volume of the object in the image.</span>
+<span class="sd">        _surface (float): The calculated surface area of the object in the image.</span>
+<span class="sd">        _comaticity (float): The calculated comaticity metric of the object in the image.</span>
+<span class="sd">        _sphericalAberration (float): The calculated spherical aberration metric of the object in the image.</span>
+<span class="sd">        _astigmatism (float): The calculated astigmatism metric of the object in the image.</span>
+<span class="sd">        _pathSkeleton (np.ndarray): The skeletonized path of the object in the image.</span>
+<span class="sd">        _RMin (float): The minimum radius of the object in the image.</span>
+<span class="sd">        _skeleton2Extremities (float): The distance from the skeleton to the extremities of the object in the image.</span>
+<span class="sd">        _ellipsRatio (float): The calculated ellipsoid ratio of the object in the image.</span>
+<span class="sd">        _orientation (float): The calculated orientation of the object in the image.</span>
+<span class="sd">        _centroids (list): A list of centroids detected in the image.</span>
+<span class="sd">        _summary (dict): A summary of the calculated metrics for the image.</span>
+<span class="sd">        _commentary (str): A string containing commentary or notes related to the metric calculations.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image</span> <span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ringInnerDistance</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ringThickness</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span> <span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_SBR</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_LAR</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sphericity</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_surface</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_comaticity</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sphericalAberration</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_astigmatism</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pathSkeleton</span> <span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_RMin</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_skeleton2Extremities</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ellipsRatio</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_orientation</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_centroids</span> <span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_summary</span> <span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meshBuilder</span> <span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_commentary</span> <span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+<div class="viewcode-block" id="MetricTool.setNormalizedImage">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.setNormalizedImage">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setNormalizedImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Normalizes the input image to a range of [0, 1] and ensures that all values are non-negative.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            image (np.ndarray): The input image to be normalized, which should be a 2D or 3D array representing the microscopy image data.</span>
+<span class="sd">        </span>
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the input image is not 2D or 3D.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: The normalized image with values in the range [0, 1].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">ndim</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Image have to be in 2D or 3D.&quot;</span><span class="p">)</span>
+        <span class="n">imageFloat</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">imageFloat</span> <span class="o">=</span> <span class="p">(</span><span class="n">imageFloat</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">imageFloat</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">imageFloat</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">imageFloat</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1e-6</span>
+        <span class="p">)</span>
+        <span class="n">imageFloat</span><span class="p">[</span><span class="n">imageFloat</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">imageFloat</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.processSingleSBRRing">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.processSingleSBRRing">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">processSingleSBRRing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the signal-to-background ratio (SBR) for a single microscopy image using a ring-based method.</span>
+<span class="sd">        The calculated SBR values are stored in the class attributes for further analysis and evaluation.</span>
+<span class="sd">        </span>
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the input image is not 2D or 3D, if there are no background pixels detected, or if there are no signal pixels detected in the image.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Image is empty&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">ndim</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Incorrect picture format&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">imageFloat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">setNormalizedImage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">)</span>
+        <span class="n">imageFloat</span> <span class="o">=</span> <span class="n">median_filter</span><span class="p">(</span><span class="n">imageFloat</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">thresholdAbs</span> <span class="o">=</span> <span class="n">ThresholdLegacy</span><span class="p">(</span><span class="n">nb_iteration</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span><span class="o">.</span><span class="n">getThreshold</span><span class="p">(</span><span class="n">imageFloat</span><span class="p">)</span>
+        <span class="n">binaryImage</span> <span class="o">=</span> <span class="n">imageFloat</span> <span class="o">&gt;</span> <span class="n">thresholdAbs</span>
+        <span class="n">labeledImage</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">binaryImage</span><span class="p">)</span>
+        <span class="n">regions</span> <span class="o">=</span> <span class="n">regionprops</span><span class="p">(</span><span class="n">labeledImage</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">regions</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">largestRegion</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">regions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">area</span><span class="p">)</span>
+        <span class="n">minZ</span><span class="p">,</span> <span class="n">minY</span><span class="p">,</span> <span class="n">minX</span><span class="p">,</span> <span class="n">maxZ</span><span class="p">,</span> <span class="n">maxY</span><span class="p">,</span> <span class="n">maxX</span> <span class="o">=</span> <span class="n">largestRegion</span><span class="o">.</span><span class="n">bbox</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">largestRegion</span><span class="o">.</span><span class="n">centroid</span>
+        <span class="n">diameterZ</span> <span class="o">=</span> <span class="n">maxZ</span> <span class="o">-</span> <span class="n">minZ</span>
+        <span class="n">diameterY</span> <span class="o">=</span> <span class="n">maxY</span> <span class="o">-</span> <span class="n">minY</span>
+        <span class="n">diameterX</span> <span class="o">=</span> <span class="n">maxX</span> <span class="o">-</span> <span class="n">minX</span>
+        <span class="n">diameterBead</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">diameterZ</span><span class="p">,</span> <span class="n">diameterY</span><span class="p">,</span> <span class="n">diameterX</span><span class="p">)</span>
+        <span class="n">innerDistance</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">umToPx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ringInnerDistance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">+</span> <span class="n">diameterBead</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="n">outerDistance</span> <span class="o">=</span> <span class="n">umToPx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ringThickness</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">+</span> <span class="n">innerDistance</span>
+        <span class="n">signal</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">nSignal</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">background</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">nBackground</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">binaryImage</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">binaryImage</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">binaryImage</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
+                    <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+                        <span class="o">+</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+                        <span class="o">+</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">center</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">binaryImage</span><span class="p">[</span><span class="n">z</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">nSignal</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">signal</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">[</span><span class="n">z</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">innerDistance</span> <span class="o">&lt;=</span> <span class="n">distance</span> <span class="o">&lt;=</span> <span class="n">outerDistance</span><span class="p">:</span>
+                            <span class="n">nBackground</span> <span class="o">+=</span> <span class="mi">1</span>
+                            <span class="n">background</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">[</span><span class="n">z</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span>
+        <span class="n">meanBackground</span> <span class="o">=</span> <span class="n">background</span> <span class="o">/</span> <span class="n">nBackground</span> <span class="k">if</span> <span class="n">nBackground</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="n">meanSignal</span> <span class="o">=</span> <span class="n">signal</span> <span class="o">/</span> <span class="n">nSignal</span> <span class="k">if</span> <span class="n">nSignal</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_SBR</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">meanSignal</span> <span class="o">/</span> <span class="n">meanBackground</span><span class="p">)</span> <span class="k">if</span> <span class="n">meanBackground</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.lateralAsymmetryRatio">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.lateralAsymmetryRatio">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lateralAsymmetryRatio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">FWHM</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the lateral asymmetry ratio (LAR) for a PSF based on the full width at half maximum (FWHM) values.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            FWHM (list): A list of FWHM values for the PSF.</span>
+<span class="sd">        </span>
+<span class="sd">        Raises:</span>
+<span class="sd">           ValueError: If the FWHM values are not available or if there are not enough FWHM values to calculate the LAR.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">FWHM</span> <span class="o">==</span> <span class="p">[]</span> <span class="ow">or</span> <span class="n">FWHM</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">FWHM</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;FWHM values are not available or insufficient to calculate LAR.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">FWHM</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">FWHM</span><span class="p">[</span><span class="mi">2</span><span class="p">]])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_LAR</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">/</span> <span class="n">tmp</span><span class="o">.</span><span class="n">max</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.getVolume">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.getVolume">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getVolume</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the volume of the object in the microscopy image based on the voxel count and voxel volume.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The calculated volume of the object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">voxelVolume</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">imageFloat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">setNormalizedImage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">)</span>
+        <span class="n">imageFloat</span> <span class="o">=</span> <span class="n">median_filter</span><span class="p">(</span><span class="n">imageFloat</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">thresholdAbs</span> <span class="o">=</span> <span class="n">ThresholdLegacy</span><span class="p">(</span><span class="n">nb_iteration</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span><span class="o">.</span><span class="n">getThreshold</span><span class="p">(</span><span class="n">imageFloat</span><span class="p">)</span>
+        <span class="n">binaryImage</span> <span class="o">=</span> <span class="n">imageFloat</span> <span class="o">&gt;</span> <span class="n">thresholdAbs</span>
+        <span class="n">voxelCount</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">binaryImage</span><span class="p">)</span>
+        <span class="n">volume</span> <span class="o">=</span> <span class="n">voxelCount</span> <span class="o">*</span> <span class="n">voxelVolume</span>
+        <span class="k">return</span> <span class="n">volume</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.updateTile">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.updateTile">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">updateTile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tile</span><span class="p">,</span> <span class="n">tileIndex</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Updates the tile configuration based on the provided tile index, which represents the presence or absence of voxels in a 2x2x2 neighborhood.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            tile (list): A 3D list representing the tile.</span>
+<span class="sd">            tileIndex (int): The index of the tile.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                    <span class="n">tile</span><span class="p">[</span><span class="n">z</span><span class="p">][</span><span class="n">y</span><span class="p">][</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">tileIndex</span> <span class="o">&amp;</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">z</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.surfaceAreaLutD3">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.surfaceAreaLutD3">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">surfaceAreaLutD3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the surface area lookup table for 3D tiles.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            list: A list of surface area values for each tile configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">d1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">d2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">d3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">vol</span> <span class="o">=</span> <span class="n">d1</span> <span class="o">*</span> <span class="n">d2</span> <span class="o">*</span> <span class="n">d3</span>
+        <span class="n">nbConfigs</span> <span class="o">=</span> <span class="mi">256</span>
+        <span class="n">tab</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbConfigs</span><span class="p">)]</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="p">[[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]]</span>
+        <span class="k">for</span> <span class="n">iConfig</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbConfigs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">updateTile</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">iConfig</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">im</span><span class="p">[</span><span class="n">z</span><span class="p">][</span><span class="n">y</span><span class="p">][</span><span class="n">x</span><span class="p">]:</span>
+                            <span class="k">continue</span>
+                        <span class="n">ke1</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">im</span><span class="p">[</span><span class="n">z</span><span class="p">][</span><span class="n">y</span><span class="p">][</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">]</span> <span class="k">else</span> <span class="n">vol</span> <span class="o">/</span> <span class="n">d1</span> <span class="o">/</span> <span class="mf">2.0</span>
+                        <span class="n">ke2</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">im</span><span class="p">[</span><span class="n">z</span><span class="p">][</span><span class="mi">1</span> <span class="o">-</span> <span class="n">y</span><span class="p">][</span><span class="n">x</span><span class="p">]</span> <span class="k">else</span> <span class="n">vol</span> <span class="o">/</span> <span class="n">d2</span> <span class="o">/</span> <span class="mf">2.0</span>
+                        <span class="n">ke3</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">im</span><span class="p">[</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="p">][</span><span class="n">y</span><span class="p">][</span><span class="n">x</span><span class="p">]</span> <span class="k">else</span> <span class="n">vol</span> <span class="o">/</span> <span class="n">d3</span> <span class="o">/</span> <span class="mf">2.0</span>
+                        <span class="n">tab</span><span class="p">[</span><span class="n">iConfig</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">ke1</span> <span class="o">+</span> <span class="n">ke2</span> <span class="o">+</span> <span class="n">ke3</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.0</span>
+        <span class="k">return</span> <span class="n">tab</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.configIndex">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.configIndex">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">configIndex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">configValues</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the index of a tile configuration.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            configValues (list): A list of boolean values representing the presence or absence of voxels in a 2x2x2 neighborhood.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            int: The index of the tile configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">val</span> <span class="o">&lt;&lt;</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">configValues</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.getHistogram3D">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.getHistogram3D">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getHistogram3D</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the histogram of 3D tile configurations in the binary image.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            list: A list of counts for each tile configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">histo</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">256</span><span class="p">)]</span>
+        <span class="n">imageFloat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">setNormalizedImage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">)</span>
+        <span class="n">imageFloat</span> <span class="o">=</span> <span class="n">median_filter</span><span class="p">(</span><span class="n">imageFloat</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">thresholdAbs</span> <span class="o">=</span> <span class="n">ThresholdLegacy</span><span class="p">(</span><span class="n">nb_iteration</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span><span class="o">.</span><span class="n">getThreshold</span><span class="p">(</span><span class="n">imageFloat</span><span class="p">)</span>
+        <span class="n">binaryImage</span> <span class="o">=</span> <span class="n">imageFloat</span> <span class="o">&gt;</span> <span class="n">thresholdAbs</span>
+
+        <span class="n">sizeZ</span><span class="p">,</span> <span class="n">sizeY</span><span class="p">,</span> <span class="n">sizeX</span> <span class="o">=</span> <span class="n">binaryImage</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">configValues</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sizeZ</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sizeY</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">configValues</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">configValues</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">configValues</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">configValues</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sizeX</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">sizeX</span><span class="p">:</span>
+                        <span class="n">configValues</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="nb">bool</span><span class="p">(</span><span class="n">binaryImage</span><span class="p">[</span><span class="n">z</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">z</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+                            <span class="k">else</span> <span class="kc">False</span>
+                        <span class="p">)</span>
+                        <span class="n">configValues</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="nb">bool</span><span class="p">(</span><span class="n">binaryImage</span><span class="p">[</span><span class="n">z</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="n">sizeY</span> <span class="ow">and</span> <span class="n">z</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+                            <span class="k">else</span> <span class="kc">False</span>
+                        <span class="p">)</span>
+                        <span class="n">configValues</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="nb">bool</span><span class="p">(</span><span class="n">binaryImage</span><span class="p">[</span><span class="n">z</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">z</span> <span class="o">&lt;</span> <span class="n">sizeZ</span><span class="p">)</span>
+                            <span class="k">else</span> <span class="kc">False</span>
+                        <span class="p">)</span>
+                        <span class="n">configValues</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="nb">bool</span><span class="p">(</span><span class="n">binaryImage</span><span class="p">[</span><span class="n">z</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="n">sizeY</span> <span class="ow">and</span> <span class="n">z</span> <span class="o">&lt;</span> <span class="n">sizeZ</span><span class="p">)</span>
+                            <span class="k">else</span> <span class="kc">False</span>
+                        <span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">configValues</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">configValues</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">configValues</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">configValues</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+                        <span class="p">)</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configIndex</span><span class="p">(</span><span class="n">configValues</span><span class="p">)</span>
+                    <span class="n">histo</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">configValues</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">configValues</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">configValues</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">configValues</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+                    <span class="n">configValues</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">configValues</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+                    <span class="n">configValues</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="n">configValues</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">histo</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.applyLut">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.applyLut">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">applyLut</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">histogram</span><span class="p">,</span> <span class="n">lut</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Applies the surface area lookup table to the histogram of tile configurations to calculate the total surface area.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            histogram (list): A list of counts for each tile configuration.</span>
+<span class="sd">            lut (list): A list of surface area values for each tile configuration.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The total surface area calculated by applying the lookup table to the histogram.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">sum</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">histogram</span><span class="p">)):</span>
+            <span class="nb">sum</span> <span class="o">+=</span> <span class="n">histogram</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">lut</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">sum</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.getSurface">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.getSurface">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getSurface</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the surface area of the object in the microscopy image.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The calculated surface area of the object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surfaceAreaLutD3</span><span class="p">()</span>
+        <span class="n">histo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getHistogram3D</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">applyLut</span><span class="p">(</span><span class="n">histo</span><span class="p">,</span> <span class="n">lut</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.sphericity">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.sphericity">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sphericity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the sphericity of the object in the microscopy image based on its volume and surface area, using the formula: sphericity = (36 * π * volume^2) / (surface^3).</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The calculated sphericity of the object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="mi">36</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_volume</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getVolume</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_surface</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSurface</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_surface</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sphericity</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sphericity</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_volume</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_surface</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sphericity</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.distance">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.distance">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the distance between two points, x1 and x2.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            x1 (float): The first point.</span>
+<span class="sd">            x2 (float): The second point.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The calculated distance between the two points.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.getContours">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.getContours">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getContours</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the contours of the object in the microscopy image using the Chan-Vese active contour model.</span>
+<span class="sd">        The method applies a Gaussian filter to smooth the input image, then uses the Chan-Vese algorithm to segment the image and find the contours of the detected object.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            image (numpy.ndarray): The input image.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy.ndarray: The detected contours.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">smoothImage</span> <span class="o">=</span> <span class="n">gaussian</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">cvMask</span> <span class="o">=</span> <span class="n">chan_vese</span><span class="p">(</span>
+            <span class="n">smoothImage</span><span class="p">,</span>
+            <span class="n">mu</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+            <span class="n">lambda1</span><span class="o">=</span><span class="mf">1.15</span><span class="p">,</span>
+            <span class="n">lambda2</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+            <span class="n">max_num_iter</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+            <span class="n">dt</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+            <span class="n">init_level_set</span><span class="o">=</span><span class="s2">&quot;checkerboard&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">contours</span> <span class="o">=</span> <span class="n">find_contours</span><span class="p">(</span><span class="n">cvMask</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">contours</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="n">snake</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">contours</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">snake</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.computeComaticityCentroids">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.computeComaticityCentroids">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">computeComaticityCentroids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the comaticity centroids for the object in the microscopy image by analyzing each image along the Z-axis and determining the maximum drift in the X and Y directions from the center of the image.&quot;&quot;&quot;</span>
+        <span class="n">threshold</span> <span class="o">=</span> <span class="n">ThresholdLegacy</span><span class="p">()</span><span class="o">.</span><span class="n">getThreshold</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">)</span>
+        <span class="n">maxDriftX</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">maxDriftY</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">[</span><span class="n">z</span><span class="p">]</span>
+            <span class="n">imageBinary</span> <span class="o">=</span> <span class="n">image</span> <span class="o">&gt;</span> <span class="n">threshold</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">imageBinary</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">props</span> <span class="o">=</span> <span class="n">regionprops</span><span class="p">(</span><span class="n">label</span><span class="p">(</span><span class="n">imageBinary</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">props</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">largestRegion</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">props</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">area</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_centroids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">largestRegion</span><span class="o">.</span><span class="n">centroid</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_centroids</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">driftX</span> <span class="o">=</span> <span class="n">pxToUm</span><span class="p">(</span>
+                    <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_centroids</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                <span class="p">)</span>
+                <span class="n">driftY</span> <span class="o">=</span> <span class="n">pxToUm</span><span class="p">(</span>
+                    <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_centroids</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">driftX</span> <span class="o">&gt;</span> <span class="n">maxDriftX</span><span class="p">:</span>
+                    <span class="n">maxDriftX</span> <span class="o">=</span> <span class="n">driftX</span>
+                <span class="k">if</span> <span class="n">driftY</span> <span class="o">&gt;</span> <span class="n">maxDriftY</span><span class="p">:</span>
+                    <span class="n">maxDriftY</span> <span class="o">=</span> <span class="n">driftY</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_centroids</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_centroids</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_centroids</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_comaticityCentroids</span> <span class="o">=</span> <span class="p">(</span><span class="n">maxDriftX</span><span class="p">,</span> <span class="n">maxDriftY</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curvaturePath</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_computeAxisComaticity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">pixelSize</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the axis comaticity for a given 1D image by analyzing the intensity profiles along the specified axis and comparing them to the detected contours of the object in the image.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            image (numpy.ndarray): The input image.</span>
+<span class="sd">            pixelSize (float): The size of each pixel in the image.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The calculated axis comaticity.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">snake</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getContours</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">snake</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="n">ndi</span><span class="o">.</span><span class="n">gaussian_filter</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">image</span><span class="p">)</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">margin</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">snake</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">-</span> <span class="n">margin</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">snake</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="n">margin</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">profile</span> <span class="o">=</span> <span class="n">image</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">amp</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">profile</span><span class="p">))</span>
+            <span class="n">prominenceMin</span> <span class="o">=</span> <span class="n">amp</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="mf">0.4</span><span class="p">)</span>
+            <span class="n">peaks</span><span class="p">,</span> <span class="n">props</span> <span class="o">=</span> <span class="n">find_peaks</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">prominence</span><span class="o">=</span><span class="n">prominenceMin</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="p">(</span>
+                <span class="nb">any</span><span class="p">(</span><span class="n">peaks</span> <span class="o">&gt;</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">peaks</span> <span class="o">&lt;</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">peaks</span> <span class="o">&gt;</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">):</span>
+                    <span class="n">score</span> <span class="o">+=</span> <span class="n">pxToUm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="n">pixelSize</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span>
+                        <span class="n">pxToUm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">peaks</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">peaks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">score</span> <span class="o">-=</span> <span class="n">pxToUm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="n">pixelSize</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span>
+                        <span class="n">pxToUm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">peaks</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">peaks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="p">)</span>
+                <span class="n">total</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">total</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">score</span> <span class="o">/=</span> <span class="n">total</span>
+        <span class="k">return</span> <span class="n">score</span>
+
+<div class="viewcode-block" id="MetricTool.comaticity">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.comaticity">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">comaticity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the comaticity of the object in the microscopy image by analyzing the intensity profiles along the X and Y axes and comparing them to the detected contours of the object in the image.</span>
+<span class="sd">        The method computes the comaticity score for both axes and combines them to provide an overall comaticity score for the object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">computeComaticityCentroids</span><span class="p">()</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_comaticityCentroids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_comaticityCentroids</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">[:,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="p">:]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">XScore</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_computeAxisComaticity</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">[:,</span> <span class="p">:,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">YScore</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_computeAxisComaticity</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_comaticity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">XScore</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">YScore</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_comaticity</span> <span class="o">=</span> <span class="mf">0.0</span></div>
+
+
+
+<div class="viewcode-block" id="MetricTool.sphericalAberration">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.sphericalAberration">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sphericalAberration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the spherical aberration of the object in the microscopy image by comparing the two halves of the intensity profile along the Z-axis to assess the symmetry of the point spread function (PSF) and determine the degree of spherical aberration present in the image.&quot;&quot;&quot;</span>
+        <span class="n">profile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">[</span>
+            <span class="p">:,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">ndi</span><span class="o">.</span><span class="n">gaussian_filter</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">zCenter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span>
+        <span class="n">profile</span> <span class="o">=</span> <span class="n">profile</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">zCenter</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span> <span class="o">-</span> <span class="n">zCenter</span><span class="p">)</span>
+        <span class="n">before</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="n">zCenter</span> <span class="o">-</span> <span class="n">length</span><span class="o">+</span><span class="mi">1</span> <span class="p">:</span> <span class="n">zCenter</span><span class="o">+</span><span class="mi">1</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">after</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="n">zCenter</span> <span class="p">:</span> <span class="n">zCenter</span> <span class="o">+</span> <span class="n">length</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sphericalAberration</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">r2_score</span><span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.getFWHM">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.getFWHM">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getFWHM</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the full width at half maximum (FWHM) of the point spread function (PSF) in the given image by fitting a 2D Gaussian function to the intensity profile and extracting the FWHM values along the Y and X axes based on the fitted parameters.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            image (numpy.ndarray): The input image containing the PSF to be analyzed.</span>
+<span class="sd">            mu (list): A list of mean values for the Gaussian fit along the Z, Y, and X axes.</span>
+<span class="sd">            sigma (list): A list of standard deviation values for the Gaussian fit along the Z, Y, and X axes.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            list: A list containing the FWHM values along the Y and X axes.</span>
+<span class="sd">            str: A string containing commentary or notes related to the FWHM calculation and fitting process.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">amp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="n">bg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="n">mu2</span> <span class="o">=</span> <span class="p">[</span><span class="n">mu</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mu</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="n">sigma2</span> <span class="o">=</span> <span class="p">[</span><span class="n">sigma</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sigma</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="n">fittingTool</span> <span class="o">=</span> <span class="n">Fitting2D</span><span class="p">()</span>
+        <span class="n">fittingTool</span><span class="o">.</span><span class="n">_spacing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span>
+        <span class="n">params</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">fittingTool</span><span class="o">.</span><span class="n">fitCurve</span><span class="p">(</span>
+            <span class="n">amp</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">mu2</span><span class="p">,</span> <span class="n">sigma2</span><span class="p">,</span> <span class="n">fittingTool</span><span class="o">.</span><span class="n">getCoords</span><span class="p">(</span><span class="n">image</span><span class="p">),</span> <span class="n">image</span>
+        <span class="p">)</span>
+        <span class="n">fwhmY</span> <span class="o">=</span> <span class="n">fittingTool</span><span class="o">.</span><span class="n">fwhm</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+        <span class="n">fwhmX</span> <span class="o">=</span> <span class="n">fittingTool</span><span class="o">.</span><span class="n">fwhm</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">fwhmY</span><span class="p">,</span> <span class="n">fwhmX</span><span class="p">],</span> <span class="n">fittingTool</span><span class="o">.</span><span class="n">_commentary</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.astigmatism">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.astigmatism">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">astigmatism</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the astigmatism of the object in the microscopy image by comparing the FWHM values along the Y and X axes for two points on either side of the object.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            mu (list): A list of mean values for the Gaussian fit along the Z, Y, and X axes.</span>
+<span class="sd">            sigma (list): A list of standard deviation values for the Gaussian fit along the Z, Y, and X axes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fwhmZ</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span> <span class="o">*</span> <span class="n">sigma</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pointBefore</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">[</span><span class="n">mu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">fwhmZ</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">mu</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mu</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="n">mu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">fwhmZ</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+            <span class="k">else</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">mu</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mu</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="p">)</span>
+        <span class="n">pointAfter</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">[</span><span class="n">mu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">fwhmZ</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">mu</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mu</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="n">mu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">fwhmZ</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">mu</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mu</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="p">)</span>
+        <span class="n">imageBefore</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">pointBefore</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+        <span class="n">imageAfter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">pointAfter</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+        <span class="n">fwhmsBefore</span><span class="p">,</span> <span class="n">commentaryBefore</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFWHM</span><span class="p">(</span><span class="n">imageBefore</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+        <span class="n">fwhmsAfter</span><span class="p">,</span> <span class="n">commentaryAfter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFWHM</span><span class="p">(</span><span class="n">imageAfter</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+        <span class="n">scoreBefore</span> <span class="o">=</span> <span class="p">(</span><span class="n">fwhmsBefore</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">fwhmsBefore</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">fwhmsBefore</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">fwhmsBefore</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">scoreAfter</span> <span class="o">=</span> <span class="p">(</span><span class="n">fwhmsAfter</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">fwhmsAfter</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">fwhmsAfter</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">fwhmsAfter</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_astigmatism</span> <span class="o">=</span> <span class="n">scoreAfter</span> <span class="o">-</span> <span class="n">scoreBefore</span>
+        <span class="k">if</span> <span class="n">commentaryBefore</span> <span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_commentary</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Image Before: </span><span class="si">{</span><span class="n">commentaryBefore</span><span class="si">}</span><span class="se">\n</span><span class="s2"> &quot;</span>
+        <span class="k">if</span> <span class="n">commentaryAfter</span> <span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_commentary</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Image After: </span><span class="si">{</span><span class="n">commentaryAfter</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.ellipsRatio">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.ellipsRatio">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ellipsRatio</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the ellipticity ratio of the object in the microscopy image by analyzing the major and minor axes of the detected contours.</span>
+<span class="sd">       </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The calculated ellipticity ratio of the object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span>
+        <span class="n">props</span> <span class="o">=</span> <span class="n">regionprops</span><span class="p">(</span>
+            <span class="n">label</span><span class="p">(</span><span class="n">image</span> <span class="o">&gt;</span> <span class="n">ThresholdLegacy</span><span class="p">(</span><span class="n">nb_iteration</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span><span class="o">.</span><span class="n">getThreshold</span><span class="p">(</span><span class="n">image</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">props</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_orientation</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="n">largestRegion</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">props</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">area</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">largestRegion</span><span class="o">.</span><span class="n">axis_minor_length</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_orientation</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ellipsRatio</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">largestRegion</span><span class="o">.</span><span class="n">axis_major_length</span> <span class="o">/</span> <span class="n">largestRegion</span><span class="o">.</span><span class="n">axis_minor_length</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_orientation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">largestRegion</span><span class="o">.</span><span class="n">orientation</span><span class="p">)</span> <span class="o">%</span> <span class="mi">180</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.meshMetrics">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.meshMetrics">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">meshMetrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the mesh metrics for the object in the microscopy image by creating a mesh representation of the object and computing various metrics related to its geometry and structure.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meshBuilder</span> <span class="o">=</span> <span class="n">MeshBuilder</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meshBuilder</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meshBuilder</span><span class="o">.</span><span class="n">_pixelSize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meshBuilder</span><span class="o">.</span><span class="n">computeMeshMetrics</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.skeletonizePath">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.skeletonizePath">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">skeletonizePath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the skeletonized path of the object in the microscopy image by applying a skeletonization algorithm to the binary representation of the image and extracting the resulting skeletonized structure.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">meshBuilder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">meshBuilder</span><span class="o">.</span><span class="n">_segArray</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">binaryImage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meshBuilder</span><span class="o">.</span><span class="n">_largestRegionMask</span> <span class="o">&gt;</span> <span class="mf">0.5</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">imageFloat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">setNormalizedImage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">)</span>
+            <span class="n">imageFloat</span> <span class="o">=</span> <span class="n">ndi</span><span class="o">.</span><span class="n">gaussian_filter</span><span class="p">(</span><span class="n">imageFloat</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+            <span class="n">thresholdAbs</span> <span class="o">=</span> <span class="n">ThresholdOtsu</span><span class="p">()</span><span class="o">.</span><span class="n">getThreshold</span><span class="p">(</span><span class="n">imageFloat</span><span class="p">)</span>
+            <span class="n">binaryImage</span> <span class="o">=</span> <span class="n">imageFloat</span> <span class="o">&gt;</span> <span class="n">thresholdAbs</span>
+        <span class="n">skeletonImg</span> <span class="o">=</span> <span class="n">skeletonize</span><span class="p">(</span><span class="n">binaryImage</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">skeletonImg</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Skeletonization failed: not enough skeleton pixels found.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pathSkeleton</span> <span class="o">=</span> <span class="n">skan</span><span class="o">.</span><span class="n">Skeleton</span><span class="p">(</span><span class="n">skeletonImg</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pathSkeleton</span><span class="o">.</span><span class="n">path_lengths</span><span class="p">()</span>
+        <span class="n">maxLength</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pathSkeleton</span><span class="o">.</span><span class="n">distances</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_summary</span> <span class="o">=</span> <span class="n">skan</span><span class="o">.</span><span class="n">summarize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pathSkeleton</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+        <span class="n">maxDistance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_summary</span><span class="p">[</span><span class="s2">&quot;euclidean_distance&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_skeleton2Extremities</span> <span class="o">=</span> <span class="p">(</span><span class="n">maxLength</span> <span class="o">/</span> <span class="n">maxDistance</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">if</span> <span class="n">maxDistance</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="MetricTool.curvaturePath">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.curvaturePath">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">curvaturePath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the curvature of the path defined by the centroids of the object in the microscopy image.</span>
+<span class="sd">        The method fits a polynomial to the centroids and computes the curvature at each point along the path, storing the maximum curvature value as the minimum radius of curvature (RMin) for the object.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The calculated minimum radius of curvature (RMin) for the object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_centroids</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_centroids</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Not enough centroids to calculate curvature.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">centroidsArray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_centroids</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">centroidsArray</span><span class="p">))</span>
+        <span class="n">pz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">centroidsArray</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">py</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">centroidsArray</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">px</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">centroidsArray</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">centroidsArray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">pz</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">py</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">px</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_centroids</span> <span class="o">=</span> <span class="n">centroidsArray</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span>
+        <span class="n">dpz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyder</span><span class="p">(</span><span class="n">pz</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">dpy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyder</span><span class="p">(</span><span class="n">py</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">dpx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyder</span><span class="p">(</span><span class="n">px</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">ddpz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyder</span><span class="p">(</span><span class="n">pz</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">ddpy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyder</span><span class="p">(</span><span class="n">py</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">ddpx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyder</span><span class="p">(</span><span class="n">px</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">dpz</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">dpy</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">dpx</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">ddpz</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">ddpy</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">ddpx</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="n">cross_prod</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+        <span class="n">numerator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cross_prod</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">denominator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">3</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">):</span>
+            <span class="n">curvature</span> <span class="o">=</span> <span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span>
+            <span class="n">curvature</span><span class="p">[</span><span class="n">denominator</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">k_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">curvature</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">k_max</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_RMin</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_RMin</span> <span class="o">=</span> <span class="n">k_max</span></div>
+
+
+
+<div class="viewcode-block" id="MetricTool.generateBeadOrientation">
+<a class="viewcode-back" href="../../../microscopy_metrics.metricTool.html#microscopy_metrics.metricTool.metricTool.MetricTool.generateBeadOrientation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generateBeadOrientation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outputPath</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates a visualization of the bead orientation based on the calculated orientation angle and saves it as an image file.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            outputPath (str): The path where the visualization image will be saved.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orientation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Orientation not calculated, cannot generate bead orientation.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">arrow</span><span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orientation</span><span class="p">)),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orientation</span><span class="p">)),</span>
+            <span class="n">head_width</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+            <span class="n">head_length</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+            <span class="n">fc</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span>
+            <span class="n">ec</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">&quot;equal&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Bead Orientation: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_orientation</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> degrees&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outputPath</span><span class="p">,</span> <span class="s2">&quot;bead_orientation.png&quot;</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, CNRS.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,783 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>microscopy_metrics.scripts.evaluate_fitting &mdash; Microscopy metrics  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Microscopy metrics
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to.html">How To</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Microscopy metrics</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">microscopy_metrics.scripts.evaluate_fitting</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for microscopy_metrics.scripts.evaluate_fitting</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mp</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">concurrent.futures</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProcessPoolExecutor</span><span class="p">,</span> <span class="n">as_completed</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.fittingTools.fitting3D</span><span class="w"> </span><span class="kn">import</span> <span class="n">Fitting3D</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.fittingTools.fittingTool</span><span class="w"> </span><span class="kn">import</span> <span class="n">FittingTool</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.scripts.PSFGenerator.PSF</span><span class="w"> </span><span class="kn">import</span> <span class="n">PSFRandomParameter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.fittingTools.fitting3DRotation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Fitting3DRotation</span>
+
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;DISPLAY&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;GITHUB_ACTIONS&#39;</span><span class="p">):</span>
+    <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;Agg&#39;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;Qt5Agg&#39;</span><span class="p">)</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="n">GIBSONLANNI</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">ORIENTED</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">PSF_SIZE</span> <span class="o">=</span> <span class="mi">80</span>
+<span class="n">NOISE</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">FIT_METHODS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;1D&quot;</span><span class="p">,</span> <span class="s2">&quot;2D&quot;</span><span class="p">,</span> <span class="s2">&quot;3D&quot;</span><span class="p">,</span> <span class="s2">&quot;2DRotation&quot;</span><span class="p">,</span> <span class="s2">&quot;3DRotation&quot;</span><span class="p">,</span> <span class="s2">&quot;2DEllips&quot;</span><span class="p">,</span> <span class="s2">&quot;Prominence&quot;</span><span class="p">]</span>
+
+<span class="n">TRUE_AMP</span> <span class="o">=</span> <span class="mf">255.0</span>
+<span class="n">TRUE_BG</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">TRUE_MU_X</span> <span class="o">=</span> <span class="n">PSF_SIZE</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="n">TRUE_MU_Y</span> <span class="o">=</span> <span class="n">PSF_SIZE</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="n">TRUE_MU_Z</span> <span class="o">=</span> <span class="n">PSF_SIZE</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="n">TRUE_SIGMA_X</span> <span class="o">=</span> <span class="n">PSF_SIZE</span> <span class="o">/</span> <span class="mi">10</span>
+<span class="n">TRUE_SIGMA_Y</span> <span class="o">=</span> <span class="n">PSF_SIZE</span> <span class="o">/</span> <span class="mi">10</span>
+<span class="n">TRUE_SIGMA_Z</span> <span class="o">=</span> <span class="n">PSF_SIZE</span> <span class="o">/</span> <span class="mi">10</span>
+
+
+<div class="viewcode-block" id="show2DPsf">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.show2DPsf">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">show2DPsf</span><span class="p">(</span><span class="n">psf</span><span class="p">,</span> <span class="n">center</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Displays a 2D slice of the Point Spread Function (PSF) image at the specified center index along the Z-axis.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        psf (np.ndarray): The 3D PSF image to be visualized.</span>
+<span class="sd">        center (int): The index along the Z-axis at which to take the 2D slice for visualization.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">psf</span><span class="p">[:,</span> <span class="n">center</span><span class="p">,</span> <span class="p">:],</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;2D Image of a Gaussian&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;X&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Y&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="computeMape">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.computeMape">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">computeMape</span><span class="p">(</span><span class="n">estimations</span><span class="p">,</span> <span class="n">truths</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the Mean Absolute Percentage Error (MAPE) between the estimated values and the true values.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        estimations (list): A list of estimated values.</span>
+<span class="sd">        truths (list): A list of true values corresponding to the estimations.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        float: The calculated MAPE value, expressed as a percentage. If there are no valid comparisons, returns infinity.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">est</span><span class="p">,</span> <span class="n">truth</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">estimations</span><span class="p">,</span> <span class="n">truths</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">truth</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">est</span> <span class="o">-</span> <span class="n">truth</span><span class="p">)</span> <span class="o">/</span> <span class="n">truth</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">errors</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">if</span> <span class="n">errors</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_rotation_matrix</span><span class="p">(</span><span class="n">thetaX</span><span class="p">,</span> <span class="n">thetaY</span><span class="p">,</span> <span class="n">thetaZ</span><span class="p">):</span>
+    <span class="n">cx</span><span class="p">,</span> <span class="n">sx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">thetaX</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">thetaX</span><span class="p">)</span>
+    <span class="n">cy</span><span class="p">,</span> <span class="n">sy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">thetaY</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">thetaY</span><span class="p">)</span>
+    <span class="n">cz</span><span class="p">,</span> <span class="n">sz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">thetaZ</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">thetaZ</span><span class="p">)</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="p">[</span><span class="n">cy</span> <span class="o">*</span> <span class="n">cz</span><span class="p">,</span> <span class="n">cz</span> <span class="o">*</span> <span class="n">sx</span> <span class="o">*</span> <span class="n">sy</span> <span class="o">-</span> <span class="n">cx</span> <span class="o">*</span> <span class="n">sz</span><span class="p">,</span> <span class="n">cx</span> <span class="o">*</span> <span class="n">cz</span> <span class="o">*</span> <span class="n">sy</span> <span class="o">+</span> <span class="n">sx</span> <span class="o">*</span> <span class="n">sz</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">cy</span> <span class="o">*</span> <span class="n">sz</span><span class="p">,</span> <span class="n">cx</span> <span class="o">*</span> <span class="n">cz</span> <span class="o">+</span> <span class="n">sx</span> <span class="o">*</span> <span class="n">sy</span> <span class="o">*</span> <span class="n">sz</span><span class="p">,</span> <span class="o">-</span><span class="n">cz</span> <span class="o">*</span> <span class="n">sx</span> <span class="o">+</span> <span class="n">cx</span> <span class="o">*</span> <span class="n">sy</span> <span class="o">*</span> <span class="n">sz</span><span class="p">],</span>
+            <span class="p">[</span><span class="o">-</span><span class="n">sy</span><span class="p">,</span> <span class="n">cy</span> <span class="o">*</span> <span class="n">sx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">*</span> <span class="n">cx</span><span class="p">],</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">R</span>
+
+
+<div class="viewcode-block" id="computeAngularError">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.computeAngularError">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">computeAngularError</span><span class="p">(</span><span class="n">estimations</span><span class="p">,</span> <span class="n">truths</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the angular error between the estimated rotation angles and the true rotation angles.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        estimations (list): A list of estimated rotation angles [thetaX, thetaY, thetaZ].</span>
+<span class="sd">        truths (list): A list of true rotation angles [thetaX, thetaY, thetaZ].</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        float: The calculated angular error in radians. If the fit method is not &quot;2D&quot; or &quot;3D&quot;, returns infinity.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">R_est</span> <span class="o">=</span> <span class="n">get_rotation_matrix</span><span class="p">(</span><span class="n">estimations</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">estimations</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">estimations</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">R_true</span> <span class="o">=</span> <span class="n">get_rotation_matrix</span><span class="p">(</span><span class="n">truths</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">truths</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">truths</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">R_diff</span> <span class="o">=</span> <span class="n">R_est</span> <span class="o">@</span> <span class="n">R_true</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">trace</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">R_diff</span><span class="p">)</span>
+    <span class="n">err_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">((</span><span class="n">trace</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">err_x</span></div>
+
+
+
+<div class="viewcode-block" id="computeMSE">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.computeMSE">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">computeMSE</span><span class="p">(</span><span class="n">estimations</span><span class="p">,</span> <span class="n">truths</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the Mean Squared Error (MSE) between the estimated values and the true values.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        estimations (list): A list of estimated values.</span>
+<span class="sd">        truths (list): A list of true values corresponding to the estimations.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        float: The calculated MSE value. If there are no valid comparisons, returns infinity.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">estimations</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">truths</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="computePSNR">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.computePSNR">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">computePSNR</span><span class="p">(</span><span class="n">estimations</span><span class="p">,</span> <span class="n">truths</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the Peak Signal-to-Noise Ratio (PSNR) between the estimated values and the true values.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        estimations (list): A list of estimated values.</span>
+<span class="sd">        truths (list): A list of true values corresponding to the estimations.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        float: The calculated PSNR value in decibels (dB). If the MSE is zero, returns infinity.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mse</span> <span class="o">=</span> <span class="n">computeMSE</span><span class="p">(</span><span class="n">estimations</span><span class="p">,</span> <span class="n">truths</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mse</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+    <span class="n">psnr</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">((</span><span class="n">TRUE_AMP</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">mse</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">psnr</span></div>
+
+
+
+<div class="viewcode-block" id="computeBhattacharyyaDistance">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.computeBhattacharyyaDistance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">computeBhattacharyyaDistance</span><span class="p">(</span><span class="n">mu1</span><span class="p">,</span> <span class="n">mu2</span><span class="p">,</span> <span class="n">sigma1</span><span class="p">,</span> <span class="n">sigma2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the Bhattacharyya distance between two Gaussian distributions defined by their means and standard deviations.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        mu1 (float): Mean of the first Gaussian distribution.</span>
+<span class="sd">        mu2 (float): Mean of the second Gaussian distribution.</span>
+<span class="sd">        sigma1 (float): Standard deviation of the first Gaussian distribution.</span>
+<span class="sd">        sigma2 (float): Standard deviation of the second Gaussian distribution.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        float: The calculated Bhattacharyya distance between the two distributions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="p">((</span><span class="n">mu1</span> <span class="o">-</span> <span class="n">mu2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">sigma1</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">sigma2</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">sigma1</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">sigma2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma1</span> <span class="o">*</span> <span class="n">sigma2</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="generateRandomPSFParams">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.generateRandomPSFParams">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generateRandomPSFParams</span><span class="p">(</span><span class="n">psf_size</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates random parameters for a Point Spread Function (PSF) based on the specified PSF size.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        psf_size (int): The size of the PSF, used to determine the range for generating random parameters.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        list: A list containing the generated parameters [amp, bg, mu_x, mu_y, mu_z, sigma_x, sigma_y, sigma_z].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mu_x</span> <span class="o">=</span> <span class="n">psf_size</span> <span class="o">*</span> <span class="mf">0.5</span>
+    <span class="n">mu_y</span> <span class="o">=</span> <span class="n">psf_size</span> <span class="o">*</span> <span class="mf">0.5</span>
+    <span class="n">mu_z</span> <span class="o">=</span> <span class="n">psf_size</span> <span class="o">*</span> <span class="mf">0.5</span>
+    <span class="n">sigmaDefault</span> <span class="o">=</span> <span class="n">psf_size</span> <span class="o">/</span> <span class="mf">10.0</span>
+    <span class="n">sigma_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.95</span> <span class="o">*</span> <span class="n">psf_size</span> <span class="o">/</span> <span class="mf">7.0</span><span class="p">,</span> <span class="mf">1.05</span> <span class="o">*</span> <span class="n">sigmaDefault</span><span class="p">)</span>
+    <span class="n">sigma_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.95</span> <span class="o">*</span> <span class="n">sigmaDefault</span><span class="p">,</span> <span class="mf">1.05</span> <span class="o">*</span> <span class="n">sigmaDefault</span><span class="p">)</span>
+    <span class="n">sigma_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.95</span> <span class="o">*</span> <span class="n">sigmaDefault</span><span class="p">,</span> <span class="mf">1.05</span> <span class="o">*</span> <span class="n">sigmaDefault</span><span class="p">)</span>
+    <span class="n">amp</span> <span class="o">=</span> <span class="n">TRUE_AMP</span>
+    <span class="n">bg</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">amp</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">mu_x</span><span class="p">,</span> <span class="n">mu_y</span><span class="p">,</span> <span class="n">mu_z</span><span class="p">,</span> <span class="n">sigma_x</span><span class="p">,</span> <span class="n">sigma_y</span><span class="p">,</span> <span class="n">sigma_z</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="addMicroscopyNoise">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.addMicroscopyNoise">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">addMicroscopyNoise</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">maxPhotons</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">readoutNoiseStd</span><span class="o">=</span><span class="mf">5.0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds realistic microscopy noise to the input image, simulating both Poisson noise (photon counting noise) and Gaussian readout noise.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        image (np.ndarray): The input image to which noise will be added.</span>
+<span class="sd">        maxPhotons (int): The maximum number of photons for scaling the image before adding noise.</span>
+<span class="sd">        readoutNoiseStd (float): The standard deviation of the Gaussian readout noise.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: The noisy image with added Poisson and Gaussian noise, clipped to the range [0, maxPhotons].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">scaledImage</span> <span class="o">=</span> <span class="p">(</span><span class="n">image</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">image</span><span class="p">))</span> <span class="o">*</span> <span class="n">maxPhotons</span>
+    <span class="n">noisyPoisson</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">scaledImage</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">gaussianNoise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">readoutNoiseStd</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">finalNoisyImage</span> <span class="o">=</span> <span class="n">noisyPoisson</span> <span class="o">+</span> <span class="n">gaussianNoise</span>
+    <span class="n">finalNoisyImage</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">finalNoisyImage</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">maxPhotons</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">finalNoisyImage</span></div>
+
+
+
+<div class="viewcode-block" id="generatePSF">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.generatePSF">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generatePSF</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates a Point Spread Function (PSF) based on the provided parameters using the Fitting3D class.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        params (list): A list containing the parameters [amp, bg, mu_x, mu_y, mu_z, sigma_x, sigma_y, sigma_z].</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A tuple containing the generated PSF, coordinates, and FWHM values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fitTool</span> <span class="o">=</span> <span class="n">Fitting3D</span><span class="p">()</span>
+    <span class="n">fitTool</span><span class="o">.</span><span class="n">_show</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">zz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">PSF_SIZE</span><span class="p">)</span>
+    <span class="n">yy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">PSF_SIZE</span><span class="p">)</span>
+    <span class="n">xx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">PSF_SIZE</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">zz</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">&quot;ij&quot;</span><span class="p">)</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">z</span><span class="o">.</span><span class="n">ravel</span><span class="p">()],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">psf</span> <span class="o">=</span> <span class="n">fitTool</span><span class="o">.</span><span class="n">gauss</span><span class="p">(</span><span class="o">*</span><span class="n">params</span><span class="p">)(</span><span class="n">coords</span><span class="p">)</span>
+    <span class="n">fwhm</span> <span class="o">=</span> <span class="p">[</span><span class="n">fitTool</span><span class="o">.</span><span class="n">fwhm</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">5</span><span class="p">]),</span> <span class="n">fitTool</span><span class="o">.</span><span class="n">fwhm</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">6</span><span class="p">]),</span> <span class="n">fitTool</span><span class="o">.</span><span class="n">fwhm</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">7</span><span class="p">])]</span>
+    <span class="k">return</span> <span class="n">psf</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">fwhm</span></div>
+
+
+
+<div class="viewcode-block" id="generateRandomGibsonLanniPSF">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.generateRandomGibsonLanniPSF">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generateRandomGibsonLanniPSF</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates a random Point Spread Function (PSF) based on the Gibson-Lanni model using the PSFRandomParameter class.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        seed (int, optional): The random seed for reproducibility.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A tuple containing the generated PSF, coordinates, and FWHM values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">gl</span> <span class="o">=</span> <span class="n">PSFRandomParameter</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">PSF_SIZE</span><span class="p">)</span>
+    <span class="n">fwhm</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">fwhm</span>
+    <span class="n">zz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">PSF_SIZE</span><span class="p">)</span>
+    <span class="n">yy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">PSF_SIZE</span><span class="p">)</span>
+    <span class="n">xx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">PSF_SIZE</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">zz</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">&quot;ij&quot;</span><span class="p">)</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">z</span><span class="o">.</span><span class="n">ravel</span><span class="p">()],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">psf</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">psf</span>
+    <span class="k">return</span> <span class="n">psf</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">fwhm</span></div>
+
+
+
+<div class="viewcode-block" id="generateOrientedPSF">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.generateOrientedPSF">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generateOrientedPSF</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates an oriented Point Spread Function (PSF) based on the provided parameters and applies a random rotation to it.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        params (list): A list containing the parameters [amp, bg, mu_x, mu_y, mu_z, sigma_x, sigma_y, sigma_z].</span>
+<span class="sd">        seed (int, optional): The random seed for reproducibility.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A tuple containing the generated PSF, coordinates, and FWHM values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">zz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">PSF_SIZE</span><span class="p">)</span>
+    <span class="n">yy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">PSF_SIZE</span><span class="p">)</span>
+    <span class="n">xx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">PSF_SIZE</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">zz</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">&quot;ij&quot;</span><span class="p">)</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">z</span><span class="o">.</span><span class="n">ravel</span><span class="p">()],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">thetas</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+    <span class="n">thetas</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>
+    <span class="n">fitTool</span> <span class="o">=</span> <span class="n">Fitting3DRotation</span><span class="p">()</span>
+    <span class="n">params</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">*=</span> <span class="mf">1.5</span>
+    <span class="n">psf</span> <span class="o">=</span> <span class="n">fitTool</span><span class="o">.</span><span class="n">gauss</span><span class="p">(</span><span class="o">*</span><span class="n">params</span><span class="p">,</span> <span class="o">*</span><span class="n">thetas</span><span class="p">)(</span><span class="n">coords</span><span class="p">)</span>
+    <span class="n">fwhm</span> <span class="o">=</span> <span class="p">[</span><span class="n">fitTool</span><span class="o">.</span><span class="n">fwhm</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">7</span><span class="p">]),</span> <span class="n">fitTool</span><span class="o">.</span><span class="n">fwhm</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">6</span><span class="p">]),</span> <span class="n">fitTool</span><span class="o">.</span><span class="n">fwhm</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">5</span><span class="p">])]</span>
+    <span class="k">return</span> <span class="n">psf</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">fwhm</span><span class="p">,</span> <span class="n">thetas</span></div>
+
+
+
+<div class="viewcode-block" id="fitPSF">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.fitPSF">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fitPSF</span><span class="p">(</span><span class="n">fitName</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fits the provided Point Spread Function (PSF) image using the specified fitting method and returns the fitting results along with the elapsed time.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        fitName (str): The name of the fitting method to be used (e.g., &quot;1D&quot;, &quot;2D&quot;, &quot;3D&quot;).</span>
+<span class="sd">        image (np.ndarray): The PSF image to be fitted.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A tuple containing the fitting results and the elapsed time for the fitting process.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fitTool</span> <span class="o">=</span> <span class="n">FittingTool</span><span class="o">.</span><span class="n">getInstance</span><span class="p">(</span><span class="n">fitName</span><span class="p">)</span>
+    <span class="n">fitTool</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="n">image</span>
+    <span class="n">fitTool</span><span class="o">.</span><span class="n">_show</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">fitTool</span><span class="o">.</span><span class="n">_centroid</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">PSF_SIZE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">PSF_SIZE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">PSF_SIZE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span>
+    <span class="n">fitTool</span><span class="o">.</span><span class="n">_roi</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])]</span>
+    <span class="k">if</span> <span class="n">GIBSONLANNI</span><span class="p">:</span>
+        <span class="n">fitTool</span><span class="o">.</span><span class="n">_pixelSize</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fitTool</span><span class="o">.</span><span class="n">_pixelSize</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]</span>
+    <span class="n">fitTool</span><span class="o">.</span><span class="n">_outputDir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;EvalFitResult&quot;</span> <span class="o">/</span> <span class="n">fitName</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">fitTool</span><span class="o">.</span><span class="n">processSingleFit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="n">fitTool</span><span class="o">.</span><span class="n">fwhms</span><span class="p">,</span>
+        <span class="n">fitTool</span><span class="o">.</span><span class="n">uncertainties</span><span class="p">,</span>
+        <span class="n">fitTool</span><span class="o">.</span><span class="n">determinations</span><span class="p">,</span>
+        <span class="n">fitTool</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+        <span class="n">fitTool</span><span class="o">.</span><span class="n">pcovs</span><span class="p">,</span>
+        <span class="n">fitTool</span><span class="o">.</span><span class="n">thetas</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="n">elapsed</span></div>
+
+
+
+<div class="viewcode-block" id="getBhattacharyyaFit">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.getBhattacharyyaFit">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">getBhattacharyyaFit</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the average Bhattacharyya distance between the fitted parameters and the true parameters for a Point Spread Function (PSF).</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        params (list): A list containing the fitted parameters [amp, bg, mu_x, mu_y, mu_z, sigma_x, sigma_y, sigma_z].</span>
+<span class="sd">        mu (list): A list containing the true means [mu_x, mu_y, mu_z].</span>
+<span class="sd">        sigma (list): A list containing the true standard deviations [sigma_x, sigma_y, sigma_z].</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        float: The average Bhattacharyya distance between the fitted and true parameters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">DistBat</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">DistBat</span> <span class="o">+=</span> <span class="n">computeBhattacharyyaDistance</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">mu</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">sigma</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">DistBat</span> <span class="o">+=</span> <span class="n">computeBhattacharyyaDistance</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">mu</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">sigma</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">DistBat</span> <span class="o">+=</span> <span class="n">computeBhattacharyyaDistance</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">mu</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">sigma</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">DistBat</span> <span class="o">/=</span> <span class="mf">3.0</span>
+    <span class="k">return</span> <span class="n">DistBat</span></div>
+
+
+
+<div class="viewcode-block" id="evaluateXDPsf">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.evaluateXDPsf">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">evaluateXDPsf</span><span class="p">(</span>
+    <span class="n">psf</span><span class="p">,</span> <span class="n">psfReshape</span><span class="p">,</span> <span class="n">FWHM</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fitMethod</span><span class="o">=</span><span class="s2">&quot;2D&quot;</span><span class="p">,</span> <span class="n">thetas</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluates the fitting of a Point Spread Function (PSF) using the specified fitting method and computes various metrics such as correlation, PSNR, Bhattacharyya distance, determination coefficient, elapsed time, and orientation correlation.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        psf (np.ndarray): The original PSF image.</span>
+<span class="sd">        psfReshape (np.ndarray): The reshaped PSF image for fitting.</span>
+<span class="sd">        FWHM (list): A list containing the true Full Width at Half Maximum (FWHM) values.</span>
+<span class="sd">        coords (np.ndarray): The coordinates corresponding to the PSF image.</span>
+<span class="sd">        params (list, optional): A list containing the true parameters [amp, bg, mu_x, mu_y, mu_z, sigma_x, sigma_y, sigma_z].</span>
+<span class="sd">        fitMethod (str): The name of the fitting method to be used (e.g., &quot;1D&quot;, &quot;2D&quot;, &quot;3D&quot;).</span>
+<span class="sd">        thetas (list, optional): A list containing the true rotation angles [thetaX, thetaY, thetaZ].</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A tuple containing the computed metrics (correlation, PSNR, Bhattacharyya distance, determination coefficient, elapsed time, orientation correlation).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span><span class="p">,</span> <span class="n">elapsed</span> <span class="o">=</span> <span class="n">fitPSF</span><span class="p">(</span><span class="n">fitMethod</span><span class="p">,</span> <span class="n">psfReshape</span><span class="p">)</span>
+    <span class="n">corr</span> <span class="o">=</span> <span class="n">computeMape</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">FWHM</span><span class="p">)</span>
+    <span class="n">fit</span> <span class="o">=</span> <span class="n">Fitting3D</span><span class="p">()</span><span class="o">.</span><span class="n">gauss</span><span class="p">(</span><span class="o">*</span><span class="n">result</span><span class="p">[</span><span class="mi">4</span><span class="p">])(</span><span class="n">coords</span><span class="p">)</span>
+
+    <span class="n">psnr</span> <span class="o">=</span> <span class="n">computePSNR</span><span class="p">(</span><span class="n">fit</span><span class="p">,</span> <span class="n">psf</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="p">[</span><span class="n">result</span><span class="p">[</span><span class="mi">4</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">4</span><span class="p">][</span><span class="mi">3</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">4</span><span class="p">][</span><span class="mi">4</span><span class="p">]]</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="p">[</span><span class="n">result</span><span class="p">[</span><span class="mi">4</span><span class="p">][</span><span class="mi">5</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">4</span><span class="p">][</span><span class="mi">6</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">4</span><span class="p">][</span><span class="mi">7</span><span class="p">]]</span>
+    <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">DistBat</span> <span class="o">=</span> <span class="n">getBhattacharyyaFit</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">DistBat</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">determination</span> <span class="o">=</span> <span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">3</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">result</span><span class="p">[</span><span class="mi">3</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">result</span><span class="p">[</span><span class="mi">3</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mf">3.0</span>
+    <span class="k">if</span> <span class="n">thetas</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">corrOrientation</span> <span class="o">=</span> <span class="n">computeAngularError</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">thetas</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">corrOrientation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">return</span> <span class="n">corr</span><span class="p">,</span> <span class="n">psnr</span><span class="p">,</span> <span class="n">DistBat</span><span class="p">,</span> <span class="n">determination</span><span class="p">,</span> <span class="n">elapsed</span><span class="p">,</span> <span class="n">corrOrientation</span></div>
+
+
+
+<div class="viewcode-block" id="evaluatePsf">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.evaluatePsf">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">evaluatePsf</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluates the fitting of a Point Spread Function (PSF) by generating a random PSF, optionally adding noise, and then fitting it using various fitting methods. Computes metrics such as correlation, PSNR, Bhattacharyya distance, determination coefficient, elapsed time, and orientation correlation for each fitting method.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        seed (int, optional): The random seed for reproducibility.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A tuple containing lists of computed metrics for each fitting method (correlation, PSNR, Bhattacharyya distance, determination coefficient, elapsed time, orientation correlation).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">thetas</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">generateRandomPSFParams</span><span class="p">(</span><span class="n">PSF_SIZE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">GIBSONLANNI</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ORIENTED</span><span class="p">:</span>
+        <span class="n">psf</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">FWHM</span> <span class="o">=</span> <span class="n">generateRandomGibsonLanniPSF</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">elif</span> <span class="n">ORIENTED</span><span class="p">:</span>
+        <span class="n">psf</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">FWHM</span><span class="p">,</span> <span class="n">thetas</span> <span class="o">=</span> <span class="n">generateOrientedPSF</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">psf</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">FWHM</span> <span class="o">=</span> <span class="n">generatePSF</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">psfReshape</span> <span class="o">=</span> <span class="n">psf</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">PSF_SIZE</span><span class="p">,</span> <span class="n">PSF_SIZE</span><span class="p">,</span> <span class="n">PSF_SIZE</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">NOISE</span><span class="p">:</span>
+        <span class="n">psfReshape</span> <span class="o">=</span> <span class="n">addMicroscopyNoise</span><span class="p">(</span><span class="n">psfReshape</span><span class="p">,</span> <span class="n">maxPhotons</span><span class="o">=</span><span class="n">TRUE_AMP</span><span class="p">)</span>
+    <span class="n">corr1D</span><span class="p">,</span> <span class="n">psnr1D</span><span class="p">,</span> <span class="n">DistBat1D</span><span class="p">,</span> <span class="n">determination1D</span><span class="p">,</span> <span class="n">elapsed1D</span><span class="p">,</span> <span class="n">corrOrientation1D</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">evaluateXDPsf</span><span class="p">(</span><span class="n">psf</span><span class="p">,</span> <span class="n">psfReshape</span><span class="p">,</span> <span class="n">FWHM</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="s2">&quot;1D&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">corr2D</span><span class="p">,</span> <span class="n">psnr2D</span><span class="p">,</span> <span class="n">DistBat2D</span><span class="p">,</span> <span class="n">determination2D</span><span class="p">,</span> <span class="n">elapsed2D</span><span class="p">,</span> <span class="n">corrOrientation2D</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">evaluateXDPsf</span><span class="p">(</span><span class="n">psf</span><span class="p">,</span> <span class="n">psfReshape</span><span class="p">,</span> <span class="n">FWHM</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="s2">&quot;2D&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">corr3D</span><span class="p">,</span> <span class="n">psnr3D</span><span class="p">,</span> <span class="n">DistBat3D</span><span class="p">,</span> <span class="n">determination3D</span><span class="p">,</span> <span class="n">elapsed3D</span><span class="p">,</span> <span class="n">corrOrientation3D</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">evaluateXDPsf</span><span class="p">(</span><span class="n">psf</span><span class="p">,</span> <span class="n">psfReshape</span><span class="p">,</span> <span class="n">FWHM</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="s2">&quot;3D&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">result</span><span class="p">,</span> <span class="n">elapsedProminence</span> <span class="o">=</span> <span class="n">fitPSF</span><span class="p">(</span><span class="s2">&quot;Prominence&quot;</span><span class="p">,</span> <span class="n">psfReshape</span><span class="p">)</span>
+    <span class="n">corrProminence</span> <span class="o">=</span> <span class="n">computeMape</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">FWHM</span><span class="p">)</span>
+    <span class="n">corrOrientationProminence</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+    <span class="p">(</span>
+        <span class="n">corr2DEllips</span><span class="p">,</span>
+        <span class="n">psnr2DEllips</span><span class="p">,</span>
+        <span class="n">DistBat2DEllips</span><span class="p">,</span>
+        <span class="n">determination2DEllips</span><span class="p">,</span>
+        <span class="n">elapsed2DEllips</span><span class="p">,</span>
+        <span class="n">corrOrientation2DEllips</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="n">evaluateXDPsf</span><span class="p">(</span><span class="n">psf</span><span class="p">,</span> <span class="n">psfReshape</span><span class="p">,</span> <span class="n">FWHM</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="s2">&quot;2D Ellipse&quot;</span><span class="p">,</span> <span class="n">thetas</span><span class="p">)</span>
+    <span class="p">(</span>
+        <span class="n">corr2DRotation</span><span class="p">,</span>
+        <span class="n">psnr2DRotation</span><span class="p">,</span>
+        <span class="n">DistBat2DRotation</span><span class="p">,</span>
+        <span class="n">determination2DRotation</span><span class="p">,</span>
+        <span class="n">elapsed2DRotation</span><span class="p">,</span>
+        <span class="n">corrOrientation2DRotation</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="n">evaluateXDPsf</span><span class="p">(</span><span class="n">psf</span><span class="p">,</span> <span class="n">psfReshape</span><span class="p">,</span> <span class="n">FWHM</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="s2">&quot;2D rotation&quot;</span><span class="p">,</span> <span class="n">thetas</span><span class="p">)</span>
+    <span class="p">(</span>
+        <span class="n">corr3DRotation</span><span class="p">,</span>
+        <span class="n">psnr3DRotation</span><span class="p">,</span>
+        <span class="n">DistBat3DRotation</span><span class="p">,</span>
+        <span class="n">determination3DRotation</span><span class="p">,</span>
+        <span class="n">elapsed3DRotation</span><span class="p">,</span>
+        <span class="n">corrOrientation3DRotation</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="n">evaluateXDPsf</span><span class="p">(</span><span class="n">psf</span><span class="p">,</span> <span class="n">psfReshape</span><span class="p">,</span> <span class="n">FWHM</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="s2">&quot;3D Rotation&quot;</span><span class="p">,</span> <span class="n">thetas</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">corr1D</span><span class="p">,</span>
+            <span class="n">corr2D</span><span class="p">,</span>
+            <span class="n">corr3D</span><span class="p">,</span>
+            <span class="n">corr2DRotation</span><span class="p">,</span>
+            <span class="n">corr3DRotation</span><span class="p">,</span>
+            <span class="n">corr2DEllips</span><span class="p">,</span>
+            <span class="n">corrProminence</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="p">[</span><span class="n">psnr1D</span><span class="p">,</span> <span class="n">psnr2D</span><span class="p">,</span> <span class="n">psnr3D</span><span class="p">,</span> <span class="n">psnr2DRotation</span><span class="p">,</span> <span class="n">psnr3DRotation</span><span class="p">,</span> <span class="n">psnr2DEllips</span><span class="p">],</span>
+        <span class="p">[</span>
+            <span class="n">DistBat1D</span><span class="p">,</span>
+            <span class="n">DistBat2D</span><span class="p">,</span>
+            <span class="n">DistBat3D</span><span class="p">,</span>
+            <span class="n">DistBat2DRotation</span><span class="p">,</span>
+            <span class="n">DistBat3DRotation</span><span class="p">,</span>
+            <span class="n">DistBat2DEllips</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="p">[</span>
+            <span class="n">determination1D</span><span class="p">,</span>
+            <span class="n">determination2D</span><span class="p">,</span>
+            <span class="n">determination3D</span><span class="p">,</span>
+            <span class="n">determination2DRotation</span><span class="p">,</span>
+            <span class="n">determination3DRotation</span><span class="p">,</span>
+            <span class="n">determination2DEllips</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="p">[</span>
+            <span class="n">elapsed1D</span><span class="p">,</span>
+            <span class="n">elapsed2D</span><span class="p">,</span>
+            <span class="n">elapsed3D</span><span class="p">,</span>
+            <span class="n">elapsed2DRotation</span><span class="p">,</span>
+            <span class="n">elapsed3DRotation</span><span class="p">,</span>
+            <span class="n">elapsed2DEllips</span><span class="p">,</span>
+            <span class="n">elapsedProminence</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="p">[</span>
+            <span class="n">corrOrientation1D</span><span class="p">,</span>
+            <span class="n">corrOrientation2D</span><span class="p">,</span>
+            <span class="n">corrOrientation3D</span><span class="p">,</span>
+            <span class="n">corrOrientation2DRotation</span><span class="p">,</span>
+            <span class="n">corrOrientation3DRotation</span><span class="p">,</span>
+            <span class="n">corrOrientation2DEllips</span><span class="p">,</span>
+            <span class="n">corrOrientationProminence</span><span class="p">,</span>
+        <span class="p">],</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="addTab">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.addTab">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">addTab</span><span class="p">(</span><span class="n">tabA</span><span class="p">,</span> <span class="n">tabB</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds two lists element-wise, returning a new list containing the sums of corresponding elements.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        tabA (list): The first list of values.</span>
+<span class="sd">        tabB (list): The second list of values.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        list: A new list containing the element-wise sums of tabA and tabB. The length of the returned list is the minimum of the lengths of tabA and tabB.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">minRange</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tabA</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">tabB</span><span class="p">))</span>
+    <span class="n">tabC</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">minRange</span><span class="p">):</span>
+        <span class="n">tabC</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tabA</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">tabB</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">tabC</span></div>
+
+
+
+<div class="viewcode-block" id="divTab">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.divTab">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">divTab</span><span class="p">(</span><span class="n">tab</span><span class="p">,</span> <span class="n">div</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Divides each element of a list by a specified divisor, returning a new list containing the results.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        tab (list): The list of values to be divided.</span>
+<span class="sd">        div (float): The divisor by which each element of the list will be divided.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        list: A new list containing the results of dividing each element of tab by div.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">x</span> <span class="o">/</span> <span class="n">div</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tab</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="superior">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.superior">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">superior</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks if the first argument is strictly greater than the second.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        a (float): The first value.</span>
+<span class="sd">        b (float): The second value.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: True if a is strictly greater than b, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">&gt;</span> <span class="n">b</span></div>
+
+
+
+<div class="viewcode-block" id="inferior">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.inferior">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">inferior</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks if the first argument is strictly less than the second.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        a (float): The first value.</span>
+<span class="sd">        b (float): The second value.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: True if a is strictly less than b, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">&lt;</span> <span class="n">b</span></div>
+
+
+
+<div class="viewcode-block" id="printResults">
+<a class="viewcode-back" href="../../../microscopy_metrics.evaluate.html#microscopy_metrics.scripts.evaluate_fitting.printResults">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">printResults</span><span class="p">(</span><span class="n">metricStr</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">unitStr</span><span class="p">,</span> <span class="n">comparison</span><span class="o">=</span><span class="n">superior</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Prints the results of the evaluation for a specific metric, including the mean values for each fitting method and identifies the best fitting method based on the specified comparison function.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        metricStr (str): The name of the metric being evaluated (e.g., &quot;MAPE&quot;, &quot;PSNR&quot;).</span>
+<span class="sd">        metric (list): A list of mean values for the specified metric corresponding to each fitting method.</span>
+<span class="sd">        unitStr (str): The unit of measurement for the metric (e.g., &quot;%&quot;, &quot;dB&quot;).</span>
+<span class="sd">        comparison (function): A function that defines how to compare two values to determine which is better. Defaults to the &#39;superior&#39; function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">,</span> <span class="n">metricStr</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span>
+    <span class="n">best_fit</span> <span class="o">=</span> <span class="n">FIT_METHODS</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">best_value</span> <span class="o">=</span> <span class="n">metric</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean </span><span class="si">{</span><span class="n">metricStr</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">FIT_METHODS</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">metric</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">unitStr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">metric</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">comparison</span><span class="p">(</span><span class="n">metric</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">best_value</span><span class="p">):</span>
+            <span class="n">best_fit</span> <span class="o">=</span> <span class="n">FIT_METHODS</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">best_value</span> <span class="o">=</span> <span class="n">metric</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">metric</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">best_value</span><span class="p">:</span>
+            <span class="n">best_fit</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; and </span><span class="si">{</span><span class="n">FIT_METHODS</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean </span><span class="si">{</span><span class="n">metricStr</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">FIT_METHODS</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">metric</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">unitStr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;The best fitting method is: </span><span class="si">{</span><span class="n">best_fit</span><span class="si">}</span><span class="s2"> | with a </span><span class="si">{</span><span class="n">metricStr</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">best_value</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">unitStr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">generateRandomPSFParams</span><span class="p">(</span><span class="n">PSF_SIZE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">GIBSONLANNI</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ORIENTED</span><span class="p">:</span>
+        <span class="n">psf</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">FWHM</span> <span class="o">=</span> <span class="n">generateRandomGibsonLanniPSF</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ORIENTED</span><span class="p">:</span>
+        <span class="n">psf</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">FWHM</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">generateOrientedPSF</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">psf</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">FWHM</span> <span class="o">=</span> <span class="n">generatePSF</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">psfReshape</span> <span class="o">=</span> <span class="n">psf</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">PSF_SIZE</span><span class="p">,</span> <span class="n">PSF_SIZE</span><span class="p">,</span> <span class="n">PSF_SIZE</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">NOISE</span><span class="p">:</span>
+        <span class="n">psfReshape</span> <span class="o">=</span> <span class="n">addMicroscopyNoise</span><span class="p">(</span><span class="n">psfReshape</span><span class="p">)</span>
+    <span class="n">show2DPsf</span><span class="p">(</span><span class="n">psfReshape</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">PSF_SIZE</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="n">meanCorr</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">FIT_METHODS</span><span class="p">))]</span>
+    <span class="n">meanPSNR</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">meanBat</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">meanDetermination</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">meanDuration</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">FIT_METHODS</span><span class="p">))]</span>
+    <span class="n">meanCorrOrientation</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">FIT_METHODS</span><span class="p">))]</span>
+
+    <span class="n">n_tests</span> <span class="o">=</span> <span class="mi">100</span>
+
+    <span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="n">n_tests</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Evaluating PSF Fitting&quot;</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
+    <span class="n">workers</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.75</span><span class="p">)</span>
+
+    <span class="n">randomSeeds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n_tests</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">ProcessPoolExecutor</span><span class="p">(</span>
+        <span class="n">max_workers</span><span class="o">=</span><span class="n">workers</span><span class="p">,</span> <span class="n">mp_context</span><span class="o">=</span><span class="n">mp</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;spawn&quot;</span><span class="p">)</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+        <span class="n">futures</span> <span class="o">=</span> <span class="p">{</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">evaluatePsf</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span> <span class="k">for</span> <span class="n">seed</span> <span class="ow">in</span> <span class="n">randomSeeds</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">as_completed</span><span class="p">(</span><span class="n">futures</span><span class="p">):</span>
+            <span class="n">corr</span><span class="p">,</span> <span class="n">psnr</span><span class="p">,</span> <span class="n">bat</span><span class="p">,</span> <span class="n">determination</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">corrOrientation</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+            <span class="n">meanCorr</span> <span class="o">=</span> <span class="n">addTab</span><span class="p">(</span><span class="n">meanCorr</span><span class="p">,</span> <span class="n">corr</span><span class="p">)</span>
+            <span class="n">meanPSNR</span> <span class="o">=</span> <span class="n">addTab</span><span class="p">(</span><span class="n">meanPSNR</span><span class="p">,</span> <span class="n">psnr</span><span class="p">)</span>
+            <span class="n">meanBat</span> <span class="o">=</span> <span class="n">addTab</span><span class="p">(</span><span class="n">meanBat</span><span class="p">,</span> <span class="n">bat</span><span class="p">)</span>
+            <span class="n">meanDetermination</span> <span class="o">=</span> <span class="n">addTab</span><span class="p">(</span><span class="n">meanDetermination</span><span class="p">,</span> <span class="n">determination</span><span class="p">)</span>
+            <span class="n">meanDuration</span> <span class="o">=</span> <span class="n">addTab</span><span class="p">(</span><span class="n">meanDuration</span><span class="p">,</span> <span class="n">duration</span><span class="p">)</span>
+            <span class="n">meanCorrOrientation</span> <span class="o">=</span> <span class="n">addTab</span><span class="p">(</span><span class="n">meanCorrOrientation</span><span class="p">,</span> <span class="n">corrOrientation</span><span class="p">)</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">set_postfix</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;MAPE 1D&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">corr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;MAPE 2D&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">corr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;MAPE 3D&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">corr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;PSNR 1D&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">psnr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">dB&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;PSNR 2D&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">psnr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">dB&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;PSNR 3D&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">psnr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">dB&quot;</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+    <span class="n">meanCorr</span> <span class="o">=</span> <span class="n">divTab</span><span class="p">(</span><span class="n">meanCorr</span><span class="p">,</span> <span class="n">n_tests</span><span class="p">)</span>
+    <span class="n">meanPSNR</span> <span class="o">=</span> <span class="n">divTab</span><span class="p">(</span><span class="n">meanPSNR</span><span class="p">,</span> <span class="n">n_tests</span><span class="p">)</span>
+    <span class="n">meanBat</span> <span class="o">=</span> <span class="n">divTab</span><span class="p">(</span><span class="n">meanBat</span><span class="p">,</span> <span class="n">n_tests</span><span class="p">)</span>
+    <span class="n">meanDetermination</span> <span class="o">=</span> <span class="n">divTab</span><span class="p">(</span><span class="n">meanDetermination</span><span class="p">,</span> <span class="n">n_tests</span><span class="p">)</span>
+    <span class="n">meanDuration</span> <span class="o">=</span> <span class="n">divTab</span><span class="p">(</span><span class="n">meanDuration</span><span class="p">,</span> <span class="n">n_tests</span><span class="p">)</span>
+    <span class="n">meanCorrOrientation</span> <span class="o">=</span> <span class="n">divTab</span><span class="p">(</span><span class="n">meanCorrOrientation</span><span class="p">,</span> <span class="n">n_tests</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;RESULTS SUMMARY&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">printResults</span><span class="p">(</span><span class="s2">&quot;MAPE&quot;</span><span class="p">,</span> <span class="n">meanCorr</span><span class="p">,</span> <span class="s2">&quot;%&quot;</span><span class="p">,</span> <span class="n">inferior</span><span class="p">)</span>
+    <span class="n">printResults</span><span class="p">(</span><span class="s2">&quot;PSNR&quot;</span><span class="p">,</span> <span class="n">meanPSNR</span><span class="p">,</span> <span class="s2">&quot;dB&quot;</span><span class="p">,</span> <span class="n">superior</span><span class="p">)</span>
+    <span class="n">printResults</span><span class="p">(</span><span class="s2">&quot;distance&quot;</span><span class="p">,</span> <span class="n">meanBat</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">inferior</span><span class="p">)</span>
+    <span class="n">printResults</span><span class="p">(</span><span class="s2">&quot;R2 score&quot;</span><span class="p">,</span> <span class="n">meanDetermination</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">superior</span><span class="p">)</span>
+    <span class="n">printResults</span><span class="p">(</span><span class="s2">&quot;duration&quot;</span><span class="p">,</span> <span class="n">meanDuration</span><span class="p">,</span> <span class="s2">&quot;seconds&quot;</span><span class="p">,</span> <span class="n">inferior</span><span class="p">)</span>
+    <span class="n">printResults</span><span class="p">(</span><span class="s2">&quot;orientation&quot;</span><span class="p">,</span> <span class="n">meanCorrOrientation</span><span class="p">,</span> <span class="s2">&quot;°&quot;</span><span class="p">,</span> <span class="n">inferior</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;END SUMMARY&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, CNRS.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
