@@ -42,4 +42,14 @@ dev = [
     "sphinx",
     "sphinx-rtd-theme",
     "sphinx-tabs",
+    "build",
+    "setuptools-scm>=8.0.0",
 ]
+
+[build-system]
+requires = ["setuptools>=61.0.0", "setuptools-scm>=8.0.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_file = "src/microscopy_metrics/_version.py"
+write_to = "src/microscopy_metrics/_version.py"
