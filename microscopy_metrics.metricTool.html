@@ -1,0 +1,530 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>microscopy_metrics.metricTool package &mdash; Microscopy metrics  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="microscopy_metrics.resolutionTools package" href="microscopy_metrics.resolutionTools.html" />
+    <link rel="prev" title="microscopy_metrics.fittingTools package" href="microscopy_metrics.fittingTools.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Microscopy metrics
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="how_to.html">How To</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.detectionTools.html">microscopy_metrics.detectionTools package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.fittingTools.html">microscopy_metrics.fittingTools package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">microscopy_metrics.metricTool package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#metrictool">MetricTool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#meshtool">MeshTool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#metrics">Metrics</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.resolutionTools.html">microscopy_metrics.resolutionTools package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.thresholdTools.html">microscopy_metrics.thresholdTools package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.reportTools.html">microscopy_metrics.reportTools package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.PSFGenerator.html">microscopy_metrics.scripts.PSFGenerator package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.evaluate.html">microscopy_metrics.scripts.evaluate package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.analyzers.html">Analyzers</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Microscopy metrics</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">API</a></li>
+      <li class="breadcrumb-item active">microscopy_metrics.metricTool package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/microscopy_metrics.metricTool.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="microscopy-metrics-metrictool-package">
+<h1>microscopy_metrics.metricTool package<a class="headerlink" href="#microscopy-metrics-metrictool-package" title="Link to this heading"></a></h1>
+<p>This package contains the metric tools used for calculating metrics on microscopy data.</p>
+<section id="metrictool">
+<h2>MetricTool<a class="headerlink" href="#metrictool" title="Link to this heading"></a></h2>
+</section>
+<section id="meshtool">
+<h2>MeshTool<a class="headerlink" href="#meshtool" title="Link to this heading"></a></h2>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.metricTool.meshTool</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.metricTool.meshTool.</span></span><span class="sig-name descname"><span class="pre">MeshBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/metricTool/meshTool.html#MeshBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for building a 3D mesh from a microscopy image using segmentation and surface extraction techniques.
+This class provides methods for constructing a mesh representation of the largest region in a 3D microscopy image, calculating concavity and curvature metrics, and saving the mesh to a file.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_image</span></span></dt>
+<dd><p>The input 3D microscopy image for mesh construction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_pixelSize</span></span></dt>
+<dd><p>The pixel size in micrometers for each dimension of the image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_RMSMaxError</span></span></dt>
+<dd><p>The maximum root mean square error for the Chan-Vese segmentation algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_numIterations</span></span></dt>
+<dd><p>The number of iterations for the Chan-Vese segmentation algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_curvatureScaling</span></span></dt>
+<dd><p>The scaling factor for curvature in the Chan-Vese segmentation algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_vertices</span></span></dt>
+<dd><p>The vertices of the constructed mesh.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_verticesResized</span></span></dt>
+<dd><p>The resized vertices of the constructed mesh, scaled by the pixel size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_faces</span></span></dt>
+<dd><p>The faces of the constructed mesh.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_concavity</span></span></dt>
+<dd><p>The concavity metric of the constructed mesh.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_curvature</span></span></dt>
+<dd><p>The curvature values of the constructed mesh.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_sphericity</span></span></dt>
+<dd><p>The sphericity metric of the constructed mesh.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_largestRegionMask</span></span></dt>
+<dd><p>The binary mask of the largest region in the image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_segArray</span></span></dt>
+<dd><p>The segmented array of the image after applying the Chan-Vese algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">BuildMesh</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/metricTool/meshTool.html#MeshBuilder.BuildMesh"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Builds a 3D mesh from the input microscopy image using segmentation and surface extraction techniques.
+The method normalizes the input image, applies Gaussian filtering, and performs Otsu thresholding to create a binary mask. It then applies the Chan-Vese segmentation algorithm to extract the largest region in the image.
+The method uses the marching cubes algorithm to generate a mesh representation of the largest region, and computes the vertices and faces of the mesh.
+The vertices are resized based on the pixel size, and the mesh is smoothed and cleaned to remove duplicates.
+The resulting mesh can be used for further analysis and visualization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong> – If the input image is not set or no regions are found in the image.</p></li>
+<li><p><strong>ValueError</strong> – If the largest region cannot be extracted.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The constructed 3D mesh.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>o3d.geometry.TriangleMesh</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">computeMeshMetrics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/metricTool/meshTool.html#MeshBuilder.computeMeshMetrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Computes the mesh metrics, including construction, concavity and curvature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">concavity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/metricTool/meshTool.html#MeshBuilder.concavity"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Calculates the concavity metric of the constructed 3D mesh.
+The concavity is defined as the ratio of the difference between the volume of the convex hull and the volume of the mesh to the volume of the convex hull.
+A higher concavity value indicates a more concave shape, while a lower value indicates a more convex shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the mesh has not been built before calculating concavity.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated concavity metric of the mesh.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">curvature</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/metricTool/meshTool.html#MeshBuilder.curvature"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Calculates the curvature metric of the constructed 3D mesh.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the mesh has not been built before calculating curvature.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated curvature metric of the mesh.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">saveMesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/metricTool/meshTool.html#MeshBuilder.saveMesh"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Saves the constructed 3D mesh to a file in the specified format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filename</strong> (<em>str</em>) – The path to the file where the mesh will be saved. The file format is determined by the file extension (e.g., .ply, .obj, .stl).</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the mesh has not been built before saving.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="metrics">
+<h2>Metrics<a class="headerlink" href="#metrics" title="Link to this heading"></a></h2>
+<p>This module uses the metric tools to calculate metrics of all beads in a given image.</p>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.metrics</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.metrics.</span></span><span class="sig-name descname"><span class="pre">Metrics</span></span><a class="reference internal" href="_modules/microscopy_metrics/metrics.html#Metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for calculating various metrics related to microscopy images.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_imageAnalyzer</span></span></dt>
+<dd><p>An instance of the ImageAnalyzer class used for analyzing the microscopy images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ImageAnalyzer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_ringInnerDistance</span></span></dt>
+<dd><p>The inner distance of the ring used for signal-to-background ratio (SBR) calculation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_ringThickness</span></span></dt>
+<dd><p>The thickness of the ring used for signal-to-background ratio (SBR) calculation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_TheoreticalResolutionTool</span></span></dt>
+<dd><p>An instance of the TheoreticalResolutionTool class used for estimating theoretical resolution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>TheoreticalResolutionTool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">GenerateHeatmap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputDir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/metrics.html#Metrics.GenerateHeatmap"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates a heatmap visualization of metrics for the microscope image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outputDir</strong> (<em>str</em>) – The directory where the heatmap image will be saved. If None, the heatmap will not be saved to disk.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">HeatmapGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputDir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xCoords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yCoords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MetricName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SBR'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/metrics.html#Metrics.HeatmapGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates a heatmap visualization of the provided metric values over the microscopy image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>outputDir</strong> (<em>str</em>) – The directory where the heatmap image will be saved. If None, the heatmap will not be saved to disk.</p></li>
+<li><p><strong>Values</strong> (<em>List</em><em>[</em><em>float</em><em>]</em>) – The metric values to visualize.</p></li>
+<li><p><strong>xCoords</strong> (<em>List</em><em>[</em><em>float</em><em>]</em>) – The x-coordinates of the metric values.</p></li>
+<li><p><strong>yCoords</strong> (<em>List</em><em>[</em><em>float</em><em>]</em>) – The y-coordinates of the metric values.</p></li>
+<li><p><strong>MetricName</strong> (<em>str</em><em>, </em><em>optional</em>) – The name of the metric for which the heatmap is being generated. Defaults to “SBR”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The generated heatmap figure.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>matplotlib.figure.Figure</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">HeatmapPlaceholder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputDir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MetricName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SBR'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/metrics.html#Metrics.HeatmapPlaceholder"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Returns a white placeholder image with centered text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>outputDir</strong> (<em>str</em>) – The directory where the placeholder image will be saved. If None, the placeholder image will not be saved to disk.</p></li>
+<li><p><strong>MetricName</strong> (<em>str</em>) – The name of the metric for which the placeholder is being generated. Default is “SBR”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The generated placeholder figure.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>matplotlib.figure.Figure</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">calculateDensity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/metrics.html#Metrics.calculateDensity"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Calculates the density of beads in the microscopy images based on their centroid coordinates.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">runMeshMetrics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/metrics.html#Metrics.runMeshMetrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Runs the mesh-based metrics calculations, including mesh building, concavity, curvature, and sphericity calculations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">runMetrics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/metrics.html#Metrics.runMetrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Runs the complete metrics calculation process, including pre-fitting metrics and fitting metrics calculations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">runPrefittingMetrics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/metrics.html#Metrics.runPrefittingMetrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Runs the pre-fitting metrics calculations, including signal-to-background ratio (SBR) calculation and theoretical resolution estimation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">runSingleMetrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bead</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/metrics.html#Metrics.runSingleMetrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Runs the complete metrics calculation process for a single index, including pre-fitting metrics and fitting metrics calculations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>bead</strong> (<em>BeadAnalyzer</em>) – An instance of the BeadAnalyzer class representing the bead for which to calculate metrics.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">signalToBackgroundRatioRing</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/metrics.html#Metrics.signalToBackgroundRatioRing"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Calculates the signal-to-background ratio (SBR) for a set of microscopy images using a ring-based method.
+It uses a ThreadPoolExecutor to parallelize the processing of multiple images for improved performance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If there are no images in the input list or if any of the images have an incorrect format.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="microscopy_metrics.fittingTools.html" class="btn btn-neutral float-left" title="microscopy_metrics.fittingTools package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="microscopy_metrics.resolutionTools.html" class="btn btn-neutral float-right" title="microscopy_metrics.resolutionTools package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, CNRS.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

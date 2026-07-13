@@ -1,0 +1,418 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How To &mdash; Microscopy metrics  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API" href="api.html" />
+    <link rel="prev" title="Getting Started" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Microscopy metrics
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">How To</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#psf-generation">PSF Generation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#random-psf-generation">Random PSF Generation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#aberrations">Aberrations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fixed-psf-generation">Fixed PSF Generation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#bead-detection">Bead Detection</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#pre-fitting-metrics">Pre-Fitting Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Basic Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#fwhm-estimation">FWHM Estimation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Basic Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#metrics-calculation">Metrics Calculation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Basic Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#report-generation">Report Generation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Basic Usage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Microscopy metrics</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">How To</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/how_to.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="how-to">
+<h1>How To<a class="headerlink" href="#how-to" title="Link to this heading"></a></h1>
+<p>This project is developed in parallel with a <strong>Napari plugin</strong> for interactive visualization and analysis of microscopy images.
+You can use it in two ways:</p>
+<ol class="arabic">
+<li><p><strong>With the Napari GUI</strong> (recommended for interactive analysis):</p>
+<p>Install the plugin via pip:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>napari-microscopy-metrics
+</pre></div>
+</div>
+</li>
+<li><p><strong>As a standalone Python library</strong> (for programmatic analysis):</p>
+<p>Use the modules directly in your Python scripts, as described below.</p>
+</li>
+</ol>
+<p>Here is an overview of the available features:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#psf-generation"><span class="std std-ref">PSF Generation</span></a></p></li>
+<li><p><a class="reference internal" href="#bead-detection"><span class="std std-ref">Bead Detection</span></a></p></li>
+<li><p><a class="reference internal" href="#pre-fitting-metrics"><span class="std std-ref">Pre-Fitting Metrics</span></a></p></li>
+<li><p><a class="reference internal" href="#fwhm-estimation"><span class="std std-ref">FWHM Estimation</span></a></p></li>
+<li><p><a class="reference internal" href="#metrics-calculation"><span class="std std-ref">Metrics Calculation</span></a></p></li>
+<li><p><a class="reference internal" href="#report-generation"><span class="std std-ref">Report Generation</span></a></p></li>
+</ul>
+<p>—</p>
+<section id="psf-generation">
+<span id="id1"></span><h2>PSF Generation<a class="headerlink" href="#psf-generation" title="Link to this heading"></a></h2>
+<p>The <strong>PSF (Point Spread Function) generation module</strong> allows you to create synthetic PSFs with or without aberrations for testing and analysis.</p>
+<section id="random-psf-generation">
+<h3>Random PSF Generation<a class="headerlink" href="#random-psf-generation" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.scripts.PSFGenerator.PSF</span><span class="w"> </span><span class="kn">import</span> <span class="n">PSFRandomParameter</span>
+
+<span class="c1"># Set the output directory for results</span>
+<span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;path/to/your/result/folder&quot;</span>
+
+<span class="c1"># Generate a PSF without aberration (random parameters)</span>
+<span class="n">psf</span> <span class="o">=</span> <span class="n">PSFRandomParameter</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="aberrations">
+<h3>Aberrations<a class="headerlink" href="#aberrations" title="Link to this heading"></a></h3>
+<p>You can generate PSFs with specific aberrations using the <code class="docutils literal notranslate"><span class="pre">aberrationType</span></code> parameter:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Comatic aberration</span>
+<span class="n">psf</span> <span class="o">=</span> <span class="n">PSFRandomParameter</span><span class="p">(</span><span class="n">aberrationType</span><span class="o">=</span><span class="s2">&quot;comatic&quot;</span><span class="p">)</span>
+
+<span class="c1"># Astigmatism aberration</span>
+<span class="n">psf</span> <span class="o">=</span> <span class="n">PSFRandomParameter</span><span class="p">(</span><span class="n">aberrationType</span><span class="o">=</span><span class="s2">&quot;astigmatism&quot;</span><span class="p">)</span>
+
+<span class="c1"># Spherical aberration</span>
+<span class="n">psf</span> <span class="o">=</span> <span class="n">PSFRandomParameter</span><span class="p">(</span><span class="n">aberrationType</span><span class="o">=</span><span class="s2">&quot;spherical&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>Aberrations are applied <strong>randomly</strong> by default.</p></li>
+</ul>
+</div>
+</section>
+<section id="fixed-psf-generation">
+<h3>Fixed PSF Generation<a class="headerlink" href="#fixed-psf-generation" title="Link to this heading"></a></h3>
+<p>You can also generate PSFs with <strong>fixed parameters</strong> using the <code class="docutils literal notranslate"><span class="pre">PSFGenerator</span></code> class:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.scripts.PSFGenerator.PSF</span><span class="w"> </span><span class="kn">import</span> <span class="n">PSFGenerator</span>
+
+<span class="c1"># Generate a PSF with fixed parameters</span>
+<span class="n">psf</span> <span class="o">=</span> <span class="n">PSFGenerator</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>—</p>
+</section>
+</section>
+<section id="bead-detection">
+<span id="id2"></span><h2>Bead Detection<a class="headerlink" href="#bead-detection" title="Link to this heading"></a></h2>
+<p>The <strong>bead detection module</strong> identifies beads in microscopy images and extracts their <strong>regions of interest (ROIs)</strong>.
+This step is required before calculating metrics or fitting PSFs.</p>
+<section id="basic-usage">
+<h3>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.detection</span><span class="w"> </span><span class="kn">import</span> <span class="n">Detection</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.thresholdTools.threshold_tool</span><span class="w"> </span><span class="kn">import</span> <span class="n">Threshold</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.detectionTools.detection_tool</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetectionTool</span>
+
+<span class="c1"># Initialize the detector</span>
+<span class="n">detector</span> <span class="o">=</span> <span class="n">Detection</span><span class="p">()</span>
+<span class="n">detector</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">psf</span><span class="o">.</span><span class="n">psf</span>  <span class="c1"># Assign the PSF image</span>
+
+<span class="c1"># Configure the detection tool (e.g., &quot;Centroids&quot;, &quot;peak local maxima&quot;, etc.)</span>
+<span class="n">detectionTool</span> <span class="o">=</span> <span class="n">DetectionTool</span><span class="o">.</span><span class="n">getInstance</span><span class="p">(</span><span class="s2">&quot;Centroids&quot;</span><span class="p">)</span>
+<span class="n">detectionTool</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="n">psf</span><span class="o">.</span><span class="n">psf</span>
+<span class="n">detectionTool</span><span class="o">.</span><span class="n">_thresholdTool</span> <span class="o">=</span> <span class="n">Threshold</span><span class="o">.</span><span class="n">getInstance</span><span class="p">(</span><span class="s2">&quot;legacy&quot;</span><span class="p">)</span>
+
+<span class="c1"># Assign the detection tool to the detector</span>
+<span class="n">detector</span><span class="o">.</span><span class="n">_detectionTool</span> <span class="o">=</span> <span class="n">detectionTool</span>
+
+<span class="c1"># Set detection parameters</span>
+<span class="n">detector</span><span class="o">.</span><span class="n">cropFactor</span> <span class="o">=</span> <span class="mi">5</span>          <span class="c1"># Crop factor for ROI extraction</span>
+<span class="n">detector</span><span class="o">.</span><span class="n">beadSize</span> <span class="o">=</span> <span class="mf">0.2</span>         <span class="c1"># Expected bead size (in micrometers)</span>
+<span class="n">detector</span><span class="o">.</span><span class="n">rejectionDistance</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="c1"># Minimum distance between beads (in micrometers)</span>
+<span class="n">detector</span><span class="o">.</span><span class="n">pixelSize</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">psf</span><span class="o">.</span><span class="n">dz</span><span class="p">,</span> <span class="n">psf</span><span class="o">.</span><span class="n">dxy</span><span class="p">,</span> <span class="n">psf</span><span class="o">.</span><span class="n">dxy</span><span class="p">])</span>  <span class="c1"># Pixel size (Z, Y, X)</span>
+
+<span class="c1"># Run detection and save ROIs</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">detector</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">outputDir</span><span class="o">=</span><span class="n">path</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="c1"># Access the image analyzer for further processing</span>
+<span class="n">imageAnalyzer</span> <span class="o">=</span> <span class="n">detector</span><span class="o">.</span><span class="n">_imageAnalyzer</span>
+<span class="n">imageAnalyzer</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">path</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">cropFactor</span></code> and <code class="docutils literal notranslate"><span class="pre">beadSize</span></code> determines how much to crop around each detected bead.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">rejectionDistance</span></code> help filter top and bottom beads.</p></li>
+</ul>
+</div>
+<p>—</p>
+</section>
+</section>
+<section id="pre-fitting-metrics">
+<span id="id3"></span><h2>Pre-Fitting Metrics<a class="headerlink" href="#pre-fitting-metrics" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>Before estimating the <strong>Full Width at Half Maximum (FWHM)</strong> of the PSF, you can compute <strong>theoretical metrics</strong> such as:</dt><dd><ul class="simple">
+<li><p><strong>Theoretical resolution</strong> (based on microscope parameters).</p></li>
+<li><p><strong>Signal-to-background ratio (SBR)</strong>.</p></li>
+</ul>
+</dd>
+</dl>
+<section id="id4">
+<h3>Basic Usage<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">Metrics</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.resolutionTools.theoretical_resolution</span><span class="w"> </span><span class="kn">import</span> <span class="n">TheoreticalResolution</span>
+
+<span class="c1"># Initialize the metrics tool</span>
+<span class="n">MetricTool</span> <span class="o">=</span> <span class="n">Metrics</span><span class="p">()</span>
+<span class="n">MetricTool</span><span class="o">.</span><span class="n">_imageAnalyzer</span> <span class="o">=</span> <span class="n">imageAnalyzer</span>
+
+<span class="c1"># Configure theoretical resolution parameters</span>
+<span class="n">MetricTool</span><span class="o">.</span><span class="n">_TheoreticalResolutionTool</span> <span class="o">=</span> <span class="n">TheoreticalResolution</span><span class="o">.</span><span class="n">getInstance</span><span class="p">(</span><span class="s2">&quot;widefield&quot;</span><span class="p">)</span>
+<span class="n">MetricTool</span><span class="o">.</span><span class="n">_TheoreticalResolutionTool</span><span class="o">.</span><span class="n">_numericalAperture</span> <span class="o">=</span> <span class="n">psf</span><span class="o">.</span><span class="n">NA</span>
+<span class="n">MetricTool</span><span class="o">.</span><span class="n">_TheoreticalResolutionTool</span><span class="o">.</span><span class="n">_emissionWavelength</span> <span class="o">=</span> <span class="n">psf</span><span class="o">.</span><span class="n">wvl</span>
+<span class="n">MetricTool</span><span class="o">.</span><span class="n">_TheoreticalResolutionTool</span><span class="o">.</span><span class="n">_refractiveIndex</span> <span class="o">=</span> <span class="n">psf</span><span class="o">.</span><span class="n">ni</span>
+<span class="n">MetricTool</span><span class="o">.</span><span class="n">_TheoreticalResolutionTool</span><span class="o">.</span><span class="n">_excitationWavelength</span> <span class="o">=</span> <span class="mf">0.225</span>  <span class="c1"># Default excitation wavelength</span>
+
+<span class="c1"># Set ring parameters for SBR calculation</span>
+<span class="n">MetricTool</span><span class="o">.</span><span class="n">_ringInnerDistance</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># Inner radius for background estimation</span>
+<span class="n">MetricTool</span><span class="o">.</span><span class="n">_ringThickness</span> <span class="o">=</span> <span class="mf">2.0</span>      <span class="c1"># Thickness of the background ring</span>
+
+<span class="c1"># Run pre-fitting metrics</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">MetricTool</span><span class="o">.</span><span class="n">runPrefittingMetrics</span><span class="p">():</span>
+    <span class="k">pass</span>
+
+<span class="c1"># Save mesh data for each bead (optional)</span>
+<span class="k">for</span> <span class="n">bead</span> <span class="ow">in</span> <span class="n">imageAnalyzer</span><span class="o">.</span><span class="n">_beadAnalyzer</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">bead</span><span class="o">.</span><span class="n">_rejected</span> <span class="o">==</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">bead</span><span class="o">.</span><span class="n">_roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">bead</span><span class="o">.</span><span class="n">_metricTool</span><span class="o">.</span><span class="n">meshBuilder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bead</span><span class="o">.</span><span class="n">_metricTool</span><span class="o">.</span><span class="n">meshBuilder</span><span class="o">.</span><span class="n">saveMesh</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;bead_</span><span class="si">{</span><span class="n">bead</span><span class="o">.</span><span class="n">_id</span><span class="si">}</span><span class="s2">_mesh.obj&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>The <strong>theoretical resolution</strong> is calculated based on the <strong>numerical aperture (NA)</strong>, <strong>wavelength</strong>, and <strong>refractive index</strong>.</p></li>
+<li><p>The <strong>signal-to-background ratio</strong> helps assess the quality of the detected beads.</p></li>
+</ul>
+</div>
+<p>—</p>
+</section>
+</section>
+<section id="fwhm-estimation">
+<span id="id5"></span><h2>FWHM Estimation<a class="headerlink" href="#fwhm-estimation" title="Link to this heading"></a></h2>
+<p>Estimate the <strong>Full Width at Half Maximum (FWHM)</strong> of the PSF by fitting a <strong>Gaussian function</strong> to each detected bead.
+This step is crucial for characterizing the <strong>resolution</strong> of your microscope.</p>
+<section id="id6">
+<h3>Basic Usage<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.fitting</span><span class="w"> </span><span class="kn">import</span> <span class="n">Fitting</span>
+
+<span class="c1"># Initialize the fitting tool</span>
+<span class="n">FittingTool</span> <span class="o">=</span> <span class="n">Fitting</span><span class="p">()</span>
+<span class="n">FittingTool</span><span class="o">.</span><span class="n">_imageAnalyzer</span> <span class="o">=</span> <span class="n">imageAnalyzer</span>
+
+<span class="c1"># Configure fitting parameters</span>
+<span class="n">FittingTool</span><span class="o">.</span><span class="n">fitType</span> <span class="o">=</span> <span class="s2">&quot;2D&quot;</span>  <span class="c1"># or &quot;1D&quot;, &quot;3D&quot;, &quot;2D Ellips&quot;, &quot;2D Rotation&quot;, &quot;3D Rotation&quot;</span>
+<span class="n">FittingTool</span><span class="o">.</span><span class="n">_thresholdRSquared</span> <span class="o">=</span> <span class="mf">0.5</span>  <span class="c1"># Minimum R² value for a valid fit</span>
+
+<span class="c1"># Run the fitting</span>
+<span class="n">FittingTool</span><span class="o">.</span><span class="n">computeFitting</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">fitType</span></code> determines the <strong>dimensionality and model</strong> used for fitting (e.g., 2D Gaussian, 3D Gaussian with rotation).</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">_thresholdRSquared</span></code> filters out poor fits (adjust based on your data quality).</p></li>
+</ul>
+</div>
+<p>—</p>
+</section>
+</section>
+<section id="metrics-calculation">
+<span id="id7"></span><h2>Metrics Calculation<a class="headerlink" href="#metrics-calculation" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>After fitting, compute <strong>advanced metrics</strong> such as:</dt><dd><ul class="simple">
+<li><p><strong>Asymmetry</strong> (deviation from a perfect Gaussian).</p></li>
+<li><p><strong>Aberration metrics</strong> (e.g., astigmatism, coma).</p></li>
+</ul>
+</dd>
+</dl>
+<section id="id8">
+<h3>Basic Usage<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Assign the fitting results to the metrics tool</span>
+<span class="n">MetricTool</span><span class="o">.</span><span class="n">_imageAnalyzer</span> <span class="o">=</span> <span class="n">FittingTool</span><span class="o">.</span><span class="n">_imageAnalyzer</span>
+
+<span class="c1"># Run metrics calculation</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">MetricTool</span><span class="o">.</span><span class="n">runMetrics</span><span class="p">():</span>
+    <span class="k">pass</span>
+
+<span class="c1"># Access the updated image analyzer</span>
+<span class="n">imageAnalyzer</span> <span class="o">=</span> <span class="n">MetricTool</span><span class="o">.</span><span class="n">_imageAnalyzer</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>Metrics are calculated <strong>per bead</strong> and stored in <code class="docutils literal notranslate"><span class="pre">imageAnalyzer._beadAnalyzer</span></code>.</p></li>
+<li><p>You can access individual bead metrics (e.g., FWHM, SNR) via <code class="docutils literal notranslate"><span class="pre">bead._metricTool</span></code>.</p></li>
+</ul>
+</div>
+<p>—</p>
+</section>
+</section>
+<section id="report-generation">
+<span id="id9"></span><h2>Report Generation<a class="headerlink" href="#report-generation" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>Generate <strong>reports</strong> summarizing the analysis results, including:</dt><dd><ul class="simple">
+<li><p><strong>Acquisition parameters</strong> (e.g., microscope settings).</p></li>
+<li><p><strong>Detected beads</strong> (positions, intensities).</p></li>
+<li><p><strong>Fitted PSFs</strong> (FWHM, R² values).</p></li>
+<li><p><strong>Metrics</strong> (resolution, SNR, asymmetry).</p></li>
+<li><p><strong>Visualizations</strong> (heatmaps, fitting curves).</p></li>
+</ul>
+</dd>
+</dl>
+<section id="id10">
+<h3>Basic Usage<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">microscopy_metrics.report_generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReportGenerator</span>
+
+<span class="c1"># Crop PSF images for the report</span>
+<span class="n">detector</span><span class="o">.</span><span class="n">cropPsf</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>          <span class="c1"># Crop individual PSFs</span>
+<span class="n">detector</span><span class="o">.</span><span class="n">GlobalCropPsf</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>    <span class="c1"># Crop global PSF overview</span>
+
+<span class="c1"># Generate heatmaps</span>
+<span class="n">MetricTool</span><span class="o">.</span><span class="n">GenerateHeatmap</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+<span class="c1"># Display fitting results</span>
+<span class="n">FittingTool</span><span class="o">.</span><span class="n">displayFitting</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+<span class="c1"># Generate the HTML report</span>
+<span class="n">ReportGenerator</span> <span class="o">=</span> <span class="n">ReportGenerator</span><span class="p">()</span><span class="o">.</span><span class="n">getInstance</span><span class="p">(</span><span class="s2">&quot;HTML&quot;</span><span class="p">)</span>
+<span class="n">ReportGenerator</span><span class="o">.</span><span class="n">_inputDir</span> <span class="o">=</span> <span class="n">path</span>
+<span class="n">ReportGenerator</span><span class="o">.</span><span class="n">_imageAnalyzer</span> <span class="o">=</span> <span class="n">imageAnalyzer</span>
+<span class="n">ReportGenerator</span><span class="o">.</span><span class="n">generateReport</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>Reports are saved in the specified <code class="docutils literal notranslate"><span class="pre">path</span></code> directory.</p></li>
+<li><p>The <strong>HTML report</strong> includes interactive visualizations (if viewed in a browser).</p></li>
+<li><p>There also exists a <strong>PDF report</strong> option, which can be generated by changing the report type in <code class="docutils literal notranslate"><span class="pre">ReportGenerator.getInstance(&quot;PDF&quot;)</span></code> and a CSV report can be generated by changing the report type in <code class="docutils literal notranslate"><span class="pre">ReportGenerator.getInstance(&quot;CSV&quot;)</span></code>.</p></li>
+</ul>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usage.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api.html" class="btn btn-neutral float-right" title="API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, CNRS.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,451 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>microscopy_metrics.ImageAnalyzer &mdash; Microscopy metrics  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Microscopy metrics
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../how_to.html">How To</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Microscopy metrics</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">microscopy_metrics.ImageAnalyzer</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for microscopy_metrics.ImageAnalyzer</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">reportlab.lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">colors</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">reportlab.lib.styles</span><span class="w"> </span><span class="kn">import</span> <span class="n">getSampleStyleSheet</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">reportlab.platypus</span><span class="w"> </span><span class="kn">import</span> <span class="n">Paragraph</span><span class="p">,</span> <span class="n">Table</span><span class="p">,</span> <span class="n">TableStyle</span>
+
+<div class="viewcode-block" id="ImageAnalyzer">
+<a class="viewcode-back" href="../../microscopy_metrics.analyzers.html#microscopy_metrics.ImageAnalyzer.ImageAnalyzer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ImageAnalyzer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class for managing the image data, bead analysis results, and various parameters such as bead size and pixel size.</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        _path (str): The path to the image file.</span>
+<span class="sd">        _beadAnalyzer (List[BeadAnalyzer]): A list of bead analyzers for each bead in the image.</span>
+<span class="sd">        _beadSize (float): The size of the beads in the image.</span>
+<span class="sd">        _pixelSize (List[float]): The size of each pixel in the image.</span>
+<span class="sd">        _image (numpy.ndarray): The image data.</span>
+<span class="sd">        _theoreticalResolution (List[float]): The estimated theoretical resolution in each dimension.</span>
+<span class="sd">        _samplingDistance (List[float]): The sampling distance in each dimension.</span>
+<span class="sd">        _density (float): The density of the beads in the image.</span>
+<span class="sd">        _meanSBR (float): The mean signal-to-background ratio (SBR) across all beads.</span>
+<span class="sd">        _meanContrast (float): The mean contrast across all beads.</span>
+<span class="sd">        _meanEllipsRatio (float): The mean ellipticity ratio across all beads.</span>
+<span class="sd">        _meanOrientation (float): The mean orientation across all beads.</span>
+<span class="sd">        _meanLAR (float): The mean length-to-width ratio across all beads.</span>
+<span class="sd">        _meanSphericity (float): The mean sphericity across all beads.</span>
+<span class="sd">        _meanComaticity (float): The mean comaticity across all beads.</span>
+<span class="sd">        _meanSkeleton2Extremities (float): The mean skeleton-to-extremities ratio across all beads.</span>
+<span class="sd">        _meanRMin (float): The mean minimum radius across all beads.</span>
+<span class="sd">        _meanDetermination (List[float]): The mean determination values across all beads.</span>
+<span class="sd">        _meanFWHM (List[float]): The mean full width at half maximum values across all beads.</span>
+<span class="sd">        _meanUncertainty (List[float]): The mean uncertainty values across all beads.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;~/&quot;</span><span class="p">,</span> <span class="n">BeadAnalyzer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">beadSize</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">pixelSize</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_beadAnalyzer</span> <span class="o">=</span> <span class="n">BeadAnalyzer</span> <span class="k">if</span> <span class="n">BeadAnalyzer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_beadSize</span> <span class="o">=</span> <span class="n">beadSize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span> <span class="o">=</span> <span class="n">pixelSize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="n">image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_theoreticalResolution</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_samplingDistance</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_density</span> <span class="o">=</span> <span class="mf">0.0</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meanSBR</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meanContrast</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meanEllipsRatio</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meanOrientation</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meanLAR</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meanSphericity</span> <span class="o">=</span> <span class="mf">0.0</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meanComaticity</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meanSkeleton2Extremities</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meanRMin</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meanConcavity</span> <span class="o">=</span> <span class="mf">0.0</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meanAstigmatism</span> <span class="o">=</span> <span class="mf">0.0</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meanSphericalAberration</span> <span class="o">=</span> <span class="mf">0.0</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meanDetermination</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meanFWHM</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meanUncertainty</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ImageAnalyzer.toDict">
+<a class="viewcode-back" href="../../microscopy_metrics.analyzers.html#microscopy_metrics.ImageAnalyzer.ImageAnalyzer.toDict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">toDict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Converts the image analysis results into a dictionary format for easier access and manipulation of the image&#39;s data.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: A dictionary containing the image&#39;s analysis results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span>
+            <span class="s2">&quot;beadAnalyzer&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">bead</span><span class="o">.</span><span class="n">_id</span> <span class="k">for</span> <span class="n">bead</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_beadAnalyzer</span><span class="p">],</span>
+            <span class="s2">&quot;beadSize&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_beadSize</span><span class="p">,</span>
+            <span class="s2">&quot;pixelSize&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">,</span>
+            <span class="s2">&quot;theoreticalResolution&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_theoreticalResolution</span><span class="p">,</span>
+            <span class="s2">&quot;meanSBR&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meanSBR</span><span class="p">,</span>
+            <span class="s2">&quot;meanComaticity&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meanComaticity</span><span class="p">,</span>
+            <span class="s2">&quot;meanSphericalAberration&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meanSphericalAberration</span><span class="p">,</span>
+            <span class="s2">&quot;meanEllipsRatio&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meanEllipsRatio</span><span class="p">,</span>
+            <span class="s2">&quot;meanOrientation&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meanOrientation</span><span class="p">,</span>
+            <span class="s2">&quot;meanSkeleton2Extremities&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meanSkeleton2Extremities</span><span class="p">,</span>
+            <span class="s2">&quot;meanRMin&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meanRMin</span><span class="p">,</span>
+            <span class="s2">&quot;meanDetermination&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meanDetermination</span><span class="p">,</span>
+            <span class="s2">&quot;meanFWHM&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meanFWHM</span><span class="p">,</span>
+            <span class="s2">&quot;meanUncertainty&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meanUncertainty</span><span class="p">,</span>
+            <span class="s2">&quot;meanLAR&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meanLAR</span><span class="p">,</span>
+            <span class="s2">&quot;meanSphericity&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meanSphericity</span><span class="p">,</span>
+            <span class="s2">&quot;meanConcavity&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meanConcavity</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+    
+<div class="viewcode-block" id="ImageAnalyzer.drawParameterTableOnPDF">
+<a class="viewcode-back" href="../../microscopy_metrics.analyzers.html#microscopy_metrics.ImageAnalyzer.ImageAnalyzer.drawParameterTableOnPDF">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">drawParameterTableOnPDF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">pdf</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper to draw a styled parameter table with a title</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            title (str): The section title</span>
+<span class="sd">            data (List[List[str]]): The key-value pairs for the table</span>
+<span class="sd">            y (int): The y-coordinate to start drawing (top to bottom)</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            int: The new y-coordinate after drawing the table</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pdf</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="s2">&quot;Helvetica-Bold&quot;</span><span class="p">,</span> <span class="mi">18</span><span class="p">)</span>
+        <span class="n">pdf</span><span class="o">.</span><span class="n">drawCentredString</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">colWidths</span><span class="o">=</span><span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">])</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">setStyle</span><span class="p">(</span><span class="n">TableStyle</span><span class="p">([</span>
+            <span class="p">(</span><span class="s1">&#39;BACKGROUND&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">colors</span><span class="o">.</span><span class="n">whitesmoke</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;TEXTCOLOR&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">colors</span><span class="o">.</span><span class="n">black</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;ALIGN&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="s1">&#39;LEFT&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;ALIGN&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="s1">&#39;CENTER&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;FONTNAME&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="s1">&#39;Helvetica-Bold&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;FONTNAME&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="s1">&#39;Helvetica&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;FONTSIZE&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mi">11</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;BOTTOMPADDING&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mi">5</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;TOPPADDING&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mi">5</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;GRID&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">colors</span><span class="o">.</span><span class="n">lightgrey</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;VALIGN&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="s1">&#39;MIDDLE&#39;</span><span class="p">),</span>
+        <span class="p">]))</span>
+        <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">wrapOn</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">drawOn</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="n">h</span> <span class="o">-</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">y</span> <span class="o">-</span> <span class="n">h</span> <span class="o">-</span> <span class="mi">50</span></div>
+
+    
+<div class="viewcode-block" id="ImageAnalyzer.generatePDFReport">
+<a class="viewcode-back" href="../../microscopy_metrics.analyzers.html#microscopy_metrics.ImageAnalyzer.ImageAnalyzer.generatePDFReport">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generatePDFReport</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pdf</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates a PDF report for the image analysis results, including bead analysis and various metrics.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            pdf (PDFReport, optional): An instance of the PDFReport class to generate the report. Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pdf</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="s2">&quot;Helvetica-Bold&quot;</span><span class="p">,</span> <span class="mi">28</span><span class="p">)</span>
+        <span class="n">pdf</span><span class="o">.</span><span class="n">drawCentredString</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">770</span><span class="p">,</span> <span class="s2">&quot;Analysis Parameters Report&quot;</span><span class="p">)</span>
+        <span class="n">pdf</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">current_y</span> <span class="o">=</span> <span class="mi">700</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span> <span class="s2">&quot;Localisation.png&quot;</span><span class="p">)):</span>
+            <span class="n">pdf</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span> <span class="s2">&quot;Localisation.png&quot;</span><span class="p">),</span>
+                <span class="mi">172</span><span class="p">,</span>
+                <span class="n">current_y</span> <span class="o">-</span> <span class="mi">300</span><span class="p">,</span>
+                <span class="n">width</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+                <span class="n">height</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+                <span class="n">preserveAspectRatio</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">current_y</span> <span class="o">-=</span> <span class="mi">350</span>
+        <span class="n">styles</span> <span class="o">=</span> <span class="n">getSampleStyleSheet</span><span class="p">()</span>
+        <span class="n">styleN</span> <span class="o">=</span> <span class="n">styles</span><span class="p">[</span><span class="s2">&quot;Normal&quot;</span><span class="p">]</span>
+        <span class="n">styleN</span><span class="o">.</span><span class="n">wordWrap</span> <span class="o">=</span> <span class="s1">&#39;CJK&#39;</span> 
+        <span class="n">imgData</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="s2">&quot;Image path&quot;</span><span class="p">,</span> <span class="n">Paragraph</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">styleN</span><span class="p">)],</span>
+            <span class="p">[</span><span class="s2">&quot;Image shape&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">shape</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="kc">None</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;N/A&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Bead size&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_beadSize</span><span class="si">}</span><span class="s2"> µm&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Pixel size&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">)</span><span class="si">}</span><span class="s2"> µm&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Number of beads analyzed&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">([</span><span class="n">bead</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">bead</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_beadAnalyzer</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">bead</span><span class="o">.</span><span class="n">_rejected</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Number of beads rejected&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">([</span><span class="n">bead</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">bead</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_beadAnalyzer</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">bead</span><span class="o">.</span><span class="n">_rejected</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+        <span class="p">]</span>
+        <span class="n">current_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawParameterTableOnPDF</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="s2">&quot;Image parameters&quot;</span><span class="p">,</span> <span class="n">imgData</span><span class="p">,</span> <span class="n">current_y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">current_y</span> <span class="o">&lt;</span> <span class="mi">300</span><span class="p">:</span>
+            <span class="n">pdf</span><span class="o">.</span><span class="n">showPage</span><span class="p">()</span>
+            <span class="n">current_y</span> <span class="o">=</span> <span class="mi">700</span>
+        <span class="n">standardMetrics</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="s2">&quot;Mean SBR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanSBR</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Contrast&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanContrast</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Ellips Ratio&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanEllipsRatio</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Orientation&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanOrientation</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">°&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Lateral Asymmetry Ratio&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanLAR</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Sphericity&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanSphericity</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+        <span class="p">]</span>
+        <span class="n">current_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawParameterTableOnPDF</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="s2">&quot;Standard metrics&quot;</span><span class="p">,</span> <span class="n">standardMetrics</span><span class="p">,</span> <span class="n">current_y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">current_y</span> <span class="o">&lt;</span> <span class="mi">300</span><span class="p">:</span>
+            <span class="n">pdf</span><span class="o">.</span><span class="n">showPage</span><span class="p">()</span>
+            <span class="n">current_y</span> <span class="o">=</span> <span class="mi">700</span>
+        <span class="n">ComaticMetrics</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Comaticity&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanComaticity</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Skeleton to Extremities&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanSkeleton2Extremities</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean RMin&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanRMin</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> µm&quot;</span><span class="p">]</span>
+        <span class="p">]</span>
+        <span class="n">current_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawParameterTableOnPDF</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="s2">&quot;Comaticity metrics&quot;</span><span class="p">,</span> <span class="n">ComaticMetrics</span><span class="p">,</span> <span class="n">current_y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">current_y</span> <span class="o">&lt;</span> <span class="mi">300</span><span class="p">:</span>
+            <span class="n">pdf</span><span class="o">.</span><span class="n">showPage</span><span class="p">()</span>
+            <span class="n">current_y</span> <span class="o">=</span> <span class="mi">700</span>
+        <span class="n">AstitmatismMetrics</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Astigmatism&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanAstigmatism</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+        <span class="p">]</span>
+        <span class="n">current_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawParameterTableOnPDF</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="s2">&quot;Astigmatism metrics&quot;</span><span class="p">,</span> <span class="n">AstitmatismMetrics</span><span class="p">,</span> <span class="n">current_y</span><span class="p">)</span>
+        <span class="n">SphericalMetrics</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Spherical Aberration&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanSphericalAberration</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+        <span class="p">]</span>
+        <span class="n">current_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawParameterTableOnPDF</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="s2">&quot;Spherical aberration metrics&quot;</span><span class="p">,</span> <span class="n">SphericalMetrics</span><span class="p">,</span> <span class="n">current_y</span><span class="p">)</span>
+        <span class="n">FittingMetrics</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="s2">&quot;Axis order&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;Z&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Y&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;X&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Determination (R²)&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_meanDetermination</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean FWHM&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_meanFWHM</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Uncertainty&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="p">,</span><span class="w"> </span><span class="nb">tuple</span><span class="p">))</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_meanUncertainty</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Theoretical resolution&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_theoreticalResolution</span><span class="p">)</span><span class="si">}</span><span class="s2"> µm&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Sampling distance&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_samplingDistance</span><span class="p">)</span><span class="si">}</span><span class="s2"> µm&quot;</span><span class="p">],</span>
+        <span class="p">]</span>
+        <span class="n">current_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawParameterTableOnPDF</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="s2">&quot;Fitting metrics&quot;</span><span class="p">,</span> <span class="n">FittingMetrics</span><span class="p">,</span> <span class="n">current_y</span><span class="p">)</span>
+        <span class="n">pdf</span><span class="o">.</span><span class="n">showPage</span><span class="p">()</span>
+        <span class="n">pdf</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="s2">&quot;Helvetica-Bold&quot;</span><span class="p">,</span> <span class="mi">28</span><span class="p">)</span>
+        <span class="n">pdf</span><span class="o">.</span><span class="n">drawCentredString</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">770</span><span class="p">,</span> <span class="s2">&quot;Metrics Heatmap&quot;</span><span class="p">)</span>
+        <span class="n">heatmap_files</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;SBR_Heatmap.png&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Contrast_Heatmap.png&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;EllipsRatio_Heatmap.png&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;LAR_Heatmap.png&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Sphericity_Heatmap.png&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Orientation_Heatmap.png&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Comaticity_Heatmap.png&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Skeleton2Extremities_Heatmap.png&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;RMin_Heatmap.png&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Astigmatism_Heatmap.png&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;SphericalAberration_Heatmap.png&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">existing_heatmaps</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">heatmap_files</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span> <span class="n">f</span><span class="p">))]</span>
+        <span class="n">img_width</span> <span class="o">=</span> <span class="mi">250</span>
+        <span class="n">img_height</span> <span class="o">=</span> <span class="mi">250</span>
+        <span class="n">x_positions</span> <span class="o">=</span> <span class="p">[</span><span class="mi">40</span><span class="p">,</span> <span class="mi">310</span><span class="p">]</span>
+        <span class="n">y_start</span> <span class="o">=</span> <span class="mi">480</span>
+        <span class="n">y_step</span> <span class="o">=</span> <span class="mi">280</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">existing_heatmaps</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">pdf</span><span class="o">.</span><span class="n">showPage</span><span class="p">()</span>
+            <span class="n">col_index</span> <span class="o">=</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">2</span> 
+            <span class="n">row_index</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">4</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>  
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x_positions</span><span class="p">[</span><span class="n">col_index</span><span class="p">]</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">y_start</span> <span class="o">-</span> <span class="p">(</span><span class="n">row_index</span> <span class="o">*</span> <span class="n">y_step</span><span class="p">)</span>
+            <span class="n">pdf</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span> <span class="n">file_name</span><span class="p">),</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">y</span><span class="p">,</span>
+                <span class="n">width</span><span class="o">=</span><span class="n">img_width</span><span class="p">,</span>
+                <span class="n">height</span><span class="o">=</span><span class="n">img_height</span><span class="p">,</span>
+                <span class="n">preserveAspectRatio</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">pdf</span><span class="o">.</span><span class="n">showPage</span><span class="p">()</span>
+        
+        <span class="n">rejectedBeads</span> <span class="o">=</span> <span class="p">[</span><span class="n">bead</span> <span class="k">for</span> <span class="n">bead</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_beadAnalyzer</span> <span class="k">if</span> <span class="n">bead</span><span class="o">.</span><span class="n">_rejected</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">rejectedBeads</span><span class="p">:</span>
+            <span class="n">MAX_ROWS_PER_PAGE</span> <span class="o">=</span> <span class="mi">30</span>
+            
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rejectedBeads</span><span class="p">),</span> <span class="n">MAX_ROWS_PER_PAGE</span><span class="p">):</span>
+                <span class="n">chunk</span> <span class="o">=</span> <span class="n">rejectedBeads</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">MAX_ROWS_PER_PAGE</span><span class="p">]</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;Rejected beads&quot;</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;Rejected beads&quot;</span>
+                <span class="n">rejectedData</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">[</span><span class="s2">&quot;Bead ID&quot;</span><span class="p">,</span> <span class="s2">&quot;Rejection reason&quot;</span><span class="p">],</span>
+                    <span class="o">*</span><span class="p">[[</span><span class="n">bead</span><span class="o">.</span><span class="n">_id</span><span class="p">,</span> <span class="n">bead</span><span class="o">.</span><span class="n">_rejectionDesc</span><span class="p">]</span> <span class="k">for</span> <span class="n">bead</span> <span class="ow">in</span> <span class="n">chunk</span><span class="p">]</span>
+                <span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">drawParameterTableOnPDF</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">rejectedData</span><span class="p">,</span> <span class="mi">770</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">+</span> <span class="n">MAX_ROWS_PER_PAGE</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">rejectedBeads</span><span class="p">):</span>
+                    <span class="n">pdf</span><span class="o">.</span><span class="n">showPage</span><span class="p">()</span>
+            <span class="n">pdf</span><span class="o">.</span><span class="n">showPage</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">bead</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_beadAnalyzer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">bead</span><span class="o">.</span><span class="n">_rejected</span><span class="p">:</span>
+                <span class="n">bead</span><span class="o">.</span><span class="n">generatePDFReport</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_theoreticalResolution</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_samplingDistance</span><span class="p">)</span>
+                <span class="n">pdf</span><span class="o">.</span><span class="n">showPage</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ImageAnalyzer.generateSimplifiedPDFReport">
+<a class="viewcode-back" href="../../microscopy_metrics.analyzers.html#microscopy_metrics.ImageAnalyzer.ImageAnalyzer.generateSimplifiedPDFReport">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generateSimplifiedPDFReport</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pdf</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates a simplified PDF report for the image analysis results, focusing on key metrics and bead analysis.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            pdf (PDFReport, optional): An instance of the PDFReport class to generate the report. Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pdf</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="s2">&quot;Helvetica-Bold&quot;</span><span class="p">,</span> <span class="mi">28</span><span class="p">)</span>
+        <span class="n">pdf</span><span class="o">.</span><span class="n">drawCentredString</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">770</span><span class="p">,</span> <span class="s2">&quot;Analysis Parameters Report&quot;</span><span class="p">)</span>
+        <span class="n">pdf</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">current_y</span> <span class="o">=</span> <span class="mi">700</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span> <span class="s2">&quot;Localisation.png&quot;</span><span class="p">)):</span>
+            <span class="n">pdf</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span> <span class="s2">&quot;Localisation.png&quot;</span><span class="p">),</span>
+                <span class="mi">172</span><span class="p">,</span>
+                <span class="n">current_y</span> <span class="o">-</span> <span class="mi">300</span><span class="p">,</span>
+                <span class="n">width</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+                <span class="n">height</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+                <span class="n">preserveAspectRatio</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">current_y</span> <span class="o">-=</span> <span class="mi">350</span>
+        <span class="n">styles</span> <span class="o">=</span> <span class="n">getSampleStyleSheet</span><span class="p">()</span>
+        <span class="n">styleN</span> <span class="o">=</span> <span class="n">styles</span><span class="p">[</span><span class="s2">&quot;Normal&quot;</span><span class="p">]</span>
+        <span class="n">styleN</span><span class="o">.</span><span class="n">wordWrap</span> <span class="o">=</span> <span class="s1">&#39;CJK&#39;</span> 
+        <span class="n">imgData</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="s2">&quot;Image path&quot;</span><span class="p">,</span> <span class="n">Paragraph</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">styleN</span><span class="p">)],</span>
+            <span class="p">[</span><span class="s2">&quot;Image shape&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">shape</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="kc">None</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;N/A&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Bead size&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_beadSize</span><span class="si">}</span><span class="s2"> µm&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Pixel size&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_pixelSize</span><span class="p">)</span><span class="si">}</span><span class="s2"> µm&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Number of beads analyzed&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">([</span><span class="n">bead</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">bead</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_beadAnalyzer</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">bead</span><span class="o">.</span><span class="n">_rejected</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Number of beads rejected&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">([</span><span class="n">bead</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">bead</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_beadAnalyzer</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">bead</span><span class="o">.</span><span class="n">_rejected</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+        <span class="p">]</span>
+        <span class="n">current_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawParameterTableOnPDF</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="s2">&quot;Image parameters&quot;</span><span class="p">,</span> <span class="n">imgData</span><span class="p">,</span> <span class="n">current_y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">current_y</span> <span class="o">&lt;</span> <span class="mi">300</span><span class="p">:</span>
+            <span class="n">pdf</span><span class="o">.</span><span class="n">showPage</span><span class="p">()</span>
+            <span class="n">current_y</span> <span class="o">=</span> <span class="mi">700</span>
+        <span class="n">standardMetrics</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="s2">&quot;Mean SBR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanSBR</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Contrast&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanContrast</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Ellips Ratio&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanEllipsRatio</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Orientation&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanOrientation</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">°&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Lateral Asymmetry Ratio&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanLAR</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Sphericity&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanSphericity</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+        <span class="p">]</span>
+        <span class="n">current_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawParameterTableOnPDF</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="s2">&quot;Standard metrics&quot;</span><span class="p">,</span> <span class="n">standardMetrics</span><span class="p">,</span> <span class="n">current_y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">current_y</span> <span class="o">&lt;</span> <span class="mi">300</span><span class="p">:</span>
+            <span class="n">pdf</span><span class="o">.</span><span class="n">showPage</span><span class="p">()</span>
+            <span class="n">current_y</span> <span class="o">=</span> <span class="mi">700</span>
+        <span class="n">ComaticMetrics</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Comaticity&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanComaticity</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Skeleton to Extremities&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanSkeleton2Extremities</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean RMin&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanRMin</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> µm&quot;</span><span class="p">]</span>
+        <span class="p">]</span>
+        <span class="n">current_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawParameterTableOnPDF</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="s2">&quot;Comaticity metrics&quot;</span><span class="p">,</span> <span class="n">ComaticMetrics</span><span class="p">,</span> <span class="n">current_y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">current_y</span> <span class="o">&lt;</span> <span class="mi">300</span><span class="p">:</span>
+            <span class="n">pdf</span><span class="o">.</span><span class="n">showPage</span><span class="p">()</span>
+            <span class="n">current_y</span> <span class="o">=</span> <span class="mi">700</span>
+        <span class="n">AstitmatismMetrics</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Astigmatism&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanAstigmatism</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+        <span class="p">]</span>
+        <span class="n">current_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawParameterTableOnPDF</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="s2">&quot;Astigmatism metrics&quot;</span><span class="p">,</span> <span class="n">AstitmatismMetrics</span><span class="p">,</span> <span class="n">current_y</span><span class="p">)</span>
+        <span class="n">SphericalMetrics</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Spherical Aberration&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_meanSphericalAberration</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+        <span class="p">]</span>
+        <span class="n">current_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawParameterTableOnPDF</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="s2">&quot;Spherical aberration metrics&quot;</span><span class="p">,</span> <span class="n">SphericalMetrics</span><span class="p">,</span> <span class="n">current_y</span><span class="p">)</span>
+        <span class="n">FittingMetrics</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="s2">&quot;Axis order&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;Z&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Y&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;X&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Determination (R²)&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_meanDetermination</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean FWHM&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_meanFWHM</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Mean Uncertainty&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="p">,</span><span class="w"> </span><span class="nb">tuple</span><span class="p">))</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_meanUncertainty</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Theoretical resolution&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_theoreticalResolution</span><span class="p">)</span><span class="si">}</span><span class="s2"> µm&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s2">&quot;Sampling distance&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_samplingDistance</span><span class="p">)</span><span class="si">}</span><span class="s2"> µm&quot;</span><span class="p">],</span>
+        <span class="p">]</span>
+        <span class="n">current_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawParameterTableOnPDF</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="s2">&quot;Fitting metrics&quot;</span><span class="p">,</span> <span class="n">FittingMetrics</span><span class="p">,</span> <span class="n">current_y</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, CNRS.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

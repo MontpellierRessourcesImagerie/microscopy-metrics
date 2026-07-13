@@ -1,0 +1,361 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>microscopy_metrics.detectionTools.detection_tool &mdash; Microscopy metrics  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Microscopy metrics
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to.html">How To</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Microscopy metrics</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">microscopy_metrics.detectionTools.detection_tool</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for microscopy_metrics.detectionTools.detection_tool</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">ndimage</span> <span class="k">as</span> <span class="n">ndi</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skimage.feature</span><span class="w"> </span><span class="kn">import</span> <span class="n">blob_log</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skimage.feature</span><span class="w"> </span><span class="kn">import</span> <span class="n">blob_dog</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skimage.feature</span><span class="w"> </span><span class="kn">import</span> <span class="n">peak_local_max</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skimage.measure</span><span class="w"> </span><span class="kn">import</span> <span class="n">regionprops</span><span class="p">,</span> <span class="n">label</span>
+
+
+<div class="viewcode-block" id="DetectionTool">
+<a class="viewcode-back" href="../../../microscopy_metrics.detectionTools.html#microscopy_metrics.detectionTools.detection_tool.DetectionTool">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DetectionTool</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract base class for bead detection tools in microscopy images.</span>
+<span class="sd">    It includes methods for normalizing images, applying Gaussian high-pass filtering, and an abstract method for detecting features in the image.</span>
+<span class="sd">    The class also maintains a registry of detection classes for easy instantiation based on method names.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        _detectionClasses (dict): A dictionary to store registered detection classes.</span>
+<span class="sd">        _image (np.ndarray): The input image for detection.</span>
+<span class="sd">        _sigma (float): The standard deviation for Gaussian filtering.</span>
+<span class="sd">        _thresholdTool (ThresholdTool): An instance of a thresholding tool used for image processing.</span>
+<span class="sd">        _normalizedImage (np.ndarray): The normalized version of the input image.</span>
+<span class="sd">        _highPassedImage (np.ndarray): The high-pass filtered version of the normalized image.</span>
+<span class="sd">        _centroids (list): A list to store detected centroids in the image.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_detectionClasses</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thresholdTool</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_highPassedImage</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_centroids</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_detectionClasses</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Class was already registered&quot;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_detectionClasses</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span>
+
+<div class="viewcode-block" id="DetectionTool.getInstance">
+<a class="viewcode-back" href="../../../microscopy_metrics.detectionTools.html#microscopy_metrics.detectionTools.detection_tool.DetectionTool.getInstance">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getInstance</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">methodName</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Factory method to create an instance of a detection class based on the provided method name.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            methodName (str): Name of the detection method (e.g., &#39;peak local maxima&#39;, &#39;Laplacian of Gaussian&#39;, &#39;Difference of Gaussian&#39;, &#39;Centroids&#39;).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            DetectionTool: An instance of the detection class corresponding to the method name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">detectionClass</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_detectionClasses</span><span class="p">[</span><span class="n">methodName</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">detectionClass</span><span class="p">()</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="DetectionTool.setNormalizedImage">
+<a class="viewcode-back" href="../../../microscopy_metrics.detectionTools.html#microscopy_metrics.detectionTools.detection_tool.DetectionTool.setNormalizedImage">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setNormalizedImage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Normalize the input image for processing by the detection algorithms.</span>
+<span class="sd">        Converts the original image to a float64 type and normalizes pixel values to the range [0, 1].</span>
+<span class="sd">        Negative pixel values are set to zero.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the image is not 2D or 3D</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            Call this method before detection to ensure the image is normalized.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">ndim</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Image must be in 2D or 3D.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span><span class="p">)</span>
+        <span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1e-6</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="DetectionTool.gaussianHighPass">
+<a class="viewcode-back" href="../../../microscopy_metrics.detectionTools.html#microscopy_metrics.detectionTools.detection_tool.DetectionTool.gaussianHighPass">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">gaussianHighPass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Applies a Gaussian high-pass filter to the normalized image.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the normalized image is not set before calling this method.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            This method should be called after setNormalizedImage()&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Normalized image is not set. Call setNormalizedImage() first.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">lowPass</span> <span class="o">=</span> <span class="n">ndi</span><span class="o">.</span><span class="n">gaussian_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigma</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_highPassedImage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span> <span class="o">-</span> <span class="n">lowPass</span></div>
+
+
+<div class="viewcode-block" id="DetectionTool.detect">
+<a class="viewcode-back" href="../../../microscopy_metrics.detectionTools.html#microscopy_metrics.detectionTools.detection_tool.DetectionTool.detect">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">detect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Detect features in the image.</span>
+<span class="sd">        Subclasses must implement this method to specify the detection algorithm they use.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="PeakLocalMaxDetector">
+<a class="viewcode-back" href="../../../microscopy_metrics.detectionTools.html#microscopy_metrics.detectionTools.detection_tool.PeakLocalMaxDetector">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PeakLocalMaxDetector</span><span class="p">(</span><span class="n">DetectionTool</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Inherits from the DetectionTool base class and implements the detect method to identify local maxima in the input image.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        name (str): The name of the detection method, set to &#39;peak local maxima&#39;.</span>
+<span class="sd">        _minDistance (int): The minimum distance between detected peaks, used to filter out closely spaced maxima.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;peak local maxima&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_minDistance</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="PeakLocalMaxDetector.detect">
+<a class="viewcode-back" href="../../../microscopy_metrics.detectionTools.html#microscopy_metrics.detectionTools.detection_tool.PeakLocalMaxDetector.detect">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">detect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Detects local maxima in the input image.</span>
+<span class="sd">        Uses a difference of Gaussian to enhance the image and identifies local maxima based on the specified minimum distance and threshold.</span>
+<span class="sd">        Detected maxima are stored in &#39;self._centroids&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setNormalizedImage</span><span class="p">()</span>
+        <span class="n">ndi</span><span class="o">.</span><span class="n">gaussian_filter</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gaussianHighPass</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_centroids</span> <span class="o">=</span> <span class="n">peak_local_max</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_highPassedImage</span><span class="p">,</span>
+            <span class="n">min_distance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_minDistance</span><span class="p">,</span>
+            <span class="n">threshold_abs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_thresholdTool</span><span class="o">.</span><span class="n">getThreshold</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_highPassedImage</span><span class="p">),</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="CentroidDetector">
+<a class="viewcode-back" href="../../../microscopy_metrics.detectionTools.html#microscopy_metrics.detectionTools.detection_tool.CentroidDetector">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CentroidDetector</span><span class="p">(</span><span class="n">DetectionTool</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using a centroid algorithm.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        name (str): The name of the detection method, set to &#39;Centroids&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Centroids&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CentroidDetector.detect">
+<a class="viewcode-back" href="../../../microscopy_metrics.detectionTools.html#microscopy_metrics.detectionTools.detection_tool.CentroidDetector.detect">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">detect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Detects centroids in the input image.</span>
+<span class="sd">        Applies a difference of Gaussian to enhance the image, thresholds the high-passed image to create a binary image, and then labels the connected components in the binary image.</span>
+<span class="sd">        Centroids are stored in &#39;self._centroids&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setNormalizedImage</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span> <span class="o">=</span> <span class="n">ndi</span><span class="o">.</span><span class="n">gaussian_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gaussianHighPass</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">binaryImage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_highPassedImage</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thresholdTool</span><span class="o">.</span><span class="n">getThreshold</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_highPassedImage</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labeledImage</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">binaryImage</span><span class="p">)</span>
+        <span class="n">regionProps</span> <span class="o">=</span> <span class="n">regionprops</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labeledImage</span><span class="p">)</span>
+        <span class="n">tmpCentroids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">regionProps</span><span class="p">:</span>
+            <span class="n">tmpCentroids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">centroid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_centroids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tmpCentroids</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BlobLogDetector">
+<a class="viewcode-back" href="../../../microscopy_metrics.detectionTools.html#microscopy_metrics.detectionTools.detection_tool.BlobLogDetector">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BlobLogDetector</span><span class="p">(</span><span class="n">DetectionTool</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using the LoG algorithm.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        name (str): The name of the detection method, set to &#39;Laplacian of Gaussian&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Laplacian of Gaussian&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="BlobLogDetector.detect">
+<a class="viewcode-back" href="../../../microscopy_metrics.detectionTools.html#microscopy_metrics.detectionTools.detection_tool.BlobLogDetector.detect">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">detect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Detects blobs in the input image using the Laplacian of Gaussian (LoG) method.</span>
+<span class="sd">        Applies the LoG algorithm to the normalized image and identifies blob centroids based on the specified parameters (e.g., max_sigma, threshold).</span>
+<span class="sd">        Detected centroids are stored in &#39;self._centroids&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setNormalizedImage</span><span class="p">()</span>
+        <span class="n">blobs</span> <span class="o">=</span> <span class="n">blob_log</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span><span class="p">,</span>
+            <span class="n">max_sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sigma</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_thresholdTool</span><span class="o">.</span><span class="n">getThreshold</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_centroids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">blob</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">blob</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">blob</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs</span><span class="p">])</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BlobDogDetector">
+<a class="viewcode-back" href="../../../microscopy_metrics.detectionTools.html#microscopy_metrics.detectionTools.detection_tool.BlobDogDetector">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BlobDogDetector</span><span class="p">(</span><span class="n">DetectionTool</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Inherits from the DetectionTool base class and implements the detect method to identify blobs in the input image using the DoG algorithm.</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        name (str): The name of the detection method, set to &#39;Difference of Gaussian&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Difference of Gaussian&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="BlobDogDetector.detect">
+<a class="viewcode-back" href="../../../microscopy_metrics.detectionTools.html#microscopy_metrics.detectionTools.detection_tool.BlobDogDetector.detect">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">detect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Detects blobs in the input image using the Difference of Gaussian (DoG) method.</span>
+<span class="sd">        Applies the DoG algorithm to the normalized image and identifies blob centroids based on the specified parameters (e.g., max_sigma, threshold).</span>
+<span class="sd">        Detected centroids are stored in &#39;self._centroids&#39; for further processing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setNormalizedImage</span><span class="p">()</span>
+        <span class="n">blobs</span> <span class="o">=</span> <span class="n">blob_dog</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span><span class="p">,</span>
+            <span class="n">max_sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sigma</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_thresholdTool</span><span class="o">.</span><span class="n">getThreshold</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_normalizedImage</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_centroids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">blob</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">blob</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">blob</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs</span><span class="p">])</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, CNRS.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

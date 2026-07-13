@@ -1,0 +1,336 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>microscopy_metrics.reportTools package &mdash; Microscopy metrics  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="microscopy_metrics.scripts.PSFGenerator package" href="microscopy_metrics.PSFGenerator.html" />
+    <link rel="prev" title="microscopy_metrics.thresholdTools package" href="microscopy_metrics.thresholdTools.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Microscopy metrics
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="how_to.html">How To</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.detectionTools.html">microscopy_metrics.detectionTools package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.fittingTools.html">microscopy_metrics.fittingTools package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.metricTool.html">microscopy_metrics.metricTool package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.resolutionTools.html">microscopy_metrics.resolutionTools package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.thresholdTools.html">microscopy_metrics.thresholdTools package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">microscopy_metrics.reportTools package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#reportcsv">ReportCSV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#reporthtml">ReportHTML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#reportpdf">ReportPDF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#report-generator">Report_generator</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.PSFGenerator.html">microscopy_metrics.scripts.PSFGenerator package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.evaluate.html">microscopy_metrics.scripts.evaluate package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.analyzers.html">Analyzers</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Microscopy metrics</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">API</a></li>
+      <li class="breadcrumb-item active">microscopy_metrics.reportTools package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/microscopy_metrics.reportTools.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="microscopy-metrics-reporttools-package">
+<h1>microscopy_metrics.reportTools package<a class="headerlink" href="#microscopy-metrics-reporttools-package" title="Link to this heading"></a></h1>
+<p>This package contains the report tools used for generating reports on microscopy data. Each report tool has its own unique algorithm for generating reports.</p>
+<section id="reportcsv">
+<h2>ReportCSV<a class="headerlink" href="#reportcsv" title="Link to this heading"></a></h2>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.reportTools.ReportCSV</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.reportTools.ReportCSV.</span></span><span class="sig-name descname"><span class="pre">ReportCSV</span></span><a class="reference internal" href="_modules/microscopy_metrics/reportTools/ReportCSV.html#ReportCSV"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ReportGenerator</span></code></p>
+<p>Class based on the ReportGenerator abstract base class that generates a CSV report based on microscopy image analysis results.</p>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">generateReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputPath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/reportTools/ReportCSV.html#ReportCSV.generateReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates a CSV report containing the results of the microscopy image analysis, including bead information, fitting results, and calculated metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outputPath</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the directory where the CSV report will be saved. Defaults to None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="reporthtml">
+<h2>ReportHTML<a class="headerlink" href="#reporthtml" title="Link to this heading"></a></h2>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.reportTools.ReportHTML</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.reportTools.ReportHTML.</span></span><span class="sig-name descname"><span class="pre">ReportHTML</span></span><a class="reference internal" href="_modules/microscopy_metrics/reportTools/ReportHTML.html#ReportHTML"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ReportGenerator</span></code></p>
+<p>Class based on the ReportGenerator abstract base class that generates an HTML report based on microscopy image analysis results.</p>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">generateReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputPath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/reportTools/ReportHTML.html#ReportHTML.generateReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates an HTML report containing the results of the microscopy image analysis, including bead information, fitting results, and calculated metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outputPath</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the directory where the HTML report will be saved. Defaults to None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="reportpdf">
+<h2>ReportPDF<a class="headerlink" href="#reportpdf" title="Link to this heading"></a></h2>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.reportTools.ReportPDF</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.reportTools.ReportPDF.</span></span><span class="sig-name descname"><span class="pre">ReportPDF</span></span><a class="reference internal" href="_modules/microscopy_metrics/reportTools/ReportPDF.html#ReportPDF"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ReportGenerator</span></code></p>
+<p>Class based on the ReportGenerator abstract base class that generates a PDF report based on microscopy image analysis results.</p>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">drawParameterTableOnPDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/reportTools/ReportPDF.html#ReportPDF.drawParameterTableOnPDF"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Helper to draw a styled parameter table with a title</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>title</strong> (<em>str</em>) – The section title</p></li>
+<li><p><strong>data</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – The key-value pairs for the table</p></li>
+<li><p><strong>y</strong> (<em>int</em>) – The y-coordinate to start drawing (top to bottom)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The new y-coordinate after drawing the table</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">generateReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputPath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/reportTools/ReportPDF.html#ReportPDF.generateReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates a PDF report containing the results of the microscopy image analysis, including bead information, fitting results, and calculated metrics.
+:param outputPath: Path to the directory where the PDF report will be saved. Defaults to None.
+:type outputPath: str, optional</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">generateSimplifiedReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputPath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/reportTools/ReportPDF.html#ReportPDF.generateSimplifiedReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates a simplified PDF report containing the results of the microscopy image analysis, including bead information, fitting results, and calculated metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outputPath</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the directory where the PDF report will be saved. Defaults to None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="report-generator">
+<h2>Report_generator<a class="headerlink" href="#report-generator" title="Link to this heading"></a></h2>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.report_generator</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.report_generator.</span></span><span class="sig-name descname"><span class="pre">ReportGenerator</span></span><a class="reference internal" href="_modules/microscopy_metrics/report_generator.html#ReportGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Abstract base class for generating reports based on microscopy image analysis results.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_inputDir</span></span></dt>
+<dd><p>The input directory containing the microscopy images and analysis results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_imageAnalyzer</span></span></dt>
+<dd><p>An instance of the ImageAnalyzer class used for analyzing the microscopy images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ImageAnalyzer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_detectionDatas</span></span></dt>
+<dd><p>A dictionary to store detection-related data for the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_fittingDatas</span></span></dt>
+<dd><p>A dictionary to store fitting-related data for the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_microscopeDatas</span></span></dt>
+<dd><p>A dictionary to store microscope-related data for the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_roiDatas</span></span></dt>
+<dd><p>A dictionary to store region of interest (ROI) related data for the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_thresholdDatas</span></span></dt>
+<dd><p>A dictionary to store threshold-related data for the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">getInstance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methodName</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/report_generator.html#ReportGenerator.getInstance"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Factory method to create an instance of a report class based on the provided method name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>methodName</strong> (<em>str</em>) – Name of the report method (e.g., “PDF”, “CSV”, “HTML”).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An instance of the report class corresponding to the method name.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ReportGenerator</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="microscopy_metrics.thresholdTools.html" class="btn btn-neutral float-left" title="microscopy_metrics.thresholdTools package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="microscopy_metrics.PSFGenerator.html" class="btn btn-neutral float-right" title="microscopy_metrics.scripts.PSFGenerator package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, CNRS.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

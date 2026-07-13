@@ -1,0 +1,707 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>microscopy_metrics.scripts.PSFGenerator package &mdash; Microscopy metrics  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="microscopy_metrics.scripts.evaluate package" href="microscopy_metrics.evaluate.html" />
+    <link rel="prev" title="microscopy_metrics.reportTools package" href="microscopy_metrics.reportTools.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Microscopy metrics
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="how_to.html">How To</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.detectionTools.html">microscopy_metrics.detectionTools package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.fittingTools.html">microscopy_metrics.fittingTools package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.metricTool.html">microscopy_metrics.metricTool package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.resolutionTools.html">microscopy_metrics.resolutionTools package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.thresholdTools.html">microscopy_metrics.thresholdTools package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.reportTools.html">microscopy_metrics.reportTools package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">microscopy_metrics.scripts.PSFGenerator package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#psfgenerator">PSFGenerator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#psfwithcomaticaberration">PSFWithComaticAberration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#psfwithastigmatismaberration">PSFWithAstigmatismAberration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#psfwithsphericalaberration">PSFWithSphericalAberration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#psfrandomparameter">PSFRandomParameter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.evaluate.html">microscopy_metrics.scripts.evaluate package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.analyzers.html">Analyzers</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Microscopy metrics</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">API</a></li>
+      <li class="breadcrumb-item active">microscopy_metrics.scripts.PSFGenerator package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/microscopy_metrics.PSFGenerator.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="microscopy-metrics-scripts-psfgenerator-package">
+<h1>microscopy_metrics.scripts.PSFGenerator package<a class="headerlink" href="#microscopy-metrics-scripts-psfgenerator-package" title="Link to this heading"></a></h1>
+<p>This package contains the PSFGenerator script used for generating point spread functions (PSFs) for microscopy data. The PSFGenerator script has its own unique algorithm for generating PSFs based on the imaging modality. It also provides methods for generating aberrated PSFs based on the imaging modality and the aberration parameters.</p>
+<section id="psfgenerator">
+<h2>PSFGenerator<a class="headerlink" href="#psfgenerator" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.PSFGenerator.PSF.</span></span><span class="sig-name descname"><span class="pre">PSFGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dxy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.515</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.515</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wvl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/PSFGenerator/PSF.html#PSFGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for generating a Point Spread Function (PSF) for microscopy images based on specified parameters such as size, pixel size, refractive index, wavelength, and numerical aperture.
+The class provides methods for generating the PSF, computing its full width at half maximum (FWHM), adding noise to the PSF, and visualizing the PSF.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">size</span></span></dt>
+<dd><p>Size of the PSF image (default: 100).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">dxy</span></span></dt>
+<dd><p>Pixel size in the XY plane (default: 0.05).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">dz</span></span></dt>
+<dd><p>Pixel size in the Z direction (default: 0.05).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">ni0</span></span></dt>
+<dd><p>Refractive index of the immersion medium (default: 1.515).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">ni</span></span></dt>
+<dd><p>Refractive index of the sample medium (default: 1.515).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">wvl</span></span></dt>
+<dd><p>Wavelength of light used for imaging (default: 0.5).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">NA</span></span></dt>
+<dd><p>Numerical aperture of the objective lens (default: 1.4).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">psf</span></span></dt>
+<dd><p>Generated PSF image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">fwhm</span></span></dt>
+<dd><p>Full width at half maximum values for Z, Y, and X axes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.scripts.PSFGenerator.PSF.PSFGenerator</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">addNoise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/PSFGenerator/PSF.html#PSFGenerator.addNoise"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Adds Gaussian noise to the generated PSF image based on the specified mean and standard deviation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mean</strong> (<em>float</em>) – Mean of the Gaussian noise to be added (default: 0).</p></li>
+<li><p><strong>std</strong> (<em>float</em>) – Standard deviation of the Gaussian noise to be added (default: 2.0).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">computeFWHM</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/PSFGenerator/PSF.html#PSFGenerator.computeFWHM"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Computes the full width at half maximum (FWHM) for the generated PSF along the Z, Y, and X axes based on the specified parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list containing the FWHM values for Z, Y, and X axes.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">generate_psf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/PSFGenerator/PSF.html#PSFGenerator.generate_psf"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates the Point Spread Function (PSF) based on the specified parameters using the psfmodels library.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The generated PSF image.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">showPSF</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/PSFGenerator/PSF.html#PSFGenerator.showPSF"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Displays the generated PSF image using matplotlib, showing the central slices along the Z and Y axes.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="psfwithcomaticaberration">
+<h2>PSFWithComaticAberration<a class="headerlink" href="#psfwithcomaticaberration" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.PSFGenerator.PSF.</span></span><span class="sig-name descname"><span class="pre">PSFWithComaticAberration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dxy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.515</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.515</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wvl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Intensity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/PSFGenerator/PSF.html#PSFWithComaticAberration"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">PSFGenerator</span></code></p>
+<p>Class for generating a Point Spread Function (PSF) with comatic aberration based on specified parameters such as size, pixel size, refractive index, wavelength, numerical aperture, and intensity of the aberration.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">size</span></span></dt>
+<dd><p>Size of the PSF image (default: 100).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">dxy</span></span></dt>
+<dd><p>Pixel size in the XY plane (default: 0.05).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">dz</span></span></dt>
+<dd><p>Pixel size in the Z direction (default: 0.05).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">ni0</span></span></dt>
+<dd><p>Refractive index of the immersion medium (default: 1.515).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">ni</span></span></dt>
+<dd><p>Refractive index of the sample medium (default: 1.515).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">wvl</span></span></dt>
+<dd><p>Wavelength of light used for imaging (default: 0.5).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">NA</span></span></dt>
+<dd><p>Numerical aperture of the objective lens (default: 1.4).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Intensity</span></span></dt>
+<dd><p>Intensity of the comatic aberration (default: random value between 0.02 and 0.08).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">psf</span></span></dt>
+<dd><p>Generated PSF image with comatic aberration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.scripts.PSFGenerator.PSF.PSFWithComaticAberration</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">generate_comatic_aberration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/PSFGenerator/PSF.html#PSFWithComaticAberration.generate_comatic_aberration"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates the Point Spread Function (PSF) with comatic aberration based on the specified parameters using the psfmodels library and applies a comatic distortion to the PSF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The generated PSF image with comatic aberration.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="psfwithastigmatismaberration">
+<h2>PSFWithAstigmatismAberration<a class="headerlink" href="#psfwithastigmatismaberration" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.PSFGenerator.PSF.</span></span><span class="sig-name descname"><span class="pre">PSFWithAstigmatismAberration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dxy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.515</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.515</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wvl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/PSFGenerator/PSF.html#PSFWithAstigmatismAberration"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">PSFGenerator</span></code></p>
+<p>Class for generating a Point Spread Function (PSF) with astigmatism aberration based on specified parameters such as size, pixel size, refractive index, wavelength, numerical aperture, and intensity of the aberration.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">size</span></span></dt>
+<dd><p>Size of the PSF image (default: 100).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">dxy</span></span></dt>
+<dd><p>Pixel size in the XY plane (default: 0.05).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">dz</span></span></dt>
+<dd><p>Pixel size in the Z direction (default: 0.05).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">ni0</span></span></dt>
+<dd><p>Refractive index of the immersion medium (default: 1.515).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">ni</span></span></dt>
+<dd><p>Refractive index of the sample medium (default: 1.515).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">wvl</span></span></dt>
+<dd><p>Wavelength of light used for imaging (default: 0.5).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">NA</span></span></dt>
+<dd><p>Numerical aperture of the objective lens (default: 1.4).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">psf</span></span></dt>
+<dd><p>Generated PSF image with astigmatism aberration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.scripts.PSFGenerator.PSF.PSFWithAstigmatismAberration</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">generate_astigmatism_aberration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/PSFGenerator/PSF.html#PSFWithAstigmatismAberration.generate_astigmatism_aberration"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates the Point Spread Function (PSF) with astigmatism aberration based on the specified parameters using the psfmodels library and applies an astigmatic distortion to the PSF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The generated PSF image with astigmatism aberration.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="psfwithsphericalaberration">
+<h2>PSFWithSphericalAberration<a class="headerlink" href="#psfwithsphericalaberration" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.PSFGenerator.PSF.</span></span><span class="sig-name descname"><span class="pre">PSFWithSphericalAberration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dxy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.515</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wvl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/PSFGenerator/PSF.html#PSFWithSphericalAberration"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">PSFGenerator</span></code></p>
+<p>Class for generating a Point Spread Function (PSF) with spherical aberration based on specified parameters such as size, pixel size, refractive index, wavelength, and numerical aperture.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">size</span></span></dt>
+<dd><p>Size of the PSF image (default: 100).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">dxy</span></span></dt>
+<dd><p>Pixel size in the XY plane (default: 0.05).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">dz</span></span></dt>
+<dd><p>Pixel size in the Z direction (default: 0.05).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">ni0</span></span></dt>
+<dd><p>Refractive index of the immersion medium (default: 1.515).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">ni</span></span></dt>
+<dd><p>Refractive index of the sample medium (default: 1.515).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">wvl</span></span></dt>
+<dd><p>Wavelength of light used for imaging (default: 0.5).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">NA</span></span></dt>
+<dd><p>Numerical aperture of the objective lens (default: 1.4).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">psf</span></span></dt>
+<dd><p>Generated PSF image with spherical aberration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.scripts.PSFGenerator.PSF.PSFWithSphericalAberration</span></code></p>
+</dd></dl>
+
+</section>
+<section id="psfrandomparameter">
+<h2>PSFRandomParameter<a class="headerlink" href="#psfrandomparameter" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.scripts.PSFGenerator.PSF.</span></span><span class="sig-name descname"><span class="pre">PSFRandomParameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aberrationType</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/scripts/PSFGenerator/PSF.html#PSFRandomParameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for generating a Point Spread Function (PSF) with random parameters and optional aberration types.
+This class allows for the creation of a PSF with random values for pixel size, refractive index, wavelength, and numerical aperture, as well as the option to apply specific aberration types such as comatic, astigmatism, or spherical aberrations.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">randomDxy</span></span></dt>
+<dd><p>Pixel size in the XY plane (default: 0.05).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">randomDz</span></span></dt>
+<dd><p>Pixel size in the Z direction (default: 0.05).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">randomNi</span></span></dt>
+<dd><p>Refractive index of the sample medium (default: 1.515).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">randomWvl</span></span></dt>
+<dd><p>Wavelength of light used for imaging (default: 0.5).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">randomNA</span></span></dt>
+<dd><p>Numerical aperture of the objective lens (default: 1.4).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>size</strong> (<em>int</em>) – Size of the PSF image (default: 100).</p></li>
+<li><p><strong>aberrationType</strong> (<em>str</em>) – Type of aberration to apply to the PSF. Options include “comatic”, “astigmatism”, “spherical”, or None for no aberration (default: None).</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.scripts.PSFGenerator.PSF.PSFRandomParameter</span></code></p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="microscopy_metrics.reportTools.html" class="btn btn-neutral float-left" title="microscopy_metrics.reportTools package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="microscopy_metrics.evaluate.html" class="btn btn-neutral float-right" title="microscopy_metrics.scripts.evaluate package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, CNRS.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

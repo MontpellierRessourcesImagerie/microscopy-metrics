@@ -1,0 +1,376 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>microscopy_metrics.fittingTools.fittingTool &mdash; Microscopy metrics  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Microscopy metrics
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to.html">How To</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Microscopy metrics</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">microscopy_metrics.fittingTools.fittingTool</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for microscopy_metrics.fittingTools.fittingTool</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">r2_score</span>
+
+
+<div class="viewcode-block" id="FittingTool">
+<a class="viewcode-back" href="../../../microscopy_metrics.fittingTools.html#microscopy_metrics.fittingTools.fittingTool.FittingTool">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FittingTool</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for fitting tools used in microscopy metrics.</span>
+<span class="sd">    This class provides common functionalities and structure for different types of fitting methods (e.g., 1D, 2D, 3D Gaussian fitting).</span>
+<span class="sd">    It includes methods for setting the image, centroid, spacing, region of interest (ROI), output directory, and results.</span>
+<span class="sd">    It also defines abstract methods that must be implemented by subclasses for specific fitting techniques.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_fittingClasses</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_centroid</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_spacing</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roi</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_outputDir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_amp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">thetas</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fwhms</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uncertainties</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">determinations</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">8</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pcovs</span> <span class="o">=</span> <span class="p">[[],</span> <span class="p">[],</span> <span class="p">[]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params1D</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">8</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Z&quot;</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="s2">&quot;X&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contrast</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_commentary</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_fittingClasses</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Class was already registered&quot;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_fittingClasses</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span>
+
+<div class="viewcode-block" id="FittingTool.getInstance">
+<a class="viewcode-back" href="../../../microscopy_metrics.fittingTools.html#microscopy_metrics.fittingTools.fittingTool.FittingTool.getInstance">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getInstance</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">methodName</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Factory method to create an instance of a fitting class based on the provided method name.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            methodName (str): Name of the fitting method (e.g., &quot;1D&quot;, &quot;2D&quot;, &quot;3D&quot;).</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            FittingTool: An instance of the fitting class corresponding to the method name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fitClass</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_fittingClasses</span><span class="p">[</span><span class="n">methodName</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">fitClass</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="FittingTool.fwhm">
+<a class="viewcode-back" href="../../../microscopy_metrics.fittingTools.html#microscopy_metrics.fittingTools.fittingTool.FittingTool.fwhm">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fwhm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the full width at half maximum (FWHM) for a Gaussian function based on the provided sigma value.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            sigma (float): The standard deviation of the Gaussian function.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The calculated FWHM value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span> <span class="o">*</span> <span class="n">sigma</span></div>
+
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">gauss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">amp</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">bg</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">mu</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evalFun</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">amp</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">bg</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">mu</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fitCurve</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">amp</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">bg</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">mu</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+        <span class="n">sigma</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+        <span class="n">coords</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">psf</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">processSingleFit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="FittingTool.setNormalizedImage">
+<a class="viewcode-back" href="../../../microscopy_metrics.fittingTools.html#microscopy_metrics.fittingTools.fittingTool.FittingTool.setNormalizedImage">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setNormalizedImage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Normalizes the input image to a range of [0, 1] and ensures that all values are non-negative.</span>
+<span class="sd">       </span>
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the input image is not 2D or 3D.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: The normalized image with values in the range [0, 1].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">ndim</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Image has to be in 2D or 3D.&quot;</span><span class="p">)</span>
+        <span class="n">imageFloat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">img_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">imageFloat</span><span class="p">)</span>
+        <span class="n">img_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">imageFloat</span><span class="p">)</span>
+        <span class="n">imageFloat</span> <span class="o">=</span> <span class="p">(</span><span class="n">imageFloat</span> <span class="o">-</span> <span class="n">img_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">img_max</span> <span class="o">-</span> <span class="n">img_min</span> <span class="o">+</span> <span class="mf">1e-6</span><span class="p">)</span>
+        <span class="n">imageFloat</span><span class="p">[</span><span class="n">imageFloat</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">return</span> <span class="n">imageFloat</span></div>
+
+
+<div class="viewcode-block" id="FittingTool.getActivePath">
+<a class="viewcode-back" href="../../../microscopy_metrics.fittingTools.html#microscopy_metrics.fittingTools.fittingTool.FittingTool.getActivePath">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getActivePath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Provides the path to the folder corresponding to the selected bead, creating it if it does not exist.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            index (int): The index of the bead for which to get the active path.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Path: The path to the folder corresponding to the selected bead.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">activePath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_outputDir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;bead_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">activePath</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">activePath</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">activePath</span></div>
+
+
+<div class="viewcode-block" id="FittingTool.uncertainty">
+<a class="viewcode-back" href="../../../microscopy_metrics.fittingTools.html#microscopy_metrics.fittingTools.fittingTool.FittingTool.uncertainty">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">uncertainty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pcov</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the uncertainties of the fitted parameters based on the provided covariance matrix.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            pcov (np.ndarray): The covariance matrix between parameters obtained from the fitting process.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: The uncertainties of the fitted parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">perr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">pcov</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">perr</span></div>
+
+
+<div class="viewcode-block" id="FittingTool.getLocalCentroid">
+<a class="viewcode-back" href="../../../microscopy_metrics.fittingTools.html#microscopy_metrics.fittingTools.fittingTool.FittingTool.getLocalCentroid">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getLocalCentroid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the local centroid of the PSF within the region of interest (ROI) based on the provided image and ROI.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            List(int): The coordinates of the local centroid within the ROI.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_centroid</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_centroid</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roi</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_centroid</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roi</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]),</span>
+        <span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="FittingTool.mip3d">
+<a class="viewcode-back" href="../../../microscopy_metrics.fittingTools.html#microscopy_metrics.fittingTools.fittingTool.FittingTool.mip3d">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mip3d</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the maximum intensity projection (MIP) of a 3D image along a specified axis.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            image (np.ndarray): The input 3D image.</span>
+<span class="sd">            axis (int): The axis along which to compute the MIP (0 for z, 1 for y, 2 for x).</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: The maximum intensity projection of the input image along the specified axis.</span>
+<span class="sd">        </span>
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the input image is not 3D or if the specified axis is not valid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Image has to be in 3 dimensions&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">axis</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Axis must be 0 (z), 1 (y) or 2 (x).&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FittingTool.compute1DParams">
+<a class="viewcode-back" href="../../../microscopy_metrics.fittingTools.html#microscopy_metrics.fittingTools.fittingTool.FittingTool.compute1DParams">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute1DParams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Computes the initial parameters for the 1D Gaussian fit based on the PSF data and the center coordinates.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            List(float): Initial parameters from the 1D Gaussian fit</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fitTool1D</span> <span class="o">=</span> <span class="n">FittingTool</span><span class="o">.</span><span class="n">getInstance</span><span class="p">(</span><span class="s2">&quot;1D&quot;</span><span class="p">)</span>
+        <span class="n">fitTool1D</span><span class="o">.</span><span class="n">_show</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_show</span>
+        <span class="n">fitTool1D</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span>
+        <span class="n">fitTool1D</span><span class="o">.</span><span class="n">_roi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roi</span>
+        <span class="n">fitTool1D</span><span class="o">.</span><span class="n">_spacing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spacing</span>
+        <span class="n">fitTool1D</span><span class="o">.</span><span class="n">_outputDir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_outputDir</span>
+        <span class="n">fitTool1D</span><span class="o">.</span><span class="n">_centroid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_centroid</span>
+        <span class="n">fitTool1D</span><span class="o">.</span><span class="n">processSingleFit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params1D</span> <span class="o">=</span> <span class="n">fitTool1D</span><span class="o">.</span><span class="n">parameters</span></div>
+
+
+<div class="viewcode-block" id="FittingTool.determination">
+<a class="viewcode-back" href="../../../microscopy_metrics.fittingTools.html#microscopy_metrics.fittingTools.fittingTool.FittingTool.determination">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">determination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">psf</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the coefficient of determination (R²) for the fitted curve against the original PSF data.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            params (list): The fitted parameters</span>
+<span class="sd">            coords (array): The coordinates of the PSF profile</span>
+<span class="sd">            psf (array): The original PSF data</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The coefficient of determination (R²)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">psfFit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evalFun</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="o">*</span><span class="n">params</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r2_score</span><span class="p">(</span><span class="n">psf</span><span class="p">,</span> <span class="n">psfFit</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FittingTool.getMu">
+<a class="viewcode-back" href="../../../microscopy_metrics.fittingTools.html#microscopy_metrics.fittingTools.fittingTool.FittingTool.getMu">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getMu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extracts the fitted centroid coordinates (mu) from the fitted parameters.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            list: The fitted centroid coordinates (mu) for each axis.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">4</span><span class="p">]]</span></div>
+
+
+<div class="viewcode-block" id="FittingTool.getSigma">
+<a class="viewcode-back" href="../../../microscopy_metrics.fittingTools.html#microscopy_metrics.fittingTools.fittingTool.FittingTool.getSigma">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getSigma</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extracts the fitted sigma values from the fitted parameters.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            list: The fitted sigma values for each axis.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">7</span><span class="p">]]</span></div>
+
+
+<div class="viewcode-block" id="FittingTool.computeContrast">
+<a class="viewcode-back" href="../../../microscopy_metrics.fittingTools.html#microscopy_metrics.fittingTools.fittingTool.FittingTool.computeContrast">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">computeContrast</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates the contrast of the fitted curve based on the Weber contrast formula.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">contrast</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">contrast</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">plotFit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outputPath</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">showFit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outputPath</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, CNRS.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

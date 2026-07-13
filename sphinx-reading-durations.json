@@ -1,0 +1,15 @@
+{
+    "api": 0.014,
+    "how_to": 0.025,
+    "index": 0.006,
+    "microscopy_metrics.PSFGenerator": 0.109,
+    "microscopy_metrics.analyzers": 0.467,
+    "microscopy_metrics.detectionTools": 0.195,
+    "microscopy_metrics.evaluate": 0.007,
+    "microscopy_metrics.fittingTools": 1.105,
+    "microscopy_metrics.metricTool": 0.453,
+    "microscopy_metrics.reportTools": 0.313,
+    "microscopy_metrics.resolutionTools": 0.06,
+    "microscopy_metrics.thresholdTools": 0.074,
+    "usage": 0.039
+}

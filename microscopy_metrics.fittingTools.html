@@ -1,0 +1,1442 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>microscopy_metrics.fittingTools package &mdash; Microscopy metrics  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="microscopy_metrics.metricTool package" href="microscopy_metrics.metricTool.html" />
+    <link rel="prev" title="microscopy_metrics.detectionTools package" href="microscopy_metrics.detectionTools.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Microscopy metrics
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="how_to.html">How To</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.detectionTools.html">microscopy_metrics.detectionTools package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">microscopy_metrics.fittingTools package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#fittingtool">FittingTool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fitting1d">Fitting1D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fitting2d">Fitting2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fitting2dellips">Fitting2DEllips</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fitting2drotation">Fitting2DRotation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fitting3d">Fitting3D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fitting3drotation">Fitting3DRotation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fitting">Fitting</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.metricTool.html">microscopy_metrics.metricTool package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.resolutionTools.html">microscopy_metrics.resolutionTools package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.thresholdTools.html">microscopy_metrics.thresholdTools package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.reportTools.html">microscopy_metrics.reportTools package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.PSFGenerator.html">microscopy_metrics.scripts.PSFGenerator package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.evaluate.html">microscopy_metrics.scripts.evaluate package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="microscopy_metrics.analyzers.html">Analyzers</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Microscopy metrics</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">API</a></li>
+      <li class="breadcrumb-item active">microscopy_metrics.fittingTools package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/microscopy_metrics.fittingTools.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="microscopy-metrics-fittingtools-package">
+<h1>microscopy_metrics.fittingTools package<a class="headerlink" href="#microscopy-metrics-fittingtools-package" title="Link to this heading"></a></h1>
+<p>This package contains the fitting tools used for fitting models to microscopy data. The fitting tools are implemented as classes that inherit from the base class <cite>FittingTool</cite>. Each fitting tool has its own unique algorithm for fitting models to data.</p>
+<section id="fittingtool">
+<h2>FittingTool<a class="headerlink" href="#fittingtool" title="Link to this heading"></a></h2>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.fittingTools.fittingTool</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.fittingTools.fittingTool.</span></span><span class="sig-name descname"><span class="pre">FittingTool</span></span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fittingTool.html#FittingTool"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for fitting tools used in microscopy metrics.
+This class provides common functionalities and structure for different types of fitting methods (e.g., 1D, 2D, 3D Gaussian fitting).
+It includes methods for setting the image, centroid, spacing, region of interest (ROI), output directory, and results.
+It also defines abstract methods that must be implemented by subclasses for specific fitting techniques.</p>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">compute1DParams</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fittingTool.html#FittingTool.compute1DParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Computes the initial parameters for the 1D Gaussian fit based on the PSF data and the center coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Initial parameters from the 1D Gaussian fit</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List(float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">computeContrast</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fittingTool.html#FittingTool.computeContrast"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Calculates the contrast of the fitted curve based on the Weber contrast formula.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">determination</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fittingTool.html#FittingTool.determination"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Calculates the coefficient of determination (R²) for the fitted curve against the original PSF data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> (<em>list</em>) – The fitted parameters</p></li>
+<li><p><strong>coords</strong> (<em>array</em>) – The coordinates of the PSF profile</p></li>
+<li><p><strong>psf</strong> (<em>array</em>) – The original PSF data</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The coefficient of determination (R²)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">fwhm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fittingTool.html#FittingTool.fwhm"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Calculates the full width at half maximum (FWHM) for a Gaussian function based on the provided sigma value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sigma</strong> (<em>float</em>) – The standard deviation of the Gaussian function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated FWHM value.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">getActivePath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fittingTool.html#FittingTool.getActivePath"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Provides the path to the folder corresponding to the selected bead, creating it if it does not exist.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<em>int</em>) – The index of the bead for which to get the active path.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The path to the folder corresponding to the selected bead.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">getInstance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methodName</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fittingTool.html#FittingTool.getInstance"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Factory method to create an instance of a fitting class based on the provided method name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>methodName</strong> (<em>str</em>) – Name of the fitting method (e.g., “1D”, “2D”, “3D”).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An instance of the fitting class corresponding to the method name.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>FittingTool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">getLocalCentroid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fittingTool.html#FittingTool.getLocalCentroid"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Calculates the local centroid of the PSF within the region of interest (ROI) based on the provided image and ROI.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The coordinates of the local centroid within the ROI.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List(int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">getMu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fittingTool.html#FittingTool.getMu"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Extracts the fitted centroid coordinates (mu) from the fitted parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The fitted centroid coordinates (mu) for each axis.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">getSigma</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fittingTool.html#FittingTool.getSigma"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Extracts the fitted sigma values from the fitted parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The fitted sigma values for each axis.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">mip3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fittingTool.html#FittingTool.mip3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Calculates the maximum intensity projection (MIP) of a 3D image along a specified axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>np.ndarray</em>) – The input 3D image.</p></li>
+<li><p><strong>axis</strong> (<em>int</em>) – The axis along which to compute the MIP (0 for z, 1 for y, 2 for x).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The maximum intensity projection of the input image along the specified axis.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the input image is not 3D or if the specified axis is not valid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">setNormalizedImage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fittingTool.html#FittingTool.setNormalizedImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Normalizes the input image to a range of [0, 1] and ensures that all values are non-negative.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the input image is not 2D or 3D.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The normalized image with values in the range [0, 1].</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">uncertainty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pcov</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fittingTool.html#FittingTool.uncertainty"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Calculates the uncertainties of the fitted parameters based on the provided covariance matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pcov</strong> (<em>np.ndarray</em>) – The covariance matrix between parameters obtained from the fitting process.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The uncertainties of the fitted parameters.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="fitting1d">
+<h2>Fitting1D<a class="headerlink" href="#fitting1d" title="Link to this heading"></a></h2>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.fittingTools.fitting1D</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.fittingTools.fitting1D.</span></span><span class="sig-name descname"><span class="pre">Fitting1D</span></span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting1D.html#Fitting1D"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">FittingTool</span></code></p>
+<p>Class for fitting a 1D Gaussian curve to the PSF profile of a microscopy image.
+This class inherits from the FittingTool base class and implements methods specific to 1D Gaussian fitting.
+It includes methods for evaluating the Gaussian function, fitting the curve to the data, and plotting the results.</p>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">evalFun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting1D.html#Fitting1D.evalFun"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Evaluates the 1D Gaussian function at the given x values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array</em>) – x values at which to evaluate the function</p></li>
+<li><p><strong>amp</strong> (<em>float</em>) – amplitude of the curve</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – background intensity</p></li>
+<li><p><strong>mu</strong> (<em>float</em>) – center of the curve</p></li>
+<li><p><strong>sigma</strong> (<em>float</em>) – standard deviation of the curve</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Intensity value at x following the curve</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">fitCurve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting1D.html#Fitting1D.fitCurve"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Fits a 1D Gaussian curve to the given data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amp</strong> (<em>float</em>) – Initial guess for the amplitude.</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – Initial guess for the background.</p></li>
+<li><p><strong>mu</strong> (<em>float</em>) – Initial guess for the center.</p></li>
+<li><p><strong>sigma</strong> (<em>float</em>) – Initial guess for the standard deviation.</p></li>
+<li><p><strong>coords</strong> (<em>array</em>) – Coordinates of the data points.</p></li>
+<li><p><strong>psf</strong> (<em>array</em>) – Intensity values at the data points.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If the optimization fails to converge.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optimal parameters and covariance matrix.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">gauss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting1D.html#Fitting1D.gauss"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates a 1D Gaussian function based on the provided parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amp</strong> (<em>float</em>) – amplitude of the curve</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – background intensity</p></li>
+<li><p><strong>mu</strong> (<em>float</em>) – center of the curve</p></li>
+<li><p><strong>sigma</strong> (<em>float</em>) – standard deviation of the curve</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Intensity value at x following the curve</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">getCoords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting1D.html#Fitting1D.getCoords"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates an array of coordinates corresponding to the length of the PSF profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>psf</strong> (<em>array</em>) – Intensity values of the PSF profile.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Coordinates corresponding to the PSF profile.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">getCovMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting1D.html#Fitting1D.getCovMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Calculates the covariance matrix for a 1D image based on the provided centroid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>np.ndarray</em>) – The 1D image data for which to calculate the covariance matrix.</p></li>
+<li><p><strong>centroid</strong> (<em>List</em><em>(</em><em>float</em><em>)</em>) – The centroid of the image, used as a reference point for the covariance calculation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If the input image is not 1D</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The calculated covariance value for the 1D image.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">plotFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting1D.html#Fitting1D.plotFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Plots the fitted curves for all three axes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outputPath</strong> (<em>str</em>) – Directory where the plots will be saved.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">plotSingleFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fineCoords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting1D.html#Fitting1D.plotSingleFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Plots the original data points, the fitted curve, and key parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>psf</strong> (<em>array</em>) – Intensity values at the data points.</p></li>
+<li><p><strong>fineCoords</strong> (<em>array</em>) – Coordinates for plotting the fitted curve.</p></li>
+<li><p><strong>outputPath</strong> (<em>str</em>) – Directory where the plot will be saved.</p></li>
+<li><p><strong>index</strong> (<em>int</em>) – Index of the axis being plotted (0 for Z, 1 for Y, 2 for X).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">processSingleFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting1D.html#Fitting1D.processSingleFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Processes a single fit for the given index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<em>int</em>) – ID of the psf.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="fitting2d">
+<h2>Fitting2D<a class="headerlink" href="#fitting2d" title="Link to this heading"></a></h2>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.fittingTools.fitting2D</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.fittingTools.fitting2D.</span></span><span class="sig-name descname"><span class="pre">Fitting2D</span></span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2D.html#Fitting2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">FittingTool</span></code></p>
+<p>Class for fitting a 2D Gaussian curve to the PSF profile of a microscopy image.
+This class inherits from the FittingTool base class and implements methods specific to 2D Gaussian fitting.
+It includes methods for evaluating the Gaussian function, fitting the curve to the data, and plotting the results.</p>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">evalFun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaY</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2D.html#Fitting2D.evalFun"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Evaluates the 2D Gaussian function at the given coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amp</strong> (<em>float</em>) – amplitude of the curve</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – background intensity</p></li>
+<li><p><strong>muX</strong> (<em>float</em>) – center coordinates of the Gaussian</p></li>
+<li><p><strong>muY</strong> (<em>float</em>) – center coordinates of the Gaussian</p></li>
+<li><p><strong>sigmaX</strong> (<em>float</em>) – standard deviation of the Gaussian</p></li>
+<li><p><strong>sigmaY</strong> (<em>float</em>) – standard deviation of the Gaussian</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Intensity value at (x,y) following the curve</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">fitCurve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2D.html#Fitting2D.fitCurve"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Fits a 2D Gaussian curve to the provided PSF data using the initial parameters and coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amp</strong> (<em>float</em>) – amplitude of the Gaussian</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – background intensity</p></li>
+<li><p><strong>mu</strong> (<em>List</em><em>(</em><em>float</em><em>)</em>) – center of the Gaussian</p></li>
+<li><p><strong>sigma</strong> (<em>List</em><em>(</em><em>float</em><em>)</em>) – standard deviation of the Gaussian</p></li>
+<li><p><strong>coords</strong> (<em>np.array</em><em>(</em><em>float</em><em>)</em>) – List of X,Y coordinates</p></li>
+<li><p><strong>psf</strong> (<em>np.ndarray</em>) – 1D image of the flatten 2D psf</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If the optimization fails to converge.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of fitted parameters and covariance matrix</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List(float),Matrix(float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">gauss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaY</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2D.html#Fitting2D.gauss"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates a 2D Gaussian function based on the provided parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amp</strong> (<em>float</em>) – amplitude of the curve</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – background intensity</p></li>
+<li><p><strong>muX</strong> (<em>float</em>) – center coordinates of the Gaussian</p></li>
+<li><p><strong>muY</strong> (<em>float</em>) – center coordinates of the Gaussian</p></li>
+<li><p><strong>sigmaX</strong> (<em>float</em>) – standard deviation of the Gaussian</p></li>
+<li><p><strong>sigmaY</strong> (<em>float</em>) – standard deviation of the Gaussian</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Intensity value at (x,y) following the curve</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">getCoords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2D.html#Fitting2D.getCoords"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates an array of coordinates corresponding to the length of the PSF profile along two axes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>psf</strong> (<em>np.ndarray</em>) – 2D image to process</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Coordinates for the 2D fit</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">plotFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2D.html#Fitting2D.plotFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates and saves a visualization of the 3D Gaussian fit compared to the original PSF data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outputPath</strong> (<em>str</em>) – The path where the visualization will be saved.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">plotSingleFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fineCoords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit2D</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2D.html#Fitting2D.plotSingleFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates and saves a visualization comparing the 1D profile of the original PSF data with the 1D profile of the 2D Gaussian fit along a specified axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>psf</strong> (<em>np.ndarray</em>) – The original PSF data.</p></li>
+<li><p><strong>fineCoords</strong> (<em>np.ndarray</em>) – The coordinates for the fine grid.</p></li>
+<li><p><strong>fit2D</strong> (<em>np.ndarray</em>) – The 2D Gaussian fit.</p></li>
+<li><p><strong>outputPath</strong> (<em>str</em>) – The path where the visualization will be saved.</p></li>
+<li><p><strong>index</strong> (<em>int</em>) – The index of the axis along which to compare profiles.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">processSingleFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2D.html#Fitting2D.processSingleFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Processes a single fit for the PSF data at the specified index, performing a 2D Gaussian fit and calculating relevant metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<em>int</em>) – The index of the PSF data to be processed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">showFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2D.html#Fitting2D.showFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Plots the fitted 3D Gaussian curve with rotation against the original PSF data for all three axes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outputPath</strong> (<em>str</em>) – Directory where the plots will be saved.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="fitting2dellips">
+<h2>Fitting2DEllips<a class="headerlink" href="#fitting2dellips" title="Link to this heading"></a></h2>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.fittingTools.fitting2DEllips</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.fittingTools.fitting2DEllips.</span></span><span class="sig-name descname"><span class="pre">Fitting2DEllips</span></span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DEllips.html#Fitting2DEllips"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">FittingTool</span></code></p>
+<p>Class for fitting a 2D Ellipse Gaussian to the PSF profile of a microscopy image.
+This class inherits from the FittingTool base class and implements methods specific to 2D Ellipse Gaussian fitting.
+It includes methods for evaluating the 2D Ellipse Gaussian function, fitting the curve to the data, and plotting the results.</p>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">ellipseParmConversion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DEllips.html#Fitting2DEllips.ellipseParmConversion"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Converts the parameters of a 2D Ellipse Gaussian fit (a, b, c) into the angle of rotation (theta) and the standard deviations along the major and minor axes (sx, sy).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<em>float</em>) – coefficient for the ellipse linked to the x-axis</p></li>
+<li><p><strong>b</strong> (<em>float</em>) – coefficient for the ellipse linked to the interaction between x and y</p></li>
+<li><p><strong>c</strong> (<em>float</em>) – coefficient for the ellipse linked to the y-axis</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The angle of rotation (theta) and the standard deviations along the major and minor axes (sx, sy)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">evalFun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DEllips.html#Fitting2DEllips.evalFun"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>calculates the 2D Ellipse Gaussian function at the given x values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amp</strong> (<em>float</em>) – amplitude of the curve</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – background intensity</p></li>
+<li><p><strong>muX</strong> (<em>float</em>) – center coordinates of the Gaussian</p></li>
+<li><p><strong>muY</strong> (<em>float</em>) – center coordinates of the Gaussian</p></li>
+<li><p><strong>a</strong> (<em>float</em>) – coefficients for the ellipse</p></li>
+<li><p><strong>b</strong> (<em>float</em>) – coefficients for the ellipse</p></li>
+<li><p><strong>c</strong> (<em>float</em>) – coefficients for the ellipse</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Intensity value at (x,y) following the curve</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">fitCurve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DEllips.html#Fitting2DEllips.fitCurve"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Fits a 2D Ellipse Gaussian curve to the provided PSF data using the given initial parameters and coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amp</strong> (<em>float</em>) – amplitude of the Gaussian</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – background intensity</p></li>
+<li><p><strong>mu</strong> (<em>List</em><em>(</em><em>float</em><em>)</em>) – center of the Gaussian</p></li>
+<li><p><strong>sigma</strong> (<em>List</em><em>(</em><em>float</em><em>)</em>) – standard deviation of the Gaussian</p></li>
+<li><p><strong>coords</strong> (<em>np.array</em><em>(</em><em>float</em><em>)</em>) – List of X,Y coordinates</p></li>
+<li><p><strong>psf</strong> (<em>np.ndarray</em>) – 1D image of the flatten 2D psf</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If the optimization fails to converge.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of fitted parameters and covariance matrix</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List(float),Matrix(float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">gauss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DEllips.html#Fitting2DEllips.gauss"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates a 2D Ellipse Gaussian function based on the provided parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amp</strong> (<em>float</em>) – amplitude of the curve</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – background intensity</p></li>
+<li><p><strong>muX</strong> (<em>float</em>) – center coordinates of the Gaussian</p></li>
+<li><p><strong>muY</strong> (<em>float</em>) – center coordinates of the Gaussian</p></li>
+<li><p><strong>a</strong> (<em>float</em>) – coefficients for the ellipse</p></li>
+<li><p><strong>b</strong> (<em>float</em>) – coefficients for the ellipse</p></li>
+<li><p><strong>c</strong> (<em>float</em>) – coefficients for the ellipse</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Intensity value at (x,y) following the curve</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">getCoords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DEllips.html#Fitting2DEllips.getCoords"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates a list of coordinates for the 2D fit based on the shape of the provided PSF image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>psf</strong> (<em>np.ndarray</em>) – The PSF image for which to generate the coordinates.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of coordinates corresponding to the shape of the PSF image, suitable for use in the 2D fitting process.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">plotFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DEllips.html#Fitting2DEllips.plotFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates and saves a 3D plot comparing the original PSF data with the fitted 2D Ellipse Gaussian curve, including the center of the Gaussian (mu) and the angle of rotation (theta).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outputPath</strong> (<em>str</em>) – The path where the visualization will be saved.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">plotSingleFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fineCoords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit2D</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DEllips.html#Fitting2DEllips.plotSingleFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates and saves a plot comparing the original PSF data with the fitted 1D Gaussian curve and the 2D Ellipse Gaussian curve, including the center of the Gaussian (mu) and the FWHM for both fits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>psf</strong> (<em>np.ndarray</em>) – The original PSF data.</p></li>
+<li><p><strong>fineCoords</strong> (<em>np.ndarray</em>) – The coordinates for the fine grid.</p></li>
+<li><p><strong>fit2D</strong> (<em>np.ndarray</em>) – The 2D Ellipse Gaussian fit.</p></li>
+<li><p><strong>outputPath</strong> (<em>str</em>) – The path where the visualization will be saved.</p></li>
+<li><p><strong>mu</strong> (<em>float</em>) – The center of the Gaussian.</p></li>
+<li><p><strong>index</strong> (<em>int</em>) – The index of the axis along which to compare profiles.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">processSingleFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DEllips.html#Fitting2DEllips.processSingleFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Processes a single fit for the given index, performing fitting, and plotting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<em>int</em>) – ID of the PSF.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">showFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DEllips.html#Fitting2DEllips.showFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Plots the fitted 2D Ellipse Gaussian curve against the original PSF data for all three axes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outputPath</strong> (<em>str</em>) – Directory where the plots will be saved.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">showSingleFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fitPSFShape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DEllips.html#Fitting2DEllips.showSingleFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates and saves a plot comparing the original PSF data with the fitted 2D Ellipse Gaussian curve, including the center of the Gaussian (mu) and the angle of rotation (theta).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>psf</strong> (<em>np.ndarray</em>) – The original PSF data.</p></li>
+<li><p><strong>outputPath</strong> (<em>str</em>) – The path where the plot will be saved.</p></li>
+<li><p><strong>params</strong> – The parameters for the 2D Ellipse Gaussian curve.</p></li>
+<li><p><strong>theta</strong> – The angle of rotation.</p></li>
+<li><p><strong>title</strong> (<em>str</em>) – The title for the plot.</p></li>
+<li><p><strong>fitPSFShape</strong> (<em>tuple</em><em>, </em><em>optional</em>) – The shape of the fitted PSF data. Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="fitting2drotation">
+<h2>Fitting2DRotation<a class="headerlink" href="#fitting2drotation" title="Link to this heading"></a></h2>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.fittingTools.fitting2DRotation</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.fittingTools.fitting2DRotation.</span></span><span class="sig-name descname"><span class="pre">Fitting2DRotation</span></span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DRotation.html#Fitting2DRotation"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">FittingTool</span></code></p>
+<p>Class for fitting a 2D Gaussian curve with rotation to the PSF profile of a microscopy image.
+This class inherits from the FittingTool base class and implements methods specific to 2D Gaussian fitting with rotation.
+It includes methods for evaluating the Gaussian function, fitting the curve to the data, and plotting the results.</p>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">evalFun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DRotation.html#Fitting2DRotation.evalFun"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Evaluates the 2D Gaussian function with rotation at the given x values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>np.ndarray</em>) – The x values at which to evaluate the function.</p></li>
+<li><p><strong>amp</strong> (<em>float</em>) – amplitude of the curve</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – background intensity</p></li>
+<li><p><strong>muX</strong> (<em>float</em>) – center coordinates of the Gaussian</p></li>
+<li><p><strong>muY</strong> (<em>float</em>) – center coordinates of the Gaussian</p></li>
+<li><p><strong>sigmaX</strong> (<em>float</em>) – standard deviation of the Gaussian</p></li>
+<li><p><strong>sigmaY</strong> (<em>float</em>) – standard deviation of the Gaussian</p></li>
+<li><p><strong>theta</strong> (<em>float</em>) – rotation angle in radians</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Intensity value at (x,y) following the curve</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">fitCurve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DRotation.html#Fitting2DRotation.fitCurve"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Fits the 2D Gaussian function with rotation to the provided PSF data using curve fitting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amp</strong> (<em>float</em>) – amplitude of the Gaussian</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – background intensity</p></li>
+<li><p><strong>mu</strong> (<em>List</em><em>(</em><em>float</em><em>)</em>) – center of the Gaussian</p></li>
+<li><p><strong>sigma</strong> (<em>List</em><em>(</em><em>float</em><em>)</em>) – standard deviation of the Gaussian</p></li>
+<li><p><strong>theta</strong> (<em>float</em>) – rotation angle in radians</p></li>
+<li><p><strong>coords</strong> (<em>np.array</em><em>(</em><em>float</em><em>)</em>) – List of X,Y coordinates</p></li>
+<li><p><strong>psf</strong> (<em>np.ndarray</em>) – 1D image of the flatten 2D psf</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If the optimization fails to converge.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of fitted parameters and covariance matrix</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List(float),Matrix(float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">gauss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DRotation.html#Fitting2DRotation.gauss"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates a 2D Gaussian function with rotation based on the provided parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amp</strong> (<em>float</em>) – amplitude of the curve</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – background intensity</p></li>
+<li><p><strong>muX</strong> (<em>float</em>) – center coordinates of the Gaussian</p></li>
+<li><p><strong>muY</strong> (<em>float</em>) – center coordinates of the Gaussian</p></li>
+<li><p><strong>sigmaX</strong> (<em>float</em>) – standard deviation of the Gaussian</p></li>
+<li><p><strong>sigmaY</strong> (<em>float</em>) – standard deviation of the Gaussian</p></li>
+<li><p><strong>theta</strong> (<em>float</em>) – rotation angle in radians</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Intensity value at (x,y) following the curve</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">getCoords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DRotation.html#Fitting2DRotation.getCoords"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates an array of coordinates corresponding to the shape of the PSF image, suitable for use in the 2D fitting process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>psf</strong> (<em>np.ndarray</em>) – 2D image to process for coordinate generation</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Coordinates for the 2D fit</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">plotFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DRotation.html#Fitting2DRotation.plotFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Plots the fitted 2D Gaussian curve in 3D.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outputPath</strong> (<em>str</em>) – Directory where the plot will be saved.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">plotSingleFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fineCoords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit2D</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DRotation.html#Fitting2DRotation.plotSingleFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Plots the original data points, the fitted curve, and key parameters for a single axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coords</strong> (<em>array</em>) – Coordinates of the data points.</p></li>
+<li><p><strong>psf</strong> (<em>array</em>) – Intensity values at the data points.</p></li>
+<li><p><strong>fineCoords</strong> (<em>array</em>) – Coordinates for plotting the fitted curve.</p></li>
+<li><p><strong>fit2D</strong> (<em>array</em>) – Intensity values of the 2D fit at the fine coordinates.</p></li>
+<li><p><strong>outputPath</strong> (<em>str</em>) – Directory where the plot will be saved.</p></li>
+<li><p><strong>index</strong> (<em>int</em>) – Index of the axis being plotted (0 for Z, 1 for Y, 2 for X).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">processSingleFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DRotation.html#Fitting2DRotation.processSingleFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Processes a single fit for the given index, performing fitting, and plotting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<em>int</em>) – ID of the PSF and position in lists where results are stored.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">showFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting2DRotation.html#Fitting2DRotation.showFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Plots the fitted 2D Gaussian curve with rotation against the original PSF data for all three axes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outputPath</strong> (<em>str</em>) – Directory where the plots will be saved.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="fitting3d">
+<h2>Fitting3D<a class="headerlink" href="#fitting3d" title="Link to this heading"></a></h2>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.fittingTools.fitting3D</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.fittingTools.fitting3D.</span></span><span class="sig-name descname"><span class="pre">Fitting3D</span></span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3D.html#Fitting3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">FittingTool</span></code></p>
+<p>Class for fitting a 3D Gaussian curve to the PSF profile of a microscopy image.
+This class inherits from the FittingTool base class and implements methods specific to 3D Gaussian fitting.
+It includes methods for evaluating the Gaussian function, fitting the curve to the data, and plotting the results.</p>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">evalFun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muZ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaZ</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3D.html#Fitting3D.evalFun"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Evaluates the 3D Gaussian function at the given x values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array</em>) – x values at which to evaluate the function</p></li>
+<li><p><strong>amp</strong> (<em>float</em>) – amplitude of the curve</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – background intensity</p></li>
+<li><p><strong>muX</strong> (<em>float</em>) – center of the curve along X axis</p></li>
+<li><p><strong>muY</strong> (<em>float</em>) – center of the curve along Y axis</p></li>
+<li><p><strong>muZ</strong> (<em>float</em>) – center of the curve along Z axis</p></li>
+<li><p><strong>sigmaX</strong> (<em>float</em>) – standard deviation of the curve along X axis</p></li>
+<li><p><strong>sigmaY</strong> (<em>float</em>) – standard deviation of the curve along Y axis</p></li>
+<li><p><strong>sigmaZ</strong> (<em>float</em>) – standard deviation of the curve along Z axis</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Intensity value at (x,y,z) following the curve</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">fitCurve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3D.html#Fitting3D.fitCurve"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Fits a 3D Gaussian curve to the provided PSF data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amp</strong> (<em>float</em>) – amplitude of the Gaussian</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – background intensity</p></li>
+<li><p><strong>mu</strong> (<em>List</em><em>(</em><em>float</em><em>)</em>) – center of the Gaussian</p></li>
+<li><p><strong>sigma</strong> (<em>List</em><em>(</em><em>float</em><em>)</em>) – standard deviation of the Gaussian</p></li>
+<li><p><strong>coords</strong> (<em>np.array</em><em>(</em><em>float</em><em>)</em>) – List of X,Y,Z coordinates</p></li>
+<li><p><strong>psf</strong> (<em>np.ndarray</em>) – 1D image of the flatten 3D psf</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If the optimization fails to converge.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of fitted parameters and covariance matrix</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List(float),Matrix(float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">gauss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muZ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaZ</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3D.html#Fitting3D.gauss"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates a 3D Gaussian function based on the provided parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amp</strong> (<em>float</em>) – amplitude of the curve</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – background intensity</p></li>
+<li><p><strong>muX</strong> (<em>float</em>) – center of the curve along X axis</p></li>
+<li><p><strong>muY</strong> (<em>float</em>) – center of the curve along Y axis</p></li>
+<li><p><strong>muZ</strong> (<em>float</em>) – center of the curve along Z axis</p></li>
+<li><p><strong>sigmaX</strong> (<em>float</em>) – standard deviation of the curve along X axis</p></li>
+<li><p><strong>sigmaY</strong> (<em>float</em>) – standard deviation of the curve along Y axis</p></li>
+<li><p><strong>sigmaZ</strong> (<em>float</em>) – standard deviation of the curve along Z axis</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Intensity value at (x,y,z) following the curve</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">getCoords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3D.html#Fitting3D.getCoords"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates an array of coordinates corresponding to the length of the PSF profile for 3D fitting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>psf</strong> (<em>np.ndarray</em>) – 3D image of the PSF data</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Array of coordinates for each axis (Z, Y, X) corresponding to the PSF profile.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">plotFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3D.html#Fitting3D.plotFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Plots the fitted 3D Gaussian curve along with the original PSF data, and saves the plot to the specified output path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outputPath</strong> (<em>str</em>) – Path to the folder where the plot will be saved</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">plotSingleFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fineCoords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit3D</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3D.html#Fitting3D.plotSingleFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Plots the original data points, the fitted curve, and key parameters for a single axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coords</strong> (<em>array</em>) – Coordinates of the data points.</p></li>
+<li><p><strong>psf</strong> (<em>array</em>) – Intensity values at the data points.</p></li>
+<li><p><strong>fineCoords</strong> (<em>array</em>) – Coordinates for plotting the fitted curve.</p></li>
+<li><p><strong>fit3D</strong> (<em>array</em>) – Intensity values of the 3D fit at the fine coordinates.</p></li>
+<li><p><strong>outputPath</strong> (<em>str</em>) – Directory where the plot will be saved.</p></li>
+<li><p><strong>index</strong> (<em>int</em>) – Index of the axis being plotted (0 for Z, 1 for Y, 2 for X).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">processSingleFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3D.html#Fitting3D.processSingleFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Processes a single fit for the given index, performing fitting, plotting, and calculating metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<em>int</em>) – ID of the PSF and position in lists for which to perform the fit.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">showFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3D.html#Fitting3D.showFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Plots the 2D slices of the PSF data and the corresponding fitted Gaussian curves, and saves the plots to the specified output path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>psf</strong> (<em>np.ndarray</em>) – 3D image of the PSF data</p></li>
+<li><p><strong>outputPath</strong> (<em>str</em>) – Path to the folder where the plots will be saved</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="fitting3drotation">
+<h2>Fitting3DRotation<a class="headerlink" href="#fitting3drotation" title="Link to this heading"></a></h2>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.fittingTools.fitting3DRotation</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.fittingTools.fitting3DRotation.</span></span><span class="sig-name descname"><span class="pre">Fitting3DRotation</span></span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3DRotation.html#Fitting3DRotation"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">FittingTool</span></code></p>
+<p>Class for fitting a 3D Gaussian curve with rotation to the PSF profile of a microscopy image.
+This class inherits from the FittingTool base class and implements methods specific to 3D Gaussian fitting with rotation.
+It includes methods for evaluating the Gaussian function, fitting the curve to the data, and plotting the results.</p>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">evalFun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muZ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaZ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thetaZ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thetaY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thetaX</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3DRotation.html#Fitting3DRotation.evalFun"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Evaluates the 3D Gaussian function with rotation at the given x values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amp</strong> (<em>float</em>) – amplitude of the curve</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – background intensity</p></li>
+<li><p><strong>muZ</strong> (<em>float</em>) – center coordinates of the Gaussian</p></li>
+<li><p><strong>muY</strong> (<em>float</em>) – center coordinates of the Gaussian</p></li>
+<li><p><strong>muX</strong> (<em>float</em>) – center coordinates of the Gaussian</p></li>
+<li><p><strong>sigmaZ</strong> (<em>float</em>) – standard deviation of the Gaussian along the Z-axis</p></li>
+<li><p><strong>sigmaY</strong> (<em>float</em>) – standard deviation of the Gaussian along the Y-axis</p></li>
+<li><p><strong>sigmaX</strong> (<em>float</em>) – standard deviation of the Gaussian along the X-axis</p></li>
+<li><p><strong>thetaZ</strong> (<em>float</em>) – rotation angle around the Z-axis (in radians)</p></li>
+<li><p><strong>thetaY</strong> (<em>float</em>) – rotation angle around the Y-axis (in radians)</p></li>
+<li><p><strong>thetaX</strong> (<em>float</em>) – rotation angle around the X-axis (in radians)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Intensity value at (x,y,z) following the curve</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">fitCurve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3DRotation.html#Fitting3DRotation.fitCurve"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Fits a 3D Gaussian curve with rotation to the provided PSF data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amp</strong> (<em>float</em>) – amplitude of the Gaussian</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – background intensity</p></li>
+<li><p><strong>mu</strong> (<em>list</em>) – center of the Gaussian</p></li>
+<li><p><strong>sigma</strong> (<em>list</em>) – standard deviation of the Gaussian</p></li>
+<li><p><strong>coords</strong> (<em>np.array</em><em>(</em><em>float</em><em>)</em>) – List of X,Y,Z coordinates</p></li>
+<li><p><strong>psf</strong> (<em>np.ndarray</em>) – 1D image of the flatten 2D psf</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If the optimization fails to converge</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of fitted parameters and covariance matrix</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list,Matrix(float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">gauss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muZ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaZ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaX</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thetaZ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thetaY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thetaX</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3DRotation.html#Fitting3DRotation.gauss"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates a 3D Gaussian function with rotation based on the provided parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amp</strong> (<em>float</em>) – Amplitude of the curve.</p></li>
+<li><p><strong>bg</strong> (<em>float</em>) – Background intensity.</p></li>
+<li><p><strong>muZ</strong> (<em>float</em>) – Center coordinate of the Gaussian along the Z-axis.</p></li>
+<li><p><strong>muY</strong> (<em>float</em>) – Center coordinate of the Gaussian along the Y-axis.</p></li>
+<li><p><strong>muX</strong> (<em>float</em>) – Center coordinate of the Gaussian along the X-axis.</p></li>
+<li><p><strong>sigmaZ</strong> (<em>float</em>) – Standard deviation of the Gaussian along the Z-axis.</p></li>
+<li><p><strong>sigmaY</strong> (<em>float</em>) – Standard deviation of the Gaussian along the Y-axis.</p></li>
+<li><p><strong>sigmaX</strong> (<em>float</em>) – Standard deviation of the Gaussian along the X-axis.</p></li>
+<li><p><strong>thetaZ</strong> (<em>float</em>) – Rotation angle around the Z-axis (in radians).</p></li>
+<li><p><strong>thetaY</strong> (<em>float</em>) – Rotation angle around the Y-axis (in radians).</p></li>
+<li><p><strong>thetaX</strong> (<em>float</em>) – Rotation angle around the X-axis (in radians).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Intensity value at (x, y, z) following the curve.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">getCoords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3DRotation.html#Fitting3DRotation.getCoords"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Generates an array of coordinates corresponding to the length of the PSF profile for 3D fitting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>psf</strong> (<em>np.ndarray</em>) – 3D image to process</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Coordinates for the 3D fit</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">plotFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3DRotation.html#Fitting3DRotation.plotFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Plots the fitted 3D Gaussian curve with rotation against the original PSF data for all three axes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outputPath</strong> (<em>str</em>) – Directory where the plots will be saved.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">plotSingleFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fineCoords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit3D</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3DRotation.html#Fitting3DRotation.plotSingleFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Plots the fitted 3D Gaussian curve with rotation against the original PSF data for a single axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coords</strong> (<em>np.ndarray</em>) – Coordinates of the data points along the axis being plotted.</p></li>
+<li><p><strong>psf</strong> (<em>np.ndarray</em>) – Intensity values at the data points along the axis being plotted.</p></li>
+<li><p><strong>fineCoords</strong> (<em>np.ndarray</em>) – Coordinates for plotting the fitted curve along the axis being plotted.</p></li>
+<li><p><strong>fit3D</strong> (<em>np.ndarray</em>) – Intensity values of the fitted 3D Gaussian curve with rotation along the axis being plotted.</p></li>
+<li><p><strong>outputPath</strong> (<em>str</em>) – Directory where the plot will be saved.</p></li>
+<li><p><strong>index</strong> (<em>int</em>) – Index of the axis being plotted (0 for Z, 1 for Y, 2 for X).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">processSingleFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3DRotation.html#Fitting3DRotation.processSingleFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Processes a single fit for the given index, performing fitting, plotting, and calculating metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<em>int</em>) – ID of the PSF and position in lists for which to perform the fit.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list containing metrics, fwhm, parameters and covariance matrix of the fit.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List(parameters)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">showFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fittingTools/fitting3DRotation.html#Fitting3DRotation.showFit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Plots the fitted 3D Gaussian curve with rotation against the original PSF data for all three axes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outputPath</strong> (<em>str</em>) – Directory where the plots will be saved.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="fitting">
+<h2>Fitting<a class="headerlink" href="#fitting" title="Link to this heading"></a></h2>
+<p>This module uses fitting tools to fit all beads in a given image. It uses the fitting tools to fit the beads and returns the fitted parameters.</p>
+<p><strong>Source Code:</strong> <code class="xref py py-mod docutils literal notranslate"><span class="pre">microscopy_metrics.fitting</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">microscopy_metrics.fitting.</span></span><span class="sig-name descname"><span class="pre">Fitting</span></span><a class="reference internal" href="_modules/microscopy_metrics/fitting.html#Fitting"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to manage the fitting process for microscopy image analysis, including running the fitting for individual beads and computing the fitting results for all beads in the analysis.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">fitType</span></span></dt>
+<dd><p>The type of fitting to be performed (e.g., “1D”, “2D”, “3D”).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_thresholdRSquared</span></span></dt>
+<dd><p>The threshold for the coefficient of determination (R²) used to filter out poor fits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_prominenceRel</span></span></dt>
+<dd><p>The relative prominence used for peak detection during fitting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_imageAnalyzer</span></span></dt>
+<dd><p>An instance of the ImageAnalyzer class used for analyzing the microscopy images and managing the fitting process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ImageAnalyzer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">computeFitting</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fitting.html#Fitting.computeFitting"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Computes the fitting for all provided images, centroids, spacing, and ROIs using the specified fitting tool.
+The method initializes a thread pool executor to run the fitting process concurrently for each index, improving performance when processing multiple images.
+The method also applies a threshold on the coefficient of determination (R²) to filter out fits that do not meet the specified quality criteria, retaining only those that exceed the threshold for further analysis.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">displayFitting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outputDir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fitting.html#Fitting.displayFitting"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Displays the fitting results for all beads that were not rejected during the fitting process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outputDir</strong> (<em>str</em>) – The directory where the fitting results will be saved.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">runFitting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/microscopy_metrics/fitting.html#Fitting.runFitting"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Runs the fitting process for a single index, using the specified fitting tool and storing the results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<em>int</em>) – The index of the fit being processed, used for retrieving the corresponding image, centroid, spacing, and ROI for the fitting process.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="microscopy_metrics.detectionTools.html" class="btn btn-neutral float-left" title="microscopy_metrics.detectionTools package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="microscopy_metrics.metricTool.html" class="btn btn-neutral float-right" title="microscopy_metrics.metricTool package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, CNRS.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
