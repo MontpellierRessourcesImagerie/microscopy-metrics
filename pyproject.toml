@@ -28,7 +28,7 @@ dependencies = [
     "Pillow",
     "simpleitk",
     "open3d",
-    "skan",
+    "skan>=0.13.0",
     "pyvista",
     "psfmodels"
 ]
@@ -40,7 +40,7 @@ dev = [
     "pytest",
     "pytest-cov",
     "coverage",
-    "sphinx",
+    "sphinx==8.2.3",
     "sphinx-rtd-theme",
     "sphinx-tabs",
     "build",

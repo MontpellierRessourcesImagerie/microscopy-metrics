@@ -34,6 +34,7 @@ class Detection(object):
         self._rejectionDistance = 0.5
         self._pixelSize = [0.1, 0.06, 0.06]
         self._thresholdIntensity = 0.75
+        self._prominenceRel = 0.5
 
         self._imageAnalyzer = None
         self._thresholdTool = None
@@ -184,14 +185,21 @@ class Detection(object):
                 z = bead._image[:, physic[1], physic[2]]
                 y = bead._image[physic[0], :, physic[2]]
                 x = bead._image[physic[0], physic[1], :]
+                xy = bead._image[physic[0], :, :]
                 peaksX, _ = find_peaks(
-                    x, prominence=np.min(x) + (np.max(x) - np.min(x)) * 0.5, distance=3
+                    x, prominence=np.min(x) + (np.max(x) - np.min(x)) * self._prominenceRel, distance=3
                 )
                 peaksY, _ = find_peaks(
-                    y, prominence=np.min(y) + (np.max(y) - np.min(y)) * 0.5, distance=3
+                    y, prominence=np.min(y) + (np.max(y) - np.min(y)) * self._prominenceRel, distance=3
                 )
                 peaksZ, _ = find_peaks(
-                    z, prominence=np.min(z) + (np.max(z) - np.min(z)) * 0.5, distance=3
+                    z, prominence=np.min(z) + (np.max(z) - np.min(z)) * self._prominenceRel, distance=3
+                )
+                peaksDiag, _ = find_peaks(
+                    np.diag(xy), prominence=np.min(np.diag(xy)) + (np.max(np.diag(xy)) - np.min(np.diag(xy))) * self._prominenceRel, distance=3
+                )
+                peaksAntiDiag, _ = find_peaks(
+                    np.diag(np.fliplr(xy)), prominence=np.min(np.diag(np.fliplr(xy))) + (np.max(np.diag(np.fliplr(xy))) - np.min(np.diag(np.fliplr(xy)))) * self._prominenceRel, distance=3
                 )
                 if bead._image[int(physic[0]), int(physic[1]), int(physic[2])] < (
                     self._thresholdIntensity * meanIntensity
@@ -200,7 +208,7 @@ class Detection(object):
                 ):
                     bead._rejected = True
                     bead._rejectionDesc = "Intensity criteria not met"
-                if len(peaksX) > 1 or len(peaksY) > 1 or len(peaksZ) > 1 :
+                if len(peaksX) > 1 or len(peaksY) > 1 or len(peaksZ) > 1 or len(peaksDiag) > 1 or len(peaksAntiDiag) > 1:
                     bead._rejected = True
                     bead._rejectionDesc = "Multiple peaks detected in ROI"
 

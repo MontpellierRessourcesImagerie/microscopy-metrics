@@ -1,7 +1,7 @@
 API
 ===
 
-Cette section regroupe l'API publique du package.
+This section describes the API of the microscopy_metrics package.
 
 .. toctree::
    :maxdepth: 2

@@ -70,6 +70,7 @@ class Prominence(FittingTool):
 
         if self._image is None:
             return None
+        self._image = self._image.astype(float)
         if self._centroid is None:
             return None
         physic = self.getLocalCentroid()
