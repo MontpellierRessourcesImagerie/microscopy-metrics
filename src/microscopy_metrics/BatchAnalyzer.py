@@ -228,11 +228,11 @@ class BatchAnalyzer(object):
         Args:
             pdf (PDFReport, optional): An instance of the PDFReport class to generate the report. Defaults to None.
         """
-        pdfPath = os.path.join(self._folderPath, f"PSF_analysis_result_simplified.pdf")
+        pdfPath = os.path.join(self._folderPath, f"Batch_analysis_results.pdf")
         self.pdf = canvas.Canvas(pdfPath, pagesize=A4)
-        self.pdf.setTitle("PSF analysis results - Batch Analysis")
+        self.pdf.setTitle("Batch Analysis Results")
         self.pdf.setFont("Helvetica-Bold", 28)
-        self.pdf.drawCentredString(300, 770, "Analysis Parameters Report")
+        self.pdf.drawCentredString(300, 770, "Batch Analysis Report")
         self.pdf.setFont("Helvetica", 10)
         self.pdf.drawCentredString(300, 750, f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         current_y = 700
@@ -275,7 +275,7 @@ class BatchAnalyzer(object):
         self.drawParameterTableOnPDF("Fitting parameters", fitting_data, current_y)
         self.pdf.showPage()
         self.pdf.setFont("Helvetica-Bold", 28)
-        self.pdf.drawCentredString(300, 770, "Analysis Parameters Report")
+        self.pdf.drawCentredString(300, 770, "Batch Metrics Report")
         self.pdf.setFont("Helvetica", 10)
         current_y = 700
         meanSBR = sum(imageAnalyzer._meanSBR for imageAnalyzer in self._imageAnalzed if imageAnalyzer is not None)/len(self._imageAnalzed)
