@@ -14,7 +14,7 @@ The project includes both a **standalone Python library** and a **Napari plugin*
 Installation
 ------------
 
-**Microscopy Metrics** requires **Python 3.9 or higher**.
+**Microscopy Metrics** requires **Python 3.11**.
 It is **strongly recommended** to use a **virtual environment** to avoid conflicts with other packages.
 
 .. tabs::
@@ -48,7 +48,7 @@ It is **strongly recommended** to use a **virtual environment** to avoid conflic
          pip install --upgrade pip
          pip install microscopy-metrics
 
-   .. tab:: Using conda
+   .. tab:: Using conda (Recommended)
 
       **1. Create a conda environment:**
 
@@ -283,7 +283,7 @@ If you encounter any issues or have questions, feel free to:
 
 ---
 
-.. _license:
+.. _license_page:
 
 License
 -------
