@@ -17,6 +17,7 @@ classifiers = [
 ]
 dependencies = [
     "PyQt5",
+    "jupyterlab",
     "numpy",
     "scipy",
     "scikit-image",
@@ -30,7 +31,7 @@ dependencies = [
     "open3d",
     "skan>=0.13.0",
     "pyvista",
-    "psfmodels"
+    "psfmodels",
 ]
 [project.urls]
 Homepage = "https://github.com/MontpellierRessourcesImagerie/microscopy-metrics"

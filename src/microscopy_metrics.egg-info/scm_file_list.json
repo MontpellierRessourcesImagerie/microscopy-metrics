@@ -1,5 +1,6 @@
 {
   "files": [
+    "coverage.xml",
     "README.md",
     "pyproject.toml",
     ".coverage",

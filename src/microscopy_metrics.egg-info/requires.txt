@@ -1,4 +1,5 @@
 PyQt5
+jupyterlab
 numpy
 scipy
 scikit-image

@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: microscopy_metrics
-Version: 0.0.5.dev1
+Version: 1.0.1.dev0
 Summary: A module for proceeding quality control with PSF
 Author-email: MRI-CIA <mri-cia@mri.cnrs.fr>, Voker Baecker <volker.baecker@mri.cnrs.fr>, Clément Benedetti <clement.benedetti@mri.cnrs.fr>, Bastian Langouët <langouetbastian@gmail.com>
 License: CeCILL-B FREE SOFTWARE LICENSE AGREEMENT
@@ -526,6 +526,7 @@ Requires-Python: >=3.9
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: PyQt5
+Requires-Dist: jupyterlab
 Requires-Dist: numpy
 Requires-Dist: scipy
 Requires-Dist: scikit-image

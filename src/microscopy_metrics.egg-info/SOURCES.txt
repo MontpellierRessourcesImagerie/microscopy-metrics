@@ -2,6 +2,7 @@
 .gitignore
 LICENSE
 README.md
+coverage.xml
 pyproject.toml
 .github/workflows/create_doc.yml
 .github/workflows/test_and_deploy.yml
@@ -29,6 +30,7 @@ docs/source/microscopy_metrics.reportTools.rst
 docs/source/microscopy_metrics.resolutionTools.rst
 docs/source/microscopy_metrics.thresholdTools.rst
 docs/source/usage.rst
+src/microscopy_metrics/BatchAnalyzer.py
 src/microscopy_metrics/BeadAnalyzer.py
 src/microscopy_metrics/ImageAnalyzer.py
 src/microscopy_metrics/__init__.py
@@ -74,6 +76,7 @@ src/microscopy_metrics/thresholdTools/threshold_tool.py
 src/scratch/1D_scratch.py
 src/scratch/2D_scratch.py
 src/scratch/3D_scratch.py
+src/scratch/BatchAnalysis.py
 src/scratch/active_contour.py
 src/scratch/class_scratch.py
 src/scratch/doc.py
