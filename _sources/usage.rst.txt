@@ -54,7 +54,7 @@ It is **strongly recommended** to use a **virtual environment** to avoid conflic
 
       .. code-block:: bash
 
-         conda create --name microscopy_metrics_env python=3.12
+         conda create --name microscopy_metrics_env python==3.11
 
       **2. Activate the conda environment:**
 
